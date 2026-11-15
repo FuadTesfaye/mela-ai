@@ -1,0 +1,6 @@
+{
+  "repository": "https://github.com/AaUel-Knight27/Savanna-static-pages",
+  "commit": "7e54f6d0fc3728568054fdb58b2d48523bc778ae",
+  "method": "Source export through connected GitHub; shell git clone blocked by DNS.",
+  "changes": "MELA integration tags added by scripts/integrate-savanna.mjs; original host layout and scripts retained."
+}

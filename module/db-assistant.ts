@@ -62,6 +62,7 @@ class DBAssistant extends HTMLElement {
   connectedCallback() {
     if (this.root) return;
     this.locale = this.getAttribute("lang") === "am" ? "am" : "en";
+    this.opened = this.hasAttribute("open");
     this.root = this.attachShadow({ mode: "open" });
     this.context = detectContext();
     this.render();

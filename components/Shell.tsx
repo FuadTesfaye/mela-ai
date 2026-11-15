@@ -1,121 +1,75 @@
 import Link from "next/link";
 import {
+  Home,
   BookOpen,
-  LayoutDashboard,
   MessageCircle,
   BriefcaseBusiness,
-  CircleHelp,
-  ArrowUpRight,
-  Sprout,
-  Accessibility,
-  ChevronDown,
-  PanelLeft,
   ShieldCheck,
+  Menu,
+  HelpCircle,
+  ChevronRight,
 } from "lucide-react";
 import Widget from "./Widget";
 const links = [
-  { href: "/", label: "Overview", Icon: LayoutDashboard },
-  { href: "/learn", label: "My learning", Icon: BookOpen },
+  { href: "/", label: "Home", Icon: Home },
+  { href: "/learn", label: "Access my learning", Icon: BookOpen },
   { href: "/support", label: "Human support", Icon: MessageCircle },
   { href: "/jobs", label: "Career space", Icon: BriefcaseBusiness },
+  { href: "/dashboard", label: "Tutor workspace", Icon: ShieldCheck },
+  { href: "/docs", label: "Help & resources", Icon: HelpCircle },
 ];
 export default function Shell({
   children,
-  active = "Overview",
-  title = "Your learning space",
+  active = "",
+  title = "Savanna learning platform",
 }: {
   children: React.ReactNode;
   active?: string;
   title?: string;
 }) {
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <Link href="/" className="brand" aria-label="MELA AI home">
-          <span className="brand-mark">
-            <Sprout size={27} />
-          </span>
-          <span>
-            mela<span className="brand-ai">AI</span>
-          </span>
+    <div className="savanna-app">
+      <header className="savanna-header">
+        <Menu aria-hidden="true" size={22} />
+        <Link href="/" aria-label="Savanna home">
+          <img
+            src="/savanna/assets/img/holberton-logo-full-alx.png"
+            alt="ALX"
+            width="92"
+            height="38"
+          />
         </Link>
-        <div className="workspace">
-          <span className="workspace-icon">DB</span>
-          <span>
-            Digital Bridge<small>Learner workspace</small>
-          </span>
-          <ChevronDown size={15} />
-        </div>
-        <p className="nav-caption">YOUR SPACE</p>
+        <span>Savanna</span>
+        <small>Learning with MELA support</small>
+      </header>
+      <aside className="savanna-sidebar">
         <nav aria-label="Main navigation">
           {links.map(({ href, label, Icon }) => (
             <Link
               key={href}
               href={href}
-              className={active === label ? "nav-link active" : "nav-link"}
               aria-current={active === label ? "page" : undefined}
             >
-              <Icon size={19} />
+              <Icon size={20} />
               {label}
-              {label === "Human support" && <span className="nav-dot" />}
             </Link>
           ))}
         </nav>
-        <div className="sidebar-bottom">
-          <div className="support-note">
-            <span className="little-leaf">
-              <Sprout size={20} />
-            </span>
-            <h3>A little help goes a long way.</h3>
-            <p>
-              Learn in your language.
-              <br />
-              Move at your own pace.
-            </p>
-            <Link href="/docs">
-              Meet your companion <ArrowUpRight size={15} />
-            </Link>
-          </div>
-          <Link href="/docs" className="nav-link">
-            <CircleHelp size={19} />
-            Help & resources
-          </Link>
-          <Link href="/dashboard" className="nav-link">
-            <ShieldCheck size={19} />
-            Tutor workspace
-          </Link>
-          <div className="profile">
-            <span className="profile-avatar">L</span>
-            <span>
-              Welcome, learner<small>Demo workspace</small>
-            </span>
-            <ChevronDown size={15} />
-          </div>
+        <div className="savanna-profile">
+          Learning workspace<span>Digital Bridge · English</span>
         </div>
       </aside>
-      <div className="page-area">
-        <header className="topbar">
-          <span className="topbar-title">
-            <PanelLeft size={18} />
-            {title}
-          </span>
-          <div className="topbar-actions">
-            <span className="accessibility-label">
-              <Accessibility size={17} />
-              Built for everyone
-            </span>
-            <span className="language-tag">EN / አማ</span>
-            <span className="profile-avatar small">L</span>
-          </div>
-        </header>
+      <div className="savanna-page">
+        <div className="savanna-breadcrumb">
+          Savanna <ChevronRight size={14} />
+          {title}
+        </div>
         <main id="main" className="main-content">
           {children}
         </main>
         <footer className="page-footer">
-          <span>
-            <Sprout size={14} />A little support. A world of possibility.
-          </span>
-          <span>MELA AI · Digital Bridge</span>
+          MELA accessibility support · integrated with the Savanna static
+          capture
         </footer>
       </div>
       <Widget />

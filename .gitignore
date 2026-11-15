@@ -10,3 +10,5 @@ test-results/
 public/db-assistant.js
 public/avatar-view.js
 public/openapi.yaml
+public/savanna-integration.js
+public/course-media.js

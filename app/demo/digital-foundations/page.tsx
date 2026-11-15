@@ -1,0 +1,54 @@
+import Shell from "@/components/Shell";
+import content from "@/data/content.json";
+import { AskButton } from "@/components/Widget";
+import { ArrowUpRight, BookOpen } from "lucide-react";
+export default function Learn() {
+  return (
+    <Shell active="My learning" title="My learning / Digital Foundations">
+      <div className="page-heading">
+        <div>
+          <div className="eyebrow">MODULE 2 · DIGITAL FOUNDATIONS</div>
+          <h1>
+            Finding your way <em>online.</em>
+          </h1>
+          <p>A few simple tools. A little more confidence.</p>
+        </div>
+        <span className="date-pill">
+          <BookOpen size={15} />8 min read
+        </span>
+      </div>
+      <div
+        data-mela-context
+        data-course-id="digital-foundations"
+        data-course-title="Digital Foundations"
+        data-module-title="Finding your way online"
+        data-lesson-title="Finding your way online"
+        className="prose"
+      >
+        {content.map((s) => (
+          <section
+            className="content-card section-anchor"
+            key={s.id}
+            id={s.id}
+            lang={s.language}
+            data-mela-section
+          >
+            <span className="tag">
+              {s.language === "am" ? "አማርኛ" : "ENGLISH"}
+            </span>
+            <h2>{s.title}</h2>
+            <p data-mela-content>{s.content}</p>
+            <AskButton className="button secondary" question={s.title}>
+              {s.language === "am" ? "ስለዚህ ይጠይቁ" : "Ask about this"}
+              <ArrowUpRight size={16} />
+            </AskButton>
+          </section>
+        ))}
+      </div>
+      <div className="notice">
+        Demo course materials. English and Amharic content should be reviewed
+        with a fluent co-designer before real-world use.
+      </div>
+    </Shell>
+  );
+}
