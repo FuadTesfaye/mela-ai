@@ -1,4 +1,5 @@
 import type {Language} from "../types";
+import {smsText} from "./transports";
 import {db} from "../database/db";
 import {answerQuestion} from "../ai/answer";
 import {createTicket} from "../support/tickets";
@@ -12,4 +13,4 @@ export async function handleCommand(channel:"telegram"|"sms",destination:string,
  if(["help","/help"].includes(lower))return language==="am"?"የሰው እርዳታ ለመጠየቅ CONFIRMHELP ይላኩ። የዚህን ቻናል መለያ ከጥያቄዎ ጋር እናስቀምጣለን። ውይይትዎ አይጋራም።":"Reply CONFIRMHELP to queue a tutor request. We’ll store your channel ID to deliver replies. Your conversation will not be shared.";
  if(["confirmhelp","/confirmhelp"].includes(lower)){const ticket=await createTicket({language,consent:true,conversation:[]});await db().query("INSERT INTO channel_tickets(ticket_id,channel,destination) VALUES($1,$2,$3)",[ticket.id,channel,destination]);return `Tutor request queued: ${ticket.id}. Replies arrive here when a tutor responds.`;}
  if(channel==="telegram"&&/^\/alerts(?:\s|$)/i.test(normalized)){await subscribe({channel,destination,language,keywords:normalized.slice(7).trim().slice(0,200)},true);return "Subscribed to demo job alerts. /stop unsubscribes. No active vacancies are promised.";}
- const answer=await answerQuestion({question:normalized,language,context:{pageType:/job|interview|ሥራ|ስራ/.test(lower)?"jobs":"unknown",sections:[]},cloudConsent:false});const base=process.env.APP_URL||"http://localhost:3000";const sources=answer.citations.map(c=>c.title+": "+new URL(c.url,base).href).join("\n");return answer.answer+(sources?"\n\n"+sources:"");}
+ const answer=await answerQuestion({question:normalized,language,context:{pageType:/job|interview|ሥራ|ስራ/.test(lower)?"jobs":"unknown",sections:[]},cloudConsent:false});const base=process.env.APP_URL||"http://localhost:3000";const sources=answer.citations.map(c=>c.title+": "+new URL(c.url,base).href).join("\n");if(channel==="sms"&&answer.citations[0]){const link=new URL(answer.citations[0].url,base).href;const budget=Math.max(0,159-Array.from(link).length);return Array.from(answer.answer).slice(0,budget).join("")+" "+link;}return answer.answer+(sources?"\n\n"+sources:"");}
