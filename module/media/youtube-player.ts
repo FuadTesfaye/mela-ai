@@ -2,6 +2,7 @@ export interface YouTubePlayer {
   getCurrentTime(): number;
   getDuration(): number;
   pauseVideo(): void;
+  playVideo(): void;
   getPlayerState(): number;
   getPlaybackRate(): number;
   seekTo(seconds: number, allowSeekAhead: boolean): void;

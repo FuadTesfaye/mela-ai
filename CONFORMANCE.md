@@ -57,3 +57,9 @@ The learner entry points use the imported Savanna capture. English training cont
 YouTube is loaded only on learner action. Gemini transcription requires separate consent and produces explicitly unreviewed English text; saved public transcripts can be restored locally. Live Gemini, captions quality, YouTube controls and signing synchronization have not been browser-verified here. The EthSL square remains unavailable until a reviewed clip is bound to the exact lesson video. The optional avatar remains a separate presentation feature.
 
 Browser axe tests target the added assistant; a full audit of the imported host is still required.
+
+### Video explanations and signing review
+
+Structured explanations include source references and text equivalents for locally rendered diagrams. Video timestamps are captured at question time; ordinary playback ticks do not cancel responses. Cloud video/frame analysis requires explicit consent. Saved explanations are opt-in browser storage with a removal control; offline access does not include video playback or a local generative model.
+
+EthSL recordings use a private upload and human review lifecycle, with approved-only learner playback and an enlargement control. Review declarations are not proof of linguistic validation. No fluent signer session, real recording, camera synchronization, cross-browser media playback, NVDA/TalkBack, or live Gemini video assessment has been completed in this environment. A fluent co-designer must review meaning, facial expression, signing space, coverage and timing before publication. Generic avatar motion is never presented as sign language.

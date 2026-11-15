@@ -12,3 +12,5 @@ public/avatar-view.js
 public/openapi.yaml
 public/savanna-integration.js
 public/course-media.js
+
+data-runtime/

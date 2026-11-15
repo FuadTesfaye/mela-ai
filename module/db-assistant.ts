@@ -380,6 +380,72 @@ class DBAssistant extends HTMLElement {
       document.createTextNode("Include on-screen visuals (Gemini)"),
     );
     learning.append(visualLabel);
+    const saved = el("button", "Saved explanations");
+    saved.type = "button";
+    saved.onclick = () => {
+      const dialog = el("dialog");
+      const close = el("button", "Close saved explanations");
+      close.type = "button";
+      close.onclick = () => dialog.close();
+      dialog.append(el("h3", "Saved on this device"), close);
+      let count = 0;
+      try {
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (!key?.startsWith("mela-explanation:")) continue;
+          const answer = JSON.parse(
+            localStorage.getItem(key) || "null",
+          ) as Answer;
+          if (
+            !answer ||
+            typeof answer.answer !== "string" ||
+            !Array.isArray(answer.citations)
+          )
+            continue;
+          count++;
+          const show = el(
+            "button",
+            (answer.summary || answer.answer).slice(0, 110),
+          );
+          show.type = "button";
+          show.onclick = () => {
+            this.message("assistant", answer.answer, false, answer);
+            dialog.close();
+          };
+          dialog.append(show);
+        }
+      } catch {
+        dialog.append(el("p", "Browser storage is unavailable."));
+      }
+      if (!count)
+        dialog.append(el("p", "Save an answer to read it here offline."));
+      const clear = el("button", "Remove saved explanations");
+      clear.type = "button";
+      clear.onclick = () => {
+        try {
+          const keys = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key?.startsWith("mela-explanation:")) keys.push(key);
+          }
+          for (const key of keys) localStorage.removeItem(key);
+        } catch {}
+        dialog.close();
+      };
+      dialog.append(clear);
+      dialog.addEventListener(
+        "close",
+        () => {
+          dialog.remove();
+          saved.focus();
+        },
+        { once: true },
+      );
+      this.root.append(dialog);
+      dialog.showModal();
+      close.focus();
+    };
+    learning.append(saved);
     this.cloud.onchange = () => {
       if (this.visual) {
         this.visual.disabled = !this.cloud.checked;
@@ -581,6 +647,7 @@ class DBAssistant extends HTMLElement {
             mode,
             scope: this.scope,
             language: this.locale,
+            visual: allowVisual,
             course: snapshot.courseId,
             video: snapshot.video
               ? {

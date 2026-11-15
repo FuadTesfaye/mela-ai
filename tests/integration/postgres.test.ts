@@ -164,3 +164,76 @@ test(
     }
   },
 );
+test(
+  "PostgreSQL signing publication hides drafts and replaces approval atomically",
+  { skip: !process.env.TEST_DATABASE_URL },
+  async () => {
+    process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
+    const { createSigningDraft, reviewSigning, approvedSigning } = await import(
+      "../../lib/signing/service"
+    );
+    const created: string[] = [];
+    try {
+      const make = async () => {
+        const row = await createSigningDraft("programming-for-beginners", {
+          videoUrl: "https://youtu.be/bJzb-RuUcMU",
+          interpreter: "Test signer",
+          publicationConsent: true,
+          sourceDuration: 120,
+          duration: 120,
+          offsetSeconds: 0,
+        });
+        created.push(String(row.id));
+        await db().query(
+          "UPDATE signing_tracks SET file_path='test.webm' WHERE id=$1",
+          [row.id],
+        );
+        return String(row.id);
+      };
+      const id = await make();
+      await reviewSigning(id, { action: "submit" });
+      const approve = {
+        action: "approve" as const,
+        reviewer: "Test fluent reviewer",
+        offsetSeconds: 0,
+        checks: {
+          fluentEthSL: true as const,
+          accurateMeaning: true as const,
+          visibleHandsAndFace: true as const,
+          synchronized: true as const,
+          completeCoverage: true as const,
+        },
+      };
+      await reviewSigning(id, approve);
+      assert.match(
+        (await approvedSigning("programming-for-beginners", "bJzb-RuUcMU"))!
+          .url,
+        new RegExp(id),
+      );
+      const replacement = await make();
+      await reviewSigning(replacement, { action: "submit" });
+      await reviewSigning(replacement, approve);
+      assert.equal(
+        (
+          await db().query("SELECT status FROM signing_tracks WHERE id=$1", [
+            id,
+          ])
+        ).rows[0].status,
+        "archived",
+      );
+      await reviewSigning(replacement, {
+        action: "archive",
+        reviewer: "Test fluent reviewer",
+      });
+      assert.equal(
+        await approvedSigning("programming-for-beginners", "bJzb-RuUcMU"),
+        null,
+      );
+    } finally {
+      await db().query("DELETE FROM signing_tracks WHERE id=ANY($1::uuid[])", [
+        created,
+      ]);
+      await closeDb();
+    }
+  },
+);

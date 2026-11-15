@@ -178,7 +178,7 @@ class CourseMedia extends HTMLElement {
   private async configuration() {
     try {
       const response = await fetch(
-        `/api/v1/lessons/${encodeURIComponent(this.getAttribute("lesson-id") || "va-future")}/media`,
+        `/api/v1/lessons/${encodeURIComponent(this.getAttribute("lesson-id") || "va-future")}/media${this.frame ? "?videoId=" + youtubeId(this.videoUrl) : ""}`,
       );
       if (!response.ok) return;
       const config = await response.json();
@@ -260,6 +260,7 @@ class CourseMedia extends HTMLElement {
     this.lastTick = -1;
     this.publishVideo();
     this.showSigning();
+    void this.configuration();
     this.restoreTranscript();
     this.status.textContent =
       "Video loaded. You can now generate its English transcript.";
@@ -277,6 +278,7 @@ class CourseMedia extends HTMLElement {
   private showSigning() {
     const box = this.root.querySelector(".sign-box")!;
     box.querySelector("video")?.remove();
+    box.querySelector(".expand-sign")?.remove();
     box.querySelector(".sign-placeholder")?.remove();
     if (this.sign?.videoId === youtubeId(this.videoUrl)) {
       const video = make("video");
@@ -289,6 +291,29 @@ class CourseMedia extends HTMLElement {
         `Validated EthSL interpretation, reviewed by ${this.sign.reviewer}`,
       );
       box.append(video);
+      const expand = make("button", "Enlarge signing", "expand-sign");
+      expand.style.cssText =
+        "position:absolute;bottom:0;right:0;padding:2px 5px;font-size:10px";
+      expand.onclick = () => {
+        const dialog = make("dialog");
+        dialog.style.cssText =
+          "width:min(640px,95vw);padding:12px;border:2px solid #006b89;border-radius:8px";
+        const close = make("button", "Close enlarged signing");
+        video.style.cssText = "width:100%;height:auto;max-height:75vh";
+        dialog.append(close, video);
+        this.root.append(dialog);
+        const restore = () => {
+          video.style.cssText = "";
+          box.append(video);
+          dialog.remove();
+          expand.focus();
+        };
+        dialog.addEventListener("close", restore, { once: true });
+        close.onclick = () => dialog.close();
+        dialog.showModal();
+        close.focus();
+      };
+      box.append(expand);
       this.signVideo = video;
       video.onerror = () => {
         video.remove();

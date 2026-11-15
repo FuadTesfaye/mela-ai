@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: MELA AI API
-  version: 0.2.0
+  version: 0.3.0
   description: Accessible learning companion. One public demo catalogue; bearer-protected
     learner tickets and cookie-protected tutor tools. Browser origins must be allowlisted.
     Errors expose no credentials or database details.
@@ -1726,6 +1726,153 @@ paths:
                         type: number
         '404':
           description: Unknown lesson
+  /api/v1/lessons/{id}/signing:
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    get:
+      summary: List private lesson signing tracks
+      responses:
+        '200':
+          description: Success
+        '401':
+          description: Tutor authentication required
+        '400':
+          description: Invalid fields
+        '409':
+          description: Invalid lifecycle transition
+        '503':
+          description: Database or storage unavailable
+      security:
+      - tutorSession: []
+    post:
+      summary: Create a private signing draft
+      responses:
+        '200':
+          description: Success
+        '401':
+          description: Tutor authentication required
+        '400':
+          description: Invalid fields
+        '409':
+          description: Invalid lifecycle transition
+        '503':
+          description: Database or storage unavailable
+      security:
+      - tutorSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SigningDraft'
+  /api/v1/signing/{id}:
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    get:
+      summary: Inspect a private signing draft
+      responses:
+        '200':
+          description: Success
+        '401':
+          description: Tutor authentication required
+        '400':
+          description: Invalid fields
+        '409':
+          description: Invalid lifecycle transition
+        '503':
+          description: Database or storage unavailable
+      security:
+      - tutorSession: []
+    patch:
+      summary: Submit, review or unpublish an interpretation
+      responses:
+        '200':
+          description: Success
+        '401':
+          description: Tutor authentication required
+        '400':
+          description: Invalid fields
+        '409':
+          description: Invalid lifecycle transition
+        '503':
+          description: Database or storage unavailable
+      security:
+      - tutorSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SigningReview'
+  /api/v1/signing/{id}/media:
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    get:
+      summary: Stream a reviewed signing video; unpublished media requires tutor authentication
+      responses:
+        '200':
+          description: Success
+        '401':
+          description: Tutor authentication required
+        '400':
+          description: Invalid fields
+        '409':
+          description: Invalid lifecycle transition
+        '503':
+          description: Database or storage unavailable
+        '206':
+          description: Partial MP4 or WebM bytes with Content-Range
+        '416':
+          description: Unsatisfiable range
+        '404':
+          description: Missing or private video
+      parameters:
+      - name: Range
+        in: header
+        schema:
+          type: string
+    put:
+      summary: Stream MP4/WebM to private storage, at most 128 MiB
+      responses:
+        '200':
+          description: Success
+        '401':
+          description: Tutor authentication required
+        '400':
+          description: Invalid fields
+        '409':
+          description: Invalid lifecycle transition
+        '503':
+          description: Database or storage unavailable
+        '413':
+          description: Over 128 MiB
+        '415':
+          description: Unsupported media type
+      security:
+      - tutorSession: []
+      requestBody:
+        required: true
+        content:
+          video/mp4:
+            schema:
+              type: string
+              format: binary
+          video/webm:
+            schema:
+              type: string
+              format: binary
 components:
   securitySchemes:
     tutorSession:
@@ -1783,6 +1930,12 @@ components:
             type: string
             maxLength: 80
           maxItems: 30
+        start:
+          type: number
+          minimum: 0
+        end:
+          type: number
+          minimum: 0
       required:
       - id
       - title
@@ -1815,6 +1968,8 @@ components:
           items:
             $ref: '#/components/schemas/Section'
           maxItems: 30
+        video:
+          $ref: '#/components/schemas/VideoSnapshot'
       required:
       - pageType
       - sections
@@ -1859,6 +2014,26 @@ components:
         simple:
           type: boolean
           default: false
+        scope:
+          type: string
+          enum:
+          - lesson
+          - wholeVideo
+          - moment
+          default: lesson
+        includeVisualContext:
+          type: boolean
+          default: false
+          description: Requires cloudConsent, moment scope and Gemini; sends the actual
+            30-second public video segment.
+        explanationMode:
+          type: string
+          enum:
+          - auto
+          - simple
+          - example
+          - steps
+          - diagram
       required:
       - question
     Answer:
@@ -1871,7 +2046,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Citation'
-          maxItems: 3
+          maxItems: 4
         provider:
           type: string
           enum:
@@ -1890,6 +2065,13 @@ components:
         notice:
           type: string
           description: Explains an AI failure when source text is shown instead.
+        summary:
+          type: string
+        blocks:
+          type: array
+          maxItems: 6
+          items:
+            $ref: '#/components/schemas/ExplanationBlock'
       required:
       - answer
       - citations
@@ -2156,3 +2338,175 @@ components:
               text:
                 type: string
                 maxLength: 1500
+    VideoSnapshot:
+      type: object
+      required:
+      - videoId
+      - url
+      - title
+      - currentTime
+      - duration
+      properties:
+        videoId:
+          type: string
+          pattern: ^[-_a-zA-Z0-9]{11}$
+        url:
+          type: string
+        title:
+          type: string
+        currentTime:
+          type: number
+          minimum: 0
+        duration:
+          type: number
+          minimum: 0
+        transcriptRevision:
+          type: string
+    ExplanationBlock:
+      type: object
+      description: Bounded structured data rendered locally; never model HTML, SVG
+        or code. Graph IDs must be unique and edge endpoints valid. Every sourceId
+        must reference an answer citation.
+      required:
+      - type
+      - sourceIds
+      properties:
+        type:
+          type: string
+          enum:
+          - paragraph
+          - example
+          - steps
+          - diagram
+        text:
+          type: string
+        items:
+          type: array
+          maxItems: 8
+          items:
+            type: string
+        title:
+          type: string
+        description:
+          type: string
+        nodes:
+          type: array
+          maxItems: 8
+          items:
+            type: object
+            required:
+            - id
+            - label
+            properties:
+              id:
+                type: string
+              label:
+                type: string
+        edges:
+          type: array
+          maxItems: 12
+          items:
+            type: object
+            required:
+            - from
+            - to
+            properties:
+              from:
+                type: string
+              to:
+                type: string
+              label:
+                type: string
+        sourceIds:
+          type: array
+          maxItems: 4
+          items:
+            type: string
+    SigningDraft:
+      type: object
+      required:
+      - videoUrl
+      - interpreter
+      - publicationConsent
+      - sourceDuration
+      - duration
+      properties:
+        videoUrl:
+          type: string
+          format: uri
+        interpreter:
+          type: string
+          minLength: 2
+          maxLength: 150
+        publicationConsent:
+          type: boolean
+          enum:
+          - true
+        sourceDuration:
+          type: number
+          minimum: 0
+          maximum: 14400
+        duration:
+          type: number
+          minimum: 0
+          maximum: 14400
+        offsetSeconds:
+          type: number
+          minimum: -30
+          maximum: 30
+    SigningReview:
+      type: object
+      required:
+      - action
+      description: submit requires an uploaded draft. approve requires a different
+        declared reviewer, complete source coverage, offset, and every human review
+        check true. reject requires reviewer and correction notes. archive unpublishes
+        an approved track. Shared tutor authentication does not independently verify
+        reviewer identity or fluency.
+      properties:
+        action:
+          type: string
+          enum:
+          - submit
+          - approve
+          - reject
+          - archive
+        reviewer:
+          type: string
+          minLength: 2
+        notes:
+          type: string
+          maxLength: 3000
+        offsetSeconds:
+          type: number
+          minimum: -30
+          maximum: 30
+        checks:
+          type: object
+          required:
+          - fluentEthSL
+          - accurateMeaning
+          - visibleHandsAndFace
+          - synchronized
+          - completeCoverage
+          properties:
+            fluentEthSL:
+              type: boolean
+              enum:
+              - true
+            accurateMeaning:
+              type: boolean
+              enum:
+              - true
+            visibleHandsAndFace:
+              type: boolean
+              enum:
+              - true
+            synchronized:
+              type: boolean
+              enum:
+              - true
+            completeCoverage:
+              type: boolean
+              enum:
+              - true

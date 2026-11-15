@@ -12,21 +12,24 @@ Recorded 15 November 2026. This describes the local implementation and observed 
 - The course video box supports English timestamped transcripts, text download, browser-local saved transcript restoration, and transcript-to-chat context. The small EthSL panel can synchronize a reviewed media clip with an exact YouTube video binding. No validated clip was supplied, so signing remains visibly unavailable.
 - PostgreSQL tickets, tutor replies, screenshot review, screen-sharing code, Telegram/text gateways, job alerts, accommodation requests, optional avatar, Compose, CI, OpenAPI and documentation remain included.
 
+- The dedicated Programming for Beginners page uses the selected `bJzb-RuUcMU` video, separate from the offline training. Timestamp-aware question snapshots, four explanation formats, safe local SVG diagrams with text alternatives, explicit saved explanations, and consented actual video-segment analysis are implemented.
+- `/dashboard/signing` supports camera recording and private uploads, separate declared fluent review, approval/rejection/unpublishing, exact video binding, synchronized/enlarged signing playback, byte-range serving and persistent Docker media storage. No real signer recording or live camera session has been validated. Shared tutor authentication cannot independently verify signer/reviewer identities or fluency.
+
 ## Checks completed
 
 | Check                                                                                               | Result                                                                       |
 | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | TypeScript route generation/type checking                                                           | Passed                                                                       |
-| Retrieval/security/Gemini/media unit tests                                                          | 27 passed                                                                    |
-| Bundled widget, original Savanna DOM, module/week context, transcript UI and offline training tests | 13 passed                                                                    |
-| HTTP Route Handler integration tests                                                                | 9 passed                                                                     |
+| Retrieval/security/Gemini/media unit tests                                                          | 35 passed                                                                    |
+| Bundled widget, original Savanna DOM, module/week context, transcript UI and offline training tests | 15 passed                                                                    |
+| HTTP Route Handler integration tests                                                                | 10 passed                                                                    |
 | Production build                                                                                    | Passed with webpack and compiler-API type checking                           |
-| Chat widget size                                                                                    | 33,481 bytes uncompressed; 11,488 gzip bytes; enforced ceiling 500,000 bytes |
-| Separate course-media module                                                                        | 13,194 bytes uncompressed; 5,114 gzip bytes                                  |
-| Separate Savanna integration module                                                                 | 4,548 bytes uncompressed; 1,990 gzip bytes                                   |
+| Chat widget size                                                                                    | 44,828 bytes uncompressed; 15,090 gzip bytes; enforced ceiling 500,000 bytes |
+| Separate course-media module                                                                        | 15,000 bytes uncompressed; 5,689 gzip bytes                                  |
+| Separate Savanna integration module                                                                 | 4,788 bytes uncompressed; 2,047 gzip bytes                                   |
 | Original non-page capture assets                                                                    | All checked Git blob hashes match upstream                                   |
 | Docker Compose configuration                                                                        | Passed `docker compose config --quiet` with temporary validation values      |
-| OpenAPI                                                                                             | YAML parsed; all 153 local references resolved across 18 paths               |
+| OpenAPI                                                                                             | YAML parsed; all 157 local references resolved across 21 paths               |
 | Credential exposure check                                                                           | No supplied-key matches in tracked or public files                           |
 
 Gemini tests use mocked provider responses to exercise the actual request body, private header authentication, consent gate, citation validation, transcript validation and cache. Widget DOM tests run the actual bundled component with the real answer handler; they are not a visual browser test.
@@ -42,8 +45,10 @@ Gemini tests use mocked provider responses to exercise the actual request body, 
 
 ## GitHub checkpoints
 
-The intended remote is the private `FuadTesfaye/mela-ai` repository. Local commits preserve each logical change, with push attempts at three-commit checkpoints. Repository creation and previous pushes failed because GitHub DNS/network access was unavailable; the local CLI also reported invalid credentials.
-
-No successful GitHub write has been verified. Source and history remain local. Restore network/authentication, create the private repository if needed, and push main without force.
+The remote is `git@github.com:FuadTesfaye/mela-ai.git`. Local commits preserve logical changes, with pushes at three-change checkpoints. The latest push of `be279ae` to `main` succeeded on 15 November 2026. Earlier DNS/authentication failures no longer describe the current Git push result. Repository visibility has not been independently verified in this session.
 
 Follow CONFORMANCE.md before claiming production readiness or accessibility conformance. The organiser’s required licence still needs to be supplied.
+
+## Latest validation limits
+
+All 60 executable unit/DOM/API-handler cases pass (35 + 15 + 10). Two PostgreSQL integration cases are included but skipped without `TEST_DATABASE_URL`, including approval replacement and unpublishing. The production build passes. Starting the server remains blocked by the sandbox (`listen EPERM` on port 3000); live browser, camera, Gemini and full signer validation are pending.

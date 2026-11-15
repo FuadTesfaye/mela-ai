@@ -16,6 +16,11 @@ const links = [
   { href: "/support", label: "Human support", Icon: MessageCircle },
   { href: "/jobs", label: "Career space", Icon: BriefcaseBusiness },
   { href: "/dashboard", label: "Tutor workspace", Icon: ShieldCheck },
+  {
+    href: "/dashboard/signing",
+    label: "EthSL signing studio",
+    Icon: ShieldCheck,
+  },
   { href: "/docs", label: "Help & resources", Icon: HelpCircle },
 ];
 export default function Shell({

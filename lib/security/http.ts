@@ -23,10 +23,17 @@ export function cors(request: Request) {
     if (!allowedOrigins().has(origin))
       throw new HttpError(403, "Origin is not allowed.");
     headers.set("Access-Control-Allow-Origin", origin);
-    headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    headers.set(
+      "Access-Control-Expose-Headers",
+      "Content-Range, Accept-Ranges, Content-Length",
+    );
+    headers.set(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization, Range",
+    );
     headers.set(
       "Access-Control-Allow-Methods",
-      "GET, POST, PATCH, DELETE, OPTIONS",
+      "GET, POST, PUT, PATCH, DELETE, OPTIONS",
     );
   }
   return headers;

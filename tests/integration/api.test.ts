@@ -107,3 +107,58 @@ test("cloud provider receives no question without explicit consent", async () =>
     globalThis.fetch = previousFetch;
   }
 });
+test("signing drafts, review and binary uploads require tutor authentication", async () => {
+  const { GET, POST } = await import(
+    "../../app/api/v1/lessons/[id]/signing/route"
+  );
+  const { PATCH } = await import("../../app/api/v1/signing/[id]/route");
+  const { PUT } = await import("../../app/api/v1/signing/[id]/media/route");
+  const params = {
+    params: Promise.resolve({ id: "programming-for-beginners" }),
+  };
+  assert.equal(
+    (
+      await GET(
+        new Request(
+          origin + "/api/v1/lessons/programming-for-beginners/signing",
+        ),
+        params,
+      )
+    ).status,
+    401,
+  );
+  assert.equal(
+    (
+      await POST(
+        request("/api/v1/lessons/programming-for-beginners/signing", {}),
+        params,
+      )
+    ).status,
+    401,
+  );
+  assert.equal(
+    (
+      await PATCH(
+        new Request(origin + "/api/v1/signing/draft", {
+          method: "PATCH",
+          headers: { origin },
+        }),
+        params,
+      )
+    ).status,
+    401,
+  );
+  assert.equal(
+    (
+      await PUT(
+        new Request(origin + "/api/v1/signing/draft/media", {
+          method: "PUT",
+          headers: { origin },
+          body: "data",
+        }),
+        params,
+      )
+    ).status,
+    401,
+  );
+});
