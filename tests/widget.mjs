@@ -345,7 +345,7 @@ test("course player presents English transcript and an honest sign-language squa
     assert.equal(media.shadowRoot.querySelector("iframe"), null);
     assert.match(
       media.shadowRoot.querySelector(".sign-box").textContent,
-      /AI captions.*experimental avatar/,
+      /Captions and visual support/,
     );
     assert.match(
       media.shadowRoot.querySelector(".card").textContent,
@@ -968,7 +968,7 @@ test("learning preview stays available when interpreter configuration is missing
     f.toggle();
     assert.match(
       f.root.querySelector(".sign-status").textContent,
-      /AI captions.*experimental avatar/,
+      /Captions and visual support/,
     );
     assert.equal(f.videos.length, 0);
     fail = true;
@@ -984,7 +984,7 @@ test("learning preview stays available when interpreter configuration is missing
     await wait(10);
     assert.match(
       f.root.querySelector(".sign-status").textContent,
-      /AI captions.*experimental avatar/,
+      /Captions and visual support/,
     );
     assert.equal(f.videos.length, 0);
   } finally {
