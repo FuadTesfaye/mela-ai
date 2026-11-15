@@ -46,6 +46,7 @@ export const askSchema = z.object({
   context: context.default({ pageType: "unknown", sections: [] }),
   cloudConsent: z.boolean().default(false),
   simple: z.boolean().default(false),
+  explanationMode:z.enum(["auto","simple","example","steps","diagram"]).optional(),
   scope: z.enum(["lesson", "wholeVideo", "moment"]).default("lesson"),
   includeVisualContext: z.boolean().default(false),
 });
