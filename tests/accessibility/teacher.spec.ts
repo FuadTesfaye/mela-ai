@@ -348,3 +348,78 @@ test("a late 3D download is not mounted into a hidden panel and is reused when r
   await expect(media(page).locator(".teacher-canvas canvas")).toBeVisible();
   expect(requests).toBe(1);
 });
+
+test("transcript cues drive both hands, silence rests, and seeking restores the same pose", async ({
+  page,
+}) => {
+  await page.route("**/transcripts/9hE5-98ZeCg.json", (route) =>
+    route.fulfill({
+      json: {
+        title: "Synthetic caption gesture fixture",
+        language: "en",
+        videoUrl: "https://www.youtube.com/watch?v=9hE5-98ZeCg",
+        generated: false,
+        cues: [
+          { start: 0, end: 3, text: "Look at the screen" },
+          { start: 4, end: 7, text: "Compare different inputs" },
+          { start: 8, end: 11, text: "Connect them together" },
+        ],
+      },
+    }),
+  );
+  await loadLesson(page);
+  await openTeacher(page);
+  const canvas = media(page).locator(".teacher-canvas canvas");
+  await expect(canvas).toBeVisible();
+  await seek(page, 0.8);
+  await expect(canvas).toHaveAttribute("data-gesture", "point");
+  const initial = {
+    left: await canvas.getAttribute("data-left-hand"),
+    right: await canvas.getAttribute("data-right-hand"),
+  };
+  await seek(page, 1.8);
+  const delta = (a: string | null, b: string | null) =>
+    Math.hypot(
+      ...a!.split(",").map((v, i) => Number(v) - Number(b!.split(",")[i])),
+    );
+  await expect
+    .poll(async () =>
+      delta(await canvas.getAttribute("data-left-hand"), initial.left),
+    )
+    .toBeGreaterThan(0.025);
+  await expect
+    .poll(async () =>
+      delta(await canvas.getAttribute("data-right-hand"), initial.right),
+    )
+    .toBeGreaterThan(0.025);
+  await seek(page, 0.8);
+  await expect(canvas).toHaveAttribute("data-left-hand", initial.left!);
+  await expect(canvas).toHaveAttribute("data-right-hand", initial.right!);
+  await media(page)
+    .getByRole("button", { name: "Play lesson", exact: true })
+    .click();
+  for (const hand of ["left", "right"] as const)
+    await expect
+      .poll(async () =>
+        delta(await canvas.getAttribute(`data-${hand}-hand`), initial[hand]),
+      )
+      .toBeGreaterThan(0.025);
+  await media(page)
+    .getByRole("button", { name: "Pause lesson", exact: true })
+    .click();
+  await page.waitForTimeout(100);
+  const heldLeft = await canvas.getAttribute("data-left-hand"),
+    heldRight = await canvas.getAttribute("data-right-hand");
+  await page.waitForTimeout(150);
+  await expect(canvas).toHaveAttribute("data-left-hand", heldLeft!);
+  await expect(canvas).toHaveAttribute("data-right-hand", heldRight!);
+  await seek(page, 3.5);
+  await expect(canvas).toHaveAttribute("data-gesture", "rest");
+  await expect(media(page).locator(".caption-words")).toHaveText(
+    "No speech at this moment.",
+  );
+  await seek(page, 5);
+  await expect(canvas).toHaveAttribute("data-gesture", "compare");
+  await seek(page, 9);
+  await expect(canvas).toHaveAttribute("data-gesture", "connect");
+});
