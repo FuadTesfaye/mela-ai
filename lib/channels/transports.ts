@@ -48,3 +48,43 @@ export async function deliver(
     ? telegramMessage(destination, text)
     : smsMessage(destination, text);
 }
+
+/** Reserve channel space for at least one source rather than truncating citations away. */
+export function channelAnswer(
+  answer: import("../types").Answer,
+  channel: "telegram" | "sms",
+  base: string,
+) {
+  const citations = answer.citations.map((c) => ({
+    ...c,
+    url: new URL(c.url, base).href,
+  }));
+  if (channel === "sms") {
+    const citation = citations[0];
+    if (!citation) return smsText(answer.answer);
+    const reference =
+      Array.from(citation.url).length <= 120
+        ? citation.url
+        : "Source: " + citation.id.slice(0, 80);
+    const budget = 159 - Array.from(reference).length;
+    return smsText(
+      Array.from(answer.answer.replace(/\s+/g, " "))
+        .slice(0, Math.max(0, budget))
+        .join("") +
+        " " +
+        reference,
+    );
+  }
+  const lines: string[] = [];
+  for (const citation of citations) {
+    const line = citation.title + ": " + citation.url;
+    if (Array.from([...lines, line].join("\n")).length <= 3000)
+      lines.push(line);
+  }
+  const sources = lines.join("\n");
+  const budget = 4000 - Array.from(sources).length - (sources ? 2 : 0);
+  return (
+    Array.from(answer.answer).slice(0, budget).join("") +
+    (sources ? "\n\n" + sources : "")
+  );
+}

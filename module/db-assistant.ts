@@ -93,6 +93,7 @@ class DBAssistant extends HTMLElement {
     this.root.append(style);
     this.launcher = el("button", undefined, "launcher");
     this.launcher.append(el("span", "✦"), document.createTextNode(this.t.open));
+    this.launcher.setAttribute("aria-label", this.t.open);
     this.launcher.setAttribute("aria-expanded", String(this.opened));
     this.launcher.setAttribute("aria-controls", "mela-panel");
     this.launcher.onclick = () => this.open();
@@ -171,6 +172,7 @@ class DBAssistant extends HTMLElement {
     help.onclick = () => this.help();
     const mic = el("button", "◉ " + this.t.mic);
     mic.type = "button";
+    mic.setAttribute("aria-label", this.t.mic);
     mic.onclick = () => this.microphone(mic);
     const avatar = el("button", "✦");
     avatar.type = "button";

@@ -4,10 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "npm run widget:build && next dev --hostname 0.0.0.0",
-    "build": "npm run widget:build && next build",
+    "build": "npm run widget:build && next build --webpack",
     "start": "next start --hostname 0.0.0.0",
     "widget:build": "node scripts/build-widget.mjs",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "test": "node --import tsx tests/unit/index.ts",
     "test:integration": "node --import tsx tests/integration/api.test.ts",
     "test:e2e": "playwright test",
@@ -44,5 +44,8 @@
   },
   "overrides": {
     "postcss": "8.5.31"
+  },
+  "engines": {
+    "node": ">=22.14.0"
   }
 }

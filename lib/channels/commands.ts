@@ -1,5 +1,5 @@
 import type { Language } from "../types";
-import { smsText } from "./transports";
+import { channelAnswer } from "./transports";
 import { db } from "../database/db";
 import { answerQuestion } from "../ai/answer";
 import { createTicket } from "../support/tickets";
@@ -80,13 +80,5 @@ export async function handleCommand(
     cloudConsent: false,
   });
   const base = process.env.APP_URL || "http://localhost:3000";
-  const sources = answer.citations
-    .map((c) => c.title + ": " + new URL(c.url, base).href)
-    .join("\n");
-  if (channel === "sms" && answer.citations[0]) {
-    const link = new URL(answer.citations[0].url, base).href;
-    const budget = Math.max(0, 159 - Array.from(link).length);
-    return Array.from(answer.answer).slice(0, budget).join("") + " " + link;
-  }
-  return answer.answer + (sources ? "\n\n" + sources : "");
+  return channelAnswer(answer, channel, base);
 }

@@ -1537,3 +1537,7 @@ button:disabled {
     font-size: 29px;
   }
 }
+
+.sidebar {
+  overflow-y: auto;
+}

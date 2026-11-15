@@ -9,7 +9,7 @@ import {
 } from "../../lib/security/auth";
 import { askSchema, section } from "../../lib/security/schemas";
 import { validateScreenshot } from "../../lib/support/tickets";
-import { smsText } from "../../lib/channels/transports";
+import { smsText, channelAnswer } from "../../lib/channels/transports";
 import { validateGenerated } from "../../lib/ai/answer";
 import { webhookUrl } from "../../lib/security/webhooks";
 process.env.SESSION_SECRET = "test-session-secret-with-at-least-32-characters";
@@ -105,4 +105,27 @@ test("hash comparisons and webhook host restrictions", () => {
     webhookUrl("https://hooks.example.com/events").hostname,
     "hooks.example.com",
   );
+});
+
+test("channel answer formatting reserves room for source citations", () => {
+  const answer = {
+    answer: "Detailed lesson text. ".repeat(1000),
+    provider: "none" as const,
+    matched: true,
+    actions: [],
+    citations: [
+      {
+        id: "lesson",
+        title: "Lesson",
+        url: "/learn#lesson",
+        excerpt: "source",
+      },
+    ],
+  };
+  const telegram = channelAnswer(answer, "telegram", "https://mela.example");
+  assert.ok(Array.from(telegram).length <= 4000);
+  assert.ok(telegram.endsWith("https://mela.example/learn#lesson"));
+  const sms = channelAnswer(answer, "sms", "https://mela.example");
+  assert.ok(Array.from(sms).length <= 160);
+  assert.ok(sms.endsWith("https://mela.example/learn#lesson"));
 });

@@ -1,4 +1,6 @@
-import { test } from "node:test";
+import { test, after } from "node:test";
+import { closeDb } from "../../lib/database/db";
+after(() => closeDb());
 import assert from "node:assert/strict";
 import { POST as ask } from "../../app/api/v1/ask/route";
 import {
