@@ -1,0 +1,99 @@
+x-app-env: &app-env
+  DATABASE_URL: postgres://mela:${POSTGRES_PASSWORD:-mela-local-only}@db:5432/mela
+  APP_URL: ${APP_URL:-http://localhost:3000}
+  ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:4173}
+  ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env (12+ characters)}
+  SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET in .env (32+ characters)}
+  AI_PROVIDER: ${AI_PROVIDER:-none}
+  OLLAMA_URL: ${OLLAMA_URL:-http://host.docker.internal:11434}
+  OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2}
+  CLOUD_AI_URL: ${CLOUD_AI_URL:-}
+  CLOUD_AI_KEY: ${CLOUD_AI_KEY:-}
+  CLOUD_AI_MODEL: ${CLOUD_AI_MODEL:-}
+  TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+  SMS_API_URL: ${SMS_API_URL:-}
+  SMS_API_KEY: ${SMS_API_KEY:-}
+  SMS_INBOUND_SECRET: ${SMS_INBOUND_SECRET:-}
+  WEBHOOK_ALLOWED_HOSTS: ${WEBHOOK_ALLOWED_HOSTS:-}
+  RETENTION_DAYS: ${RETENTION_DAYS:-30}
+  STUN_URL: ${STUN_URL:-}
+  TURN_URL: ${TURN_URL:-}
+  TURN_USERNAME: ${TURN_USERNAME:-}
+  TURN_CREDENTIAL: ${TURN_CREDENTIAL:-}
+services:
+  db:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_USER: mela
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mela-local-only}
+      POSTGRES_DB: mela
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - mela-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mela -d mela"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    restart: unless-stopped
+  db-init:
+    build:
+      context: .
+      target: tools
+    environment: *app-env
+    command: ["sh", "-c", "npm run db:migrate && npm run db:seed"]
+    depends_on:
+      db:
+        condition: service_healthy
+  web:
+    build:
+      context: .
+      target: web
+    environment: *app-env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/v1/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+  telegram-worker:
+    profiles: ["telegram"]
+    build:
+      context: .
+      target: tools
+    environment: *app-env
+    command: ["npm", "run", "worker:telegram"]
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+  alert-worker:
+    profiles: ["channels"]
+    build:
+      context: .
+      target: tools
+    environment: *app-env
+    command: ["npm", "run", "worker:alerts"]
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+  turn:
+    profiles: ["turn"]
+    image: coturn/coturn:4.6.3
+    command: ["-n", "--log-file=stdout", "--listening-port=3478", "--min-port=49160", "--max-port=49200", "--realm=mela", "--lt-cred-mech", "--user=${TURN_USERNAME:-mela}:${TURN_CREDENTIAL:-set-a-secret}", "--no-cli", "--no-multicast-peers", "--no-loopback-peers"]
+    ports:
+      - "3478:3478/tcp"
+      - "3478:3478/udp"
+      - "49160-49200:49160-49200/udp"
+    restart: unless-stopped
+volumes:
+  mela-data:
