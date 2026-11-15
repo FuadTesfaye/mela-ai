@@ -7,6 +7,16 @@ export interface Section {
   language?: Language;
   courseId?: string;
   keywords?: string[];
+  start?: number;
+  end?: number;
+}
+export interface VideoSnapshot {
+  videoId: string;
+  url: string;
+  title: string;
+  currentTime: number;
+  duration: number;
+  transcriptRevision?: string;
 }
 export interface LearningContext {
   pageType: "dashboard" | "lesson" | "jobs" | "unknown";
@@ -15,6 +25,7 @@ export interface LearningContext {
   moduleTitle?: string;
   lessonTitle?: string;
   sections: Section[];
+  video?: VideoSnapshot;
 }
 export interface Citation {
   id: string;

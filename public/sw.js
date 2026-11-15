@@ -1,5 +1,5 @@
 /* Offline shell for this MELA-hosted Savanna demo, never registered on unrelated hosts. */
-const CACHE = "mela-public-v2-savanna";
+const CACHE = "mela-public-v3-programming";
 const PAGES = [
   "/jobs",
   "/support",
@@ -13,6 +13,7 @@ const PAGES = [
   "/savanna/pages/homepage-v1-self-paced.html",
   "/savanna/pages/concept-with-navigation.html",
   "/savanna/pages/offline-first-localized-ai.html",
+  "/savanna/pages/programming-for-beginners.html",
 ];
 const ASSETS = [
   "/db-assistant.js",

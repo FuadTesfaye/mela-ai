@@ -1,6 +1,12 @@
 import { styles } from "./styles";
 import { strings } from "./i18n/strings";
-import type { Answer, Language, LearningContext } from "../lib/types";
+import { videoEvidence, type VideoCue } from "../lib/media/video-context";
+import type {
+  Answer,
+  Language,
+  LearningContext,
+  VideoSnapshot,
+} from "../lib/types";
 import { detectContext } from "./context/savanna-adapter";
 import { observeContext } from "./context/context-observer";
 import { loadKnowledge, offlineAnswer } from "./knowledge/offline-search";
@@ -16,6 +22,109 @@ const el = <K extends keyof HTMLElementTagNameMap>(
 };
 class DBAssistant extends HTMLElement {
   private root!: ShadowRoot;
+  private video?: VideoSnapshot;
+  private videoCues: VideoCue[] = [];
+  private scope: "lesson" | "wholeVideo" | "moment" = "lesson";
+  private mediaSource(event: Event) {
+    return (
+      event.target instanceof HTMLElement &&
+      event.target.tagName === "MELA-COURSE-MEDIA" &&
+      !!event.target.closest("main,article")
+    );
+  }
+  private readVideo(value: unknown): VideoSnapshot | undefined {
+    if (!value || typeof value !== "object") return;
+    const v = value as VideoSnapshot;
+    try {
+      const url = new URL(v.url);
+      if (
+        url.origin !== "https://www.youtube.com" ||
+        url.searchParams.get("v") !== v.videoId ||
+        !/^[-_a-zA-Z0-9]{11}$/.test(v.videoId) ||
+        !Number.isFinite(v.currentTime) ||
+        v.currentTime < 0 ||
+        v.currentTime > 14400
+      )
+        return;
+      return {
+        ...v,
+        title: String(v.title || "Video").slice(0, 200),
+        duration: Math.min(14400, Math.max(0, Number(v.duration) || 0)),
+      };
+    } catch {
+      return;
+    }
+  }
+  private videoEvent = (event: Event) => {
+    if (!this.mediaSource(event)) return;
+    const value = this.readVideo((event as CustomEvent).detail);
+    if (!value) return;
+    const changed = this.video?.videoId !== value.videoId;
+    if (changed) {
+      this.videoCues = [];
+      this.version++;
+      this.abort?.abort();
+      this.scope = "lesson";
+    }
+    this.video = value;
+    this.updateVideoLabel();
+  };
+  private transcriptEvent = (event: Event) => {
+    if (!this.mediaSource(event)) return;
+    const detail = (event as CustomEvent).detail;
+    const value = this.readVideo(detail?.video);
+    if (!value || !Array.isArray(detail.cues) || detail.cues.length > 240)
+      return;
+    const valid = detail.cues.every(
+      (c: VideoCue) =>
+        typeof c.text === "string" &&
+        c.text.length <= 1500 &&
+        Number.isFinite(c.start) &&
+        Number.isFinite(c.end) &&
+        c.start >= 0 &&
+        c.end > c.start,
+    );
+    if (!valid) return;
+    if (this.video?.transcriptRevision !== value.transcriptRevision) {
+      this.version++;
+      this.abort?.abort();
+    }
+    if (!this.video || this.video.videoId !== value.videoId)
+      this.scope = "wholeVideo";
+    this.video = value;
+    this.videoCues = detail.cues;
+    this.context = detectContext(this.includePublicPage);
+    this.updateVideoLabel();
+  };
+  private momentEvent = (event: Event) => {
+    if (!this.mediaSource(event)) return;
+    if (this.busy) {
+      this.setStatus(
+        "Please wait for the current explanation, then try this moment again.",
+      );
+      return;
+    }
+    const detail = (event as CustomEvent).detail;
+    const value = this.readVideo(detail?.video);
+    if (!value) return;
+    this.video = value;
+    this.scope = "moment";
+    this.updateVideoLabel();
+    this.open();
+    this.input.value = "Explain this moment in the video.";
+    void this.ask();
+  };
+  private updateVideoLabel() {
+    const target = this.root?.querySelector(".video-time");
+    if (target)
+      target.textContent = this.video
+        ? `Video · ${Math.floor(this.video.currentTime / 60)}:${String(Math.floor(this.video.currentTime % 60)).padStart(2, "0")}`
+        : "Lesson context";
+    const select =
+      this.root?.querySelector<HTMLSelectElement>(".context-scope");
+    if (select) select.value = this.scope;
+  }
+
   private locale: Language = "en";
   private opened = false;
   private busy = false;
@@ -69,6 +178,7 @@ class DBAssistant extends HTMLElement {
     this.render();
     this.stopObserving = observeContext(
       (context) => {
+        if (JSON.stringify(context) === JSON.stringify(this.context)) return;
         this.context = context;
         this.version++;
         this.abort?.abort();
@@ -78,6 +188,9 @@ class DBAssistant extends HTMLElement {
       () => detectContext(this.includePublicPage),
     );
     window.addEventListener("mela:open", this.openEvent);
+    document.addEventListener("mela:video-state", this.videoEvent);
+    document.addEventListener("mela:transcript-ready", this.transcriptEvent);
+    document.addEventListener("mela:explain-moment", this.momentEvent);
     this.knowledgeReady = loadKnowledge(
       this.getAttribute("content") || "/content.json",
     ).catch(() => {});
@@ -85,6 +198,9 @@ class DBAssistant extends HTMLElement {
   disconnectedCallback() {
     this.stopObserving?.();
     window.removeEventListener("mela:open", this.openEvent);
+    document.removeEventListener("mela:video-state", this.videoEvent);
+    document.removeEventListener("mela:transcript-ready", this.transcriptEvent);
+    document.removeEventListener("mela:explain-moment", this.momentEvent);
     this.abort?.abort();
     clearInterval(this.ticketTimer);
     this.recognition?.stop();
@@ -215,7 +331,31 @@ class DBAssistant extends HTMLElement {
       e.preventDefault();
       void this.ask();
     };
-    this.panel.append(header, toolbar, this.messages, this.status, composer);
+    const learning = el("div", undefined, "learning-controls");
+    const select = el("select", undefined, "context-scope");
+    select.setAttribute("aria-label", "Question context");
+    for (const [value, label] of [
+      ["lesson", "Lesson"],
+      ["wholeVideo", "Whole video"],
+      ["moment", "This moment"],
+    ]) {
+      const option = el("option", label);
+      option.value = value;
+      select.append(option);
+    }
+    select.value = this.scope;
+    select.onchange = () => {
+      this.scope = select.value as typeof this.scope;
+    };
+    learning.append(select, el("span", undefined, "video-time"));
+    this.panel.append(
+      header,
+      toolbar,
+      learning,
+      this.messages,
+      this.status,
+      composer,
+    );
     this.root.append(this.launcher, this.panel);
     this.message("assistant", this.t.welcome, false);
     for (const message of this.history)
@@ -227,6 +367,7 @@ class DBAssistant extends HTMLElement {
         message.question,
       );
     this.updateContext();
+    this.updateVideoLabel();
     if (this.opened) this.open();
     if (this.ticket) this.showTicket();
   }
@@ -319,7 +460,7 @@ class DBAssistant extends HTMLElement {
       const listen = el("button", this.t.listen);
       listen.onclick = () => this.listen(text);
       const stop = el("button", this.t.stop);
-      stop.onclick = () => window.window.speechSynthesis?.cancel();
+      stop.onclick = () => window.speechSynthesis?.cancel();
       actions.append(listen, stop);
       if (answer?.matched) {
         const simplify = el("button", this.t.simple);
@@ -343,6 +484,17 @@ class DBAssistant extends HTMLElement {
       /^(i.d like to talk to a person|human help|የሰው እርዳታ)$/i.test(question)
     ) {
       this.help();
+      return;
+    }
+    const snapshot = videoEvidence(
+      { ...this.context, video: this.video ? { ...this.video } : undefined },
+      this.videoCues,
+      this.scope,
+    );
+    if (this.scope !== "lesson" && !snapshot.sections.length) {
+      this.setStatus(
+        "Generate or restore this video's English transcript first.",
+      );
       return;
     }
     this.input.value = "";
@@ -369,7 +521,8 @@ class DBAssistant extends HTMLElement {
           body: JSON.stringify({
             question,
             language: this.locale,
-            context: this.context,
+            context: snapshot,
+            scope: this.scope,
             cloudConsent: this.cloud.checked,
             simple,
           }),
@@ -381,12 +534,7 @@ class DBAssistant extends HTMLElement {
       } catch {
         if (version !== this.version) return;
         await this.knowledgeReady;
-        answer = await offlineAnswer(
-          question,
-          this.locale,
-          this.context,
-          simple,
-        );
+        answer = await offlineAnswer(question, this.locale, snapshot, simple);
         this.setStatus(this.t.offline);
       }
       if (version === this.version)

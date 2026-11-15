@@ -19,6 +19,8 @@ export const section = z.object({
   language: language.optional(),
   courseId: z.string().max(100).optional(),
   keywords: z.array(z.string().max(80)).max(30).optional(),
+  start: z.number().min(0).max(14400).optional(),
+  end: z.number().min(0).max(14400).optional(),
 });
 export const context = z.object({
   pageType: z.enum(["dashboard", "lesson", "jobs", "unknown"]),
@@ -27,6 +29,16 @@ export const context = z.object({
   moduleTitle: z.string().max(300).optional(),
   lessonTitle: z.string().max(300).optional(),
   sections: z.array(section).max(30),
+  video: z
+    .object({
+      videoId: z.string().regex(/^[-_a-zA-Z0-9]{11}$/),
+      url: safeUrl,
+      title: z.string().max(200),
+      currentTime: z.number().min(0).max(14400),
+      duration: z.number().min(0).max(14400),
+      transcriptRevision: z.string().max(100).optional(),
+    })
+    .optional(),
 });
 export const askSchema = z.object({
   question: z.string().trim().min(1).max(2000),
@@ -34,6 +46,8 @@ export const askSchema = z.object({
   context: context.default({ pageType: "unknown", sections: [] }),
   cloudConsent: z.boolean().default(false),
   simple: z.boolean().default(false),
+  scope: z.enum(["lesson", "wholeVideo", "moment"]).default("lesson"),
+  includeVisualContext: z.boolean().default(false),
 });
 export const ticketSchema = z.object({
   language: language.default("en"),

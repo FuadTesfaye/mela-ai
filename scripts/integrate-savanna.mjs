@@ -1,3 +1,4 @@
+await import("./build-programming.mjs");
 await import("./build-training.mjs");
 import { readFile, writeFile } from "node:fs/promises";
 const pages = [
@@ -5,6 +6,7 @@ const pages = [
   "homepage-v1-self-paced.html",
   "concept-with-navigation.html",
   "offline-first-localized-ai.html",
+  "programming-for-beginners.html",
 ];
 for (const page of pages) {
   const path = "public/savanna/pages/" + page;

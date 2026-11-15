@@ -293,6 +293,14 @@ test("video transcript joins current-page context with timestamped source links"
         bubbles: true,
         detail: {
           videoUrl: "https://www.youtube.com/watch?v=9hE5-98ZeCg",
+          video: {
+            videoId: "9hE5-98ZeCg",
+            url: "https://www.youtube.com/watch?v=9hE5-98ZeCg",
+            title: "Example",
+            currentTime: 12,
+            duration: 120,
+            transcriptRevision: "test-v1",
+          },
           cues: [
             {
               start: 12,
@@ -499,6 +507,70 @@ test("the original paced Savanna page exposes only its currently rendered week",
       !data.context.sections.some((s) =>
         s.content.includes("static-track-store"),
       ),
+    );
+  } finally {
+    f.cleanup();
+  }
+});
+test("playback ticks do not cancel an explanation submitted at a fixed timestamp", async () => {
+  let release;
+  const f = setup({
+    fullPage: readFileSync(
+      "public/savanna/pages/programming-for-beginners.html",
+      "utf8",
+    ),
+    integration: true,
+    answer: () =>
+      new Promise((resolve) => {
+        release = resolve;
+      }),
+  });
+  try {
+    const media = f.window.document.querySelector("mela-course-media");
+    const video = {
+      videoId: "bJzb-RuUcMU",
+      url: "https://www.youtube.com/watch?v=bJzb-RuUcMU",
+      title: "Programming",
+      currentTime: 120,
+      duration: 270,
+      transcriptRevision: "v1",
+    };
+    media.dispatchEvent(
+      new f.window.CustomEvent("mela:transcript-ready", {
+        bubbles: true,
+        detail: {
+          videoUrl: video.url,
+          video,
+          cues: [{ start: 110, end: 130, text: "Practice one small idea." }],
+        },
+      }),
+    );
+    await wait(250);
+    await question(f, "Explain this video");
+    assert.ok(release);
+    media.dispatchEvent(
+      new f.window.CustomEvent("mela:video-state", {
+        bubbles: true,
+        detail: { ...video, currentTime: 125 },
+      }),
+    );
+    release(
+      Response.json({
+        answer: "FROZEN_EXPLANATION",
+        citations: [],
+        provider: "none",
+        matched: true,
+        actions: [],
+      }),
+    );
+    await wait(20);
+    const request = JSON.parse(
+      f.calls.find((c) => String(c.url).endsWith("/ask")).init.body,
+    );
+    assert.equal(request.context.video.currentTime, 120);
+    assert.match(
+      f.root.querySelector(".messages").textContent,
+      /FROZEN_EXPLANATION/,
     );
   } finally {
     f.cleanup();

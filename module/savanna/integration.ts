@@ -146,6 +146,13 @@ function mount() {
           return navigator.serviceWorker.register("/sw.js");
       })
       .catch(() => {});
+  const programming = document.createElement("li");
+  const programmingLink = document.createElement("a");
+  programmingLink.href = "programming-for-beginners.html";
+  programmingLink.className = "mela-training-nav";
+  programmingLink.textContent = "Programming for Beginners";
+  programming.append(programmingLink);
+  document.querySelector("#sidebar ul")?.append(programming);
   const assistant = document.createElement("db-assistant");
   assistant.setAttribute("lang", "en");
   assistant.setAttribute("api", "/api");

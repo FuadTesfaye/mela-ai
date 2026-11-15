@@ -1,5 +1,6 @@
 import { youtubeId, youtubeUrl } from "../../lib/media/youtube";
 import { youtubeAPI, type YouTubePlayer } from "./youtube-player";
+import { transcriptRevision } from "../../lib/media/video-context";
 import type { Transcript } from "../../lib/media/transcript";
 const make = <K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -26,6 +27,7 @@ class CourseMedia extends HTMLElement {
   private sign?: Sign;
   private signVideo?: HTMLVideoElement;
   private videoUrl = "https://www.youtube.com/watch?v=9hE5-98ZeCg";
+  private lastTick = -1;
   private frame?: HTMLIFrameElement;
   private status!: HTMLParagraphElement;
   private transcript?: Transcript;
@@ -44,7 +46,7 @@ class CourseMedia extends HTMLElement {
   }
   private render() {
     const style = make("style");
-    style.textContent = `:host{display:block;font:14px/1.6 Arial,sans-serif;color:#17394e}*{box-sizing:border-box}[hidden]{display:none!important}button,input{font:inherit}button{cursor:pointer;padding:10px 13px;border:1px solid #b5cbd8;border-radius:5px;background:#fff;color:#16445e}button:hover{background:#edf8fc}button:disabled{opacity:.6;cursor:wait}button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid #cc940c;outline-offset:3px}.card{border:1px solid #cfdee7;border-radius:9px;overflow:hidden;background:white}.bar{display:flex;align-items:center;gap:12px;background:#eef7fb;padding:16px 18px}.bar strong{font-size:16px}.badge{font-size:11px;margin-left:auto;background:white;border:1px solid #c7dce7;border-radius:20px;padding:4px 9px}.body{padding:18px}.url-form{display:flex;gap:8px;margin-bottom:12px}.url-form input{padding:10px;border:1px solid #adc2cf;border-radius:5px;flex:1;min-width:0}.stage{background:#062c40;aspect-ratio:16/9;position:relative;display:grid;place-items:center;overflow:hidden;border-radius:6px}.stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0}.placeholder{text-align:center;color:#fff;padding:20px}.placeholder strong{display:block;font-size:19px}.placeholder p{font-size:13px;color:#cfdfeb;max-width:330px}.sign-box{position:absolute;right:12px;top:12px;width:155px;height:155px;z-index:2;background:#f7fafc;border:2px solid #fff;box-shadow:0 2px 14px #00192766;border-radius:6px;overflow:hidden;color:#355a70;display:flex;flex-direction:column}.sign-label{font-size:10px;font-weight:bold;letter-spacing:.7px;background:#003c54;color:white;padding:5px 8px}.sign-placeholder{padding:13px 9px;text-align:center;font-size:11px;flex:1;display:grid;place-items:center}.sign-box video{width:100%;height:calc(100% - 25px);object-fit:contain;background:#182e3e}.controls{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:13px}.primary{background:#006b89;color:white;border-color:#006b89}.controls label{display:flex;align-items:center;gap:7px;font-size:12px}.controls input{width:17px;height:17px}.status{font-size:12px;color:#3b5f75;margin:12px 0 0;min-height:20px}.transcript{margin-top:18px;border-top:1px solid #dce6ed;padding-top:15px}.transcript h3{font-size:16px;margin:0 0 7px}.transcript small{display:block;font-size:12px;color:#5b6f7c}.cues{max-height:300px;overflow:auto;margin-top:12px}.cue{width:100%;text-align:left;display:flex;align-items:baseline;gap:12px;border:0;border-top:1px solid #e8eff4;border-radius:0;padding:11px 5px;background:white;font-size:13px}.cue.active{background:#eaf7fc}.time{font-weight:bold;white-space:nowrap;color:#006580;font-size:11px}.download{font-size:12px;color:#005d7b;text-decoration:underline;margin-left:auto}@media(max-width:650px){.sign-box{width:112px;height:112px;right:7px;top:7px}.sign-placeholder{padding:6px;font-size:9px}.sign-label{font-size:9px;padding:3px 5px}.url-form{flex-wrap:wrap}.url-form input{flex-basis:100%}.bar{padding:12px}.body{padding:12px}.bar strong{font-size:14px}.badge{font-size:10px}.placeholder strong{font-size:15px}.placeholder p{font-size:11px;max-width:190px}.stage{min-height:230px}.controls label{font-size:11px}}`;
+    style.textContent = `:host{display:block;font:14px/1.6 Arial,sans-serif;color:#17394e}*{box-sizing:border-box}[hidden]{display:none!important}button,input{font:inherit}button{cursor:pointer;padding:10px 13px;border:1px solid #b5cbd8;border-radius:5px;background:#fff;color:#16445e}button:hover{background:#edf8fc}button:disabled{opacity:.6;cursor:wait}button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid #cc940c;outline-offset:3px}.card{border:1px solid #cfdee7;border-radius:9px;overflow:hidden;background:white}.bar{display:flex;align-items:center;gap:12px;background:#eef7fb;padding:16px 18px}.bar strong{font-size:16px}.badge{font-size:11px;margin-left:auto;background:white;border:1px solid #c7dce7;border-radius:20px;padding:4px 9px}.body{padding:18px}.url-form{display:flex;gap:8px;margin-bottom:12px}.url-form input{padding:10px;border:1px solid #adc2cf;border-radius:5px;flex:1;min-width:0}.stage{background:#062c40;aspect-ratio:16/9;min-height:220px;position:relative;display:grid;place-items:center;overflow:hidden;border-radius:6px}.stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0}.placeholder{text-align:center;color:#fff;padding:20px}.placeholder strong{display:block;font-size:19px}.placeholder p{font-size:13px;color:#cfdfeb;max-width:330px}.sign-box{position:absolute;right:12px;top:12px;width:155px;height:155px;z-index:2;background:#f7fafc;border:2px solid #fff;box-shadow:0 2px 14px #00192766;border-radius:6px;overflow:hidden;color:#355a70;display:flex;flex-direction:column}.sign-label{font-size:10px;font-weight:bold;letter-spacing:.7px;background:#003c54;color:white;padding:5px 8px}.sign-placeholder{padding:13px 9px;text-align:center;font-size:11px;flex:1;display:grid;place-items:center}.sign-box video{width:100%;height:calc(100% - 25px);object-fit:contain;background:#182e3e}.controls{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:13px}.primary{background:#006b89;color:white;border-color:#006b89}.controls label{display:flex;align-items:center;gap:7px;font-size:12px}.controls input{width:17px;height:17px}.status{font-size:12px;color:#3b5f75;margin:12px 0 0;min-height:20px}.transcript{margin-top:18px;border-top:1px solid #dce6ed;padding-top:15px}.transcript h3{font-size:16px;margin:0 0 7px}.transcript small{display:block;font-size:12px;color:#5b6f7c}.cues{max-height:300px;overflow:auto;margin-top:12px}.cue{width:100%;text-align:left;display:flex;align-items:baseline;gap:12px;border:0;border-top:1px solid #e8eff4;border-radius:0;padding:11px 5px;background:white;font-size:13px}.cue.active{background:#eaf7fc}.time{font-weight:bold;white-space:nowrap;color:#006580;font-size:11px}.download{font-size:12px;color:#005d7b;text-decoration:underline;margin-left:auto}@media(max-width:650px){.sign-box{width:112px;height:112px;right:7px;top:7px}.sign-placeholder{padding:6px;font-size:9px}.sign-label{font-size:9px;padding:3px 5px}.url-form{flex-wrap:wrap}.url-form input{flex-basis:100%}.bar{padding:12px}.body{padding:12px}.bar strong{font-size:14px}.badge{font-size:10px}.placeholder strong{font-size:15px}.placeholder p{font-size:11px;max-width:190px}.stage{min-height:230px}.controls label{font-size:11px}}`;
     const card = make("section", undefined, "card");
     card.setAttribute(
       "aria-label",
@@ -80,6 +82,7 @@ class CourseMedia extends HTMLElement {
     );
     stage.append(placeholder);
     const sign = make("div", undefined, "sign-box");
+    sign.setAttribute("role", "group");
     sign.setAttribute("aria-label", "Ethiopian Sign Language panel");
     sign.append(
       make("div", "SIGN LANGUAGE · EthSL", "sign-label"),
@@ -144,7 +147,24 @@ class CourseMedia extends HTMLElement {
       toggle.setAttribute("aria-expanded", String(!sign.hidden));
       if (sign.hidden) this.signVideo?.pause();
     };
-    controls.append(consent, transcribe, toggle);
+    const explain = make("button", "Explain this moment");
+    explain.type = "button";
+    explain.onclick = () => {
+      if (!this.transcript) {
+        this.status.textContent =
+          "Generate or restore this video's transcript first.";
+        return;
+      }
+      this.player?.pauseVideo?.();
+      this.dispatchEvent(
+        new CustomEvent("mela:explain-moment", {
+          bubbles: true,
+          composed: true,
+          detail: { video: this.snapshot(), cues: this.transcript.cues },
+        }),
+      );
+    };
+    controls.append(consent, transcribe, toggle, explain);
     this.status = make(
       "p",
       "Example video; replace it with your course video. Signing is enabled only for a matching, reviewed EthSL clip.",
@@ -172,6 +192,7 @@ class CourseMedia extends HTMLElement {
     } catch {
     } finally {
       this.restoreTranscript();
+      this.publishVideo();
     }
   }
   private restoreTranscript() {
@@ -236,6 +257,8 @@ class CourseMedia extends HTMLElement {
     frame.src = `https://www.youtube-nocookie.com/embed/${youtubeId(canonical)}?enablejsapi=1&rel=0&playsinline=1&origin=${encodeURIComponent(location.origin)}`;
     this.root.querySelector(".stage")!.prepend(frame);
     this.frame = frame;
+    this.lastTick = -1;
+    this.publishVideo();
     this.showSigning();
     this.restoreTranscript();
     this.status.textContent =
@@ -291,6 +314,10 @@ class CourseMedia extends HTMLElement {
     if (!this.player || typeof this.player.getCurrentTime !== "function")
       return;
     const seconds = this.player.getCurrentTime() || 0;
+    if (Math.floor(seconds) !== this.lastTick) {
+      this.lastTick = Math.floor(seconds);
+      this.publishVideo();
+    }
     for (const button of this.root.querySelectorAll<HTMLButtonElement>(
       ".cue",
     )) {
@@ -403,6 +430,27 @@ class CourseMedia extends HTMLElement {
     section.append(cues);
     this.root.querySelector(".body")!.append(section);
   }
+  private snapshot() {
+    return {
+      videoId: youtubeId(this.videoUrl),
+      url: this.videoUrl,
+      title: this.getAttribute("title") || "Course video",
+      currentTime: Math.max(0, this.player?.getCurrentTime?.() || 0),
+      duration: Math.max(0, this.player?.getDuration?.() || 0),
+      transcriptRevision: this.transcript
+        ? transcriptRevision(this.videoUrl, this.transcript.cues)
+        : undefined,
+    };
+  }
+  private publishVideo() {
+    this.dispatchEvent(
+      new CustomEvent("mela:video-state", {
+        bubbles: true,
+        composed: true,
+        detail: this.snapshot(),
+      }),
+    );
+  }
   private dispatchTranscript(
     cues: { start: number; end: number; text: string }[],
   ) {
@@ -410,7 +458,12 @@ class CourseMedia extends HTMLElement {
       new CustomEvent("mela:transcript-ready", {
         bubbles: true,
         composed: true,
-        detail: { videoUrl: this.videoUrl, language: "en", cues },
+        detail: {
+          videoUrl: this.videoUrl,
+          language: "en",
+          cues,
+          video: this.snapshot(),
+        },
       }),
     );
   }

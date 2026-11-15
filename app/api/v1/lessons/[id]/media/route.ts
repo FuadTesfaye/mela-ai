@@ -1,4 +1,5 @@
 import { api, preflight } from "@/lib/security/http";
+import { PROGRAMMING_LESSON, lessonIds } from "@/lib/media/lesson-catalog";
 import { HttpError } from "@/lib/security/auth";
 export const OPTIONS = preflight;
 export const GET = (
@@ -6,9 +7,8 @@ export const GET = (
   { params }: { params: Promise<{ id: string }> },
 ) =>
   api(request, async () => {
-    if (
-      !["va-future", "offline-first-localized-ai"].includes((await params).id)
-    )
+    const lessonId = (await params).id;
+    if (!(lessonIds as readonly string[]).includes(lessonId))
       throw new HttpError(404, "Lesson not found.");
     const url = process.env.SIGN_LANGUAGE_VIDEO_URL;
     let safe = false;
@@ -31,8 +31,10 @@ export const GET = (
       );
     return {
       defaultVideoUrl:
-        process.env.COURSE_VIDEO_URL ||
-        "https://www.youtube.com/watch?v=9hE5-98ZeCg",
+        lessonId === PROGRAMMING_LESSON.id
+          ? PROGRAMMING_LESSON.videoUrl
+          : process.env.COURSE_VIDEO_URL ||
+            "https://www.youtube.com/watch?v=9hE5-98ZeCg",
       signLanguage: validated
         ? {
             url,
