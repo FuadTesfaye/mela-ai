@@ -85,16 +85,17 @@ export function mount(
     parent.add(mesh);
     return { mesh, radius };
   }
+  const av = new THREE.Vector3(),
+    bv = new THREE.Vector3(),
+    delta = new THREE.Vector3(),
+    axis = new THREE.Vector3(0, 1, 0);
   function positionSegment(bone: ReturnType<typeof segment>, a: Vec3, b: Vec3) {
-    const av = new THREE.Vector3(...a),
-      bv = new THREE.Vector3(...b),
-      delta = bv.clone().sub(av);
+    av.set(...a);
+    bv.set(...b);
+    delta.copy(bv).sub(av);
     bone.mesh.position.copy(av.add(bv).multiplyScalar(0.5));
     bone.mesh.scale.set(bone.radius, delta.length(), bone.radius);
-    bone.mesh.quaternion.setFromUnitVectors(
-      new THREE.Vector3(0, 1, 0),
-      delta.normalize(),
-    );
+    bone.mesh.quaternion.setFromUnitVectors(axis, delta.normalize());
   }
   const torsoPoints = [
     new THREE.Vector2(0.3, 0.36),
@@ -263,6 +264,45 @@ export function mount(
   disc.scale.y = 0.55;
   disc.position.y = 0.34;
   scene.add(disc);
+  // Keep the rig hierarchy for articulation; batch matching surfaces for the GPU.
+  const groups = new Map<string, THREE.Mesh[]>();
+  root.traverse((object) => {
+    if (!(object instanceof THREE.Mesh) || Array.isArray(object.material))
+      return;
+    const key = object.geometry.uuid + object.material.uuid;
+    const group = groups.get(key) || [];
+    group.push(object);
+    groups.set(key, group);
+  });
+  const batches: { mesh: THREE.InstancedMesh; sources: THREE.Mesh[] }[] = [];
+  for (const sources of groups.values()) {
+    if (sources.length < 2) continue;
+    const mesh = new THREE.InstancedMesh(
+      sources[0].geometry,
+      sources[0].material,
+      sources.length,
+    );
+    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    mesh.frustumCulled = false;
+    scene.add(mesh);
+    for (const source of sources) source.visible = false;
+    batches.push({ mesh, sources });
+  }
+  const instanceMatrix = new THREE.Matrix4();
+  function updateInstances() {
+    root.updateMatrixWorld(true);
+    for (const batch of batches) {
+      batch.sources.forEach((source, index) => {
+        instanceMatrix.copy(source.matrixWorld);
+        // Cylinders and ellipsoids are reflection symmetric. Remove the left
+        // hand's negative X scale: InstancedMesh does not support negative scales.
+        if (instanceMatrix.determinant() < 0)
+          for (let i = 0; i < 4; i++) instanceMatrix.elements[i] *= -1;
+        batch.mesh.setMatrixAt(index, instanceMatrix);
+      });
+      batch.mesh.instanceMatrix.needsUpdate = true;
+    }
+  }
   let disposed = false,
     frames = 0,
     lastDraw = 0,
@@ -341,6 +381,7 @@ export function mount(
       distance * Math.max(1, 1 / camera.aspect),
     );
     camera.lookAt(0, frame.camera === "hands" ? 1.28 : 1.38, 0.08);
+    updateInstances();
     renderer.render(scene, camera);
     frames++;
     canvas.dataset.gesture = frame.gesture;
@@ -402,6 +443,7 @@ export function mount(
       disposed = true;
       observer?.disconnect();
       canvas.removeEventListener("webglcontextlost", lost);
+      for (const batch of batches) batch.mesh.dispose();
       for (const g of geometry) g.dispose();
       for (const m of materials) m.dispose();
       renderer.dispose();
