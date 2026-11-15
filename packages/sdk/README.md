@@ -109,3 +109,7 @@ The SDK does not bundle Three.js. Opening a visible panel requests `/avatar/teac
 Demo: `/demo/sdk.html`. Wrapper: `/embed`.
 
 Host Content Security Policy must allow the selected SDK scripts, API connections, YouTube frames and component styles. Use the iframe wrapper when direct component styling conflicts with host policy; the host must allow the wrapper frame origin.
+
+## Accessible chat preferences
+
+Reading mode is available in the chat toolbar. It remembers a local browser preference, enlarges answer text and opens diagram text equivalents; no disability or TalkBack detection is attempted. New messages use a polite, additions-only chat log and an explicit busy state. Speech starts only through Listen. Advanced context/format/saved-answer controls are in Learning options; cloud sharing remains visible by the composer. These behaviors are shared by the Web Component, SDK and iframe. Real-device TalkBack/NVDA validation remains pending.

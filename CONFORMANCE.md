@@ -10,7 +10,7 @@ Target: WCAG 2.2 AA. **Status: not yet independently verified.** This is an impl
 | Screen-reader chat    | Named dialog, labelled input and controls, role=log with polite additions, separate status region             | Markup and DOM tests; NVDA/TalkBack pending                                  |
 | Language and text     | English/Amharic labels and content, message dir=auto, Unicode retrieval                                       | Bilingual unit/API/DOM tests pass; fluent review and Arabic RTL test pending |
 | Reflow and zoom       | Responsive workspace, mobile widget bounded by dynamic viewport, wrapping messages                            | Type/build checks pass; 320px and 200% manual checks pending                 |
-| Contrast and motion   | Green/cream palette, visible focus, reduced-motion CSS and avatar support                                     | Browser axe/contrast audit pending                                           |
+| Contrast and motion   | Blue/white palette, visible focus, forced-color and reduced-motion support                                    | Scoped browser axe checks pass; full host audit pending                      |
 | Alternatives to audio | Full text and source links, sound-off operation by design                                                     | DOM answer tests pass; manual task pending                                   |
 | Speech                | Capability detection, matching language voice, microphone confirmation, text fallback                         | Device and Amharic voice validation pending                                  |
 | Human help            | Sharing preview, explicit consent, private tickets, optional screenshot and stoppable capture                 | Consent DOM tests pass; PostgreSQL/tutor/browser integration pending         |
@@ -76,7 +76,7 @@ Every demo course defaults to the same configured video. A local source-caption 
 
 Native Chromium checks pass for the SDK hosted on another origin, backend-relative caption URLs, play/pause/seek/speed synchronization, motion override, 320px overflow, a scoped serious/critical axe scan, keyboard dialog controls, React hydration through the iframe wrapper, and multiple-instance teardown preserving host content. React SSR imports/rendering are unit-tested without DOM globals. These checks do not certify language accuracy or whole-site accessibility.
 
-The production browser suite now runs with an isolated migrated PostgreSQL database and passes all 32 cases, including the tutor-reply flow. The two direct PostgreSQL integration tests also pass. Multiple SDK assistants are scoped to their own mounted roots; prepared captions automatically select whole-video question context after the initial player-state event.
+The production browser suite now runs with an isolated migrated PostgreSQL database and passes all 34 cases, including the tutor-reply flow. The two direct PostgreSQL integration tests also pass. Multiple SDK assistants are scoped to their own mounted roots; prepared captions automatically select whole-video question context after the initial player-state event.
 
 ### 3D visual teacher
 
@@ -89,3 +89,11 @@ The optional 3D download is separate from the initial SDK, respects data saving 
 ### Caption-driven hand movement update (16 November 2026)
 
 The teacher now chooses illustrative gestures from the current English cue, using authored concepts as a fallback. Cue boundaries control preparation and return, long cues repeat bounded cycles, and gaps rest both hands. Larger wrist paths and per-finger movement improve visibility. Unit tests measure movement in both wrists and fingers, bounded reaches, repeatable seeking and static reduced-motion poses. A native browser test additionally verifies actual canvas hand positions during playback, pause, seeking, silence and transcript-driven gesture changes. The panel is wider on desktop and retains the tested 320px layout. This remains an illustrative keyword-based system, not validated sign-language translation.
+
+### Reading mode and renderer optimization (16 November 2026)
+
+The chat now has a persistent, user-selected Reading mode, 44px buttons/language controls, native Learning options disclosure, visible focus and forced-color support. Diagram text equivalents expand in Reading mode while decorative diagrams are hidden. The labelled chat log announces additions politely, marks pending answers busy, and preserves focus. No speech starts automatically. The local preference is never sent as a disability flag, and no blindness/TalkBack detection is attempted: [W3C design guidance](https://www.w3.org/TR/design-principles/) explains why assistive-technology use should remain private. The [W3C chat-log technique](https://www.w3.org/WAI/WCAG21/Techniques/aria/ARIA23) informs the announcement semantics.
+
+Two additional native Chromium tests cover persistence, English/Amharic controls, disclosure navigation, 320px overflow, scoped axe checks, forced colors, keyboard open/close, answer busy state, text equivalents, stable focus and absence of automatic speech. These checks do not establish actual TalkBack or NVDA behavior. Android/TalkBack and co-designer testing remain required.
+
+The teacher now instances repeated symmetric surfaces, reducing a measured frame from 111 to 16 GPU draw calls without removing fingers or changing the source clock. Browser tests enforce no more than 25 draw calls, both hands in frame, deterministic seeking and GPU disposal. This is a rendering-work reduction, not a guaranteed frame-rate measurement on learner devices.

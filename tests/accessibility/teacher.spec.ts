@@ -264,6 +264,7 @@ test("all poses keep both hands in frame and repeated disposal frees GPU resourc
             stats: () => {
               handsInFrame: boolean;
               triangles: number;
+              calls: number;
               geometries: number;
               disposed: boolean;
             };
@@ -276,6 +277,7 @@ test("all poses keep both hands in frame and repeated disposal frees GPU resourc
     document.body.append(host);
     let inFrame = true,
       maxTriangles = 0,
+      maxCalls = 0,
       released = true;
     for (let cycle = 0; cycle < 3; cycle++) {
       const renderer = factory.mount(host, { onFailure: () => {} });
@@ -301,6 +303,7 @@ test("all poses keep both hands in frame and repeated disposal frees GPU resourc
           const stats = renderer.stats();
           inFrame = inFrame && stats.handsInFrame;
           maxTriangles = Math.max(maxTriangles, stats.triangles);
+          maxCalls = Math.max(maxCalls, stats.calls);
         }
       renderer.dispose();
       released =
@@ -310,10 +313,11 @@ test("all poses keep both hands in frame and repeated disposal frees GPU resourc
     }
     const remaining = host.querySelectorAll("canvas").length;
     host.remove();
-    return { inFrame, maxTriangles, released, remaining };
+    return { inFrame, maxTriangles, maxCalls, released, remaining };
   });
   expect(results.inFrame).toBe(true);
   expect(results.maxTriangles).toBeLessThan(30000);
+  expect(results.maxCalls).toBeLessThanOrEqual(25);
   expect(results.released).toBe(true);
   expect(results.remaining).toBe(0);
 });

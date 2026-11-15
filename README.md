@@ -62,7 +62,7 @@ Each course concept includes a YouTube video box. Load the public example or pas
 
 Generation needs connectivity, a usable key/model, an accessible public video and provider quota. It can fail for long videos or unclear/missing speech; there is no fabricated fallback transcript. Successful server results are cached for one hour in memory; browser-saved public transcripts can be restored offline. YouTube video playback itself is not available offline.
 
-The **learning panel** starts hidden. Click **Show learning panel** for synchronized captions and an animated person beside the lesson (below it on mobile). Choose **Captions + avatar**, **Captions only**, or **Avatar only**. Without an interpreter recording, the MVP uses locally drawn, transcript-driven illustrative gestures, visibly labelled experimental and not EthSL translation. Configure a real `.mp4`/`.webm` interpretation only after fluent-signer review:
+The **learning panel** starts hidden. Click **Show learning panel** for synchronized captions and an animated person beside the lesson (below it on mobile). Choose **Captions + teacher**, **Captions only**, or **Teacher only**. Without an interpreter recording, the MVP uses locally drawn, transcript-driven illustrative gestures, visibly labelled experimental and not EthSL translation. Configure a real `.mp4`/`.webm` interpretation only after fluent-signer review:
 
 ```dotenv
 SIGN_LANGUAGE_VIDEO_URL=/signing/reviewed-lesson.mp4
@@ -140,7 +140,7 @@ Both providers receive only retrieved evidence and the current question. Invalid
 
 Speech uses browser APIs. The microphone has an explicit confirmation because browser recognition may send audio to the browser vendor. Matching voices, especially `am-ET`, depend on browser/device support. Reliable Amharic speech is not claimed without device validation. No cloud speech credentials or speech server are bundled. Simplify uses the first two source sentences in no-AI mode.
 
-The optional WebGL human character is generated procedurally, needs no downloaded asset, and moves its mouth during browser speech. It is not EthSL translation. No EthSL animations are enabled without fluent-signer validation and asset/reviewer metadata.
+The course visual teacher is generated procedurally and loads only when its panel is visible. Matching surfaces are instanced to reduce GPU draw calls while preserving articulated hands. The chat uses a simpler text/voice interface; the older duplicate decorative chat-avatar control has been removed. Course illustrations are not EthSL translation.
 
 ## Offline behavior
 
@@ -285,3 +285,15 @@ Or use an isolated wrapper:
 ```
 
 Direct embedding needs the host CSP to permit the chosen SDK scripts, API connections, YouTube frames and component styles. The iframe option isolates the companion from host styles; the host still needs to allow that frame origin. The iframe cannot read parent-page lesson text.
+
+## Reading mode and screen readers
+
+The chat keeps language, Reading mode, conversation, Send, microphone and human help accessible. Extra context/format/saved-answer controls are under **Learning options**. Cloud sharing remains an explicit choice beside the composer. Touch buttons and language controls have a 44px minimum height; keyboard focus and forced colors remain visible.
+
+Choose **Reading mode** for larger answer text and expanded diagram descriptions. It remembers `mela-reading-mode` in this browser's storage when available. The preference is not sent to the AI or used to infer disability. It works without detecting a screen reader. Chat answers use a labelled polite `log` with additions-only updates and a busy state while an answer is being assembled. Answers do not steal focus or automatically start synthesized speech; **Listen** is optional.
+
+Websites cannot reliably determine blindness or detect TalkBack through a standard browser API. The [W3C design principles](https://www.w3.org/TR/design-principles/) advise keeping assistive-technology use private. [W3C's chat-log technique](https://www.w3.org/WAI/WCAG21/Techniques/aria/ARIA23) informs the message announcements, and [Google's Android overview](https://support.google.com/accessibility/android/answer/6006564?hl=en) describes TalkBack's touch and spoken feedback. Actual Android/TalkBack testing is still required; browser accessibility checks are not a substitute.
+
+For a device check: enable TalkBack, open the lesson in Chrome, swipe to Ask MELA and double-tap, enable Reading mode, submit a question, verify the complete answer and source links are announced, explore Diagram as text, then close the chat and confirm focus returns to Ask MELA. Repeat with reading mode off, large text and a hardware keyboard if available.
+
+The 3D renderer uses [Three.js instancing](https://threejs.org/docs/pages/InstancedMesh.html) for repeated geometry/materials, following its [optimization guidance](https://threejs.org/manual/pages/optimize-lots-of-objects.html). A measured front-view frame now uses 16 draw calls versus 111 previously (about 86% fewer), with the same 16,384 triangles. This reduces GPU submission work; it does not guarantee a particular frame rate on every device or speed up the source video.
