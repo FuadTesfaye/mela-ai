@@ -76,4 +76,12 @@ Every demo course defaults to the same configured video. A local source-caption 
 
 Native Chromium checks pass for the SDK hosted on another origin, backend-relative caption URLs, play/pause/seek/speed synchronization, motion override, 320px overflow, a scoped serious/critical axe scan, keyboard dialog controls, React hydration through the iframe wrapper, and multiple-instance teardown preserving host content. React SSR imports/rendering are unit-tested without DOM globals. These checks do not certify language accuracy or whole-site accessibility.
 
-The production browser suite now runs with an isolated migrated PostgreSQL database and passes all 22 cases, including the tutor-reply flow. The two direct PostgreSQL integration tests also pass. Multiple SDK assistants are scoped to their own mounted roots; prepared captions automatically select whole-video question context after the initial player-state event.
+The production browser suite now runs with an isolated migrated PostgreSQL database and passes all 31 cases, including the tutor-reply flow. The two direct PostgreSQL integration tests also pass. Multiple SDK assistants are scoped to their own mounted roots; prepared captions automatically select whole-video question context after the initial player-state event.
+
+### 3D visual teacher
+
+The default preview now presents a procedural human with two articulated hands and eight source-backed teaching segments for the selected video. Gestures and diagrams illustrate concepts; they are not ASL/EthSL translation or linguistically validated signing. Optional experimental manual-alphabet and reviewed-interpreter paths remain available. The visible label states this distinction.
+
+Explain pauses playback, opens an accessible dialog and preserves a source timestamp. Local slow demonstration replay leaves the source paused; Resume seeks to the captured moment and resumes. Native Chromium tests cover synchronization, both cameras and all seven poses with both hands in frame, stale explanations, delayed/failed downloads, context loss and retry, repeated disposal, keyboard behavior, 320px layout and reduced-motion override. Scoped axe found no serious/critical issues in the tested mobile component. Real-device screen-reader checks and co-designer comprehension sessions remain pending.
+
+The optional 3D download is separate from the initial SDK, respects data saving in adaptive mode, and falls back to 2D without removing captions. Closed/offscreen/hidden-tab previews stop updates. Desktop/mobile targets are capped at 60/30 fps with limited pixel ratio and adaptive resolution; these are caps, not measured device guarantees. No local neural sign-language or speech model is included.

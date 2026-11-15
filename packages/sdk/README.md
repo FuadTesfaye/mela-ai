@@ -100,10 +100,12 @@ The wrapper uses the same React adapter and backend. Parent-page DOM is not avai
 
 The default course video is configured once in `data/lesson-media.json`. Prepare its public English caption cache using the optional step in the root README, or generate a new transcript with learner consent through Gemini. Cached public captions are fetched from the backend origin, including on foreign sites, and checked against the exact video ID.
 
-English fingerspelling follows source caption intervals; word/letter timing inside a cue is estimated. The procedural handshapes are experimental and require fluent review. This is not full ASL/EthSL translation. The alternative illustrative gestures are separately labelled. Play/pause, seeking and speed come from the source player's clock. Reduced motion pauses animation by default and offers an explicit Enable animation action. A reviewed interpreter recording takes priority when available.
+The default visual teacher uses a procedural 3D human with coordinated arms, articulated fingers, source-clock poses and caption-backed diagrams for the selected video. **Explain this moment** pauses the source and enlarges the concept. Demonstration replay has an independent 0.5×/0.75×/1× clock; only **Resume lesson** resumes the source. Seeking or switching video invalidates a captured explanation. These are visual teaching gestures, not sign-language translation. Optional English fingerspelling remains experimental; a reviewed interpreter recording takes priority.
+
+Set `renderer: "auto" | "2d" | "3d"` in `mount()` or the React props, `renderer="2d"` on `<mela-course-media>`, or `?renderer=2d` on `/embed`. The default `auto` respects data saving. `3d` explicitly tries WebGL; failures retain the 2D illustration and captions. Front, Hands focus and Reset view are available once 3D loads. System reduced motion requires an explicit Enable animation action.
+
+The SDK does not bundle Three.js. Opening a visible panel requests `/avatar/teacher-3d.js` and `/avatar/storyboard.json` from the configured backend origin. Deploy both generated files, allow that script origin in the host CSP, and keep the backend's asset CORS headers. No model or texture downloads are needed. Closed, offscreen and hidden-tab previews stop updates; `destroy()` releases observers and GPU resources. After a first online load, the MELA service worker can cache these optional assets for its own origin; foreign hosts need their own offline caching policy. `mela:renderer-state` reports `{ renderer, status }` as a composed bubbling event.
 
 Demo: `/demo/sdk.html`. Wrapper: `/embed`.
 
-Host Content Security Policy must allow the selected SDK scripts, API connections,
-YouTube frames and component styles. Use the iframe wrapper when direct component
-styling conflicts with host policy; the host must allow the wrapper frame origin.
+Host Content Security Policy must allow the selected SDK scripts, API connections, YouTube frames and component styles. Use the iframe wrapper when direct component styling conflicts with host policy; the host must allow the wrapper frame origin.

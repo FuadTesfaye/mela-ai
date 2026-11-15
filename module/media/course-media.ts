@@ -482,7 +482,7 @@ class CourseMedia extends HTMLElement {
     }
   }
   private showSigning(
-    message = "AI captions + experimental avatar are ready.",
+    message = "Captions and visual support are ready.",
     retry = false,
   ) {
     this.clearSigning();
@@ -638,7 +638,7 @@ class CourseMedia extends HTMLElement {
         "h3",
         approved
           ? "Captions and Ethiopian Sign Language interpretation"
-          : "AI captions and experimental avatar",
+          : "Captions and visual support",
       );
       title.id = "signing-dialog-title";
       dialog.setAttribute("aria-labelledby", title.id);
