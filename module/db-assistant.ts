@@ -358,7 +358,7 @@ class DBAssistant extends HTMLElement {
     const version = this.version;
     this.abort = new AbortController();
     this.setStatus(this.t.thinking);
-    const timeout = setTimeout(() => this.abort?.abort(), 20000);
+    const timeout = setTimeout(() => this.abort?.abort(), 30000);
     try {
       let answer: Answer;
       try {

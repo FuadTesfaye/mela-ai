@@ -20,10 +20,19 @@ export function detectContext(includePublicPage = false): LearningContext {
     content: string,
     language: "en" | "am" = "en",
     anchor = id,
+    sourceUrl?: string,
   ) => {
-    const url = new URL(location.href);
-    url.hash = anchor;
-    url.search = "";
+    let url: URL;
+    try {
+      url = new URL(sourceUrl || location.href, location.href);
+    } catch {
+      return;
+    }
+    if (!["http:", "https:"].includes(url.protocol)) return;
+    if (!sourceUrl) {
+      url.hash = anchor;
+      url.search = "";
+    }
     const text = content.trim();
     if (!text) return;
     sections.push({
@@ -39,7 +48,7 @@ export function detectContext(includePublicPage = false): LearningContext {
   const authored = root.matches("[data-mela-context]")
     ? root.querySelector<HTMLElement>(".formatted-content .savanna-styles")
     : null;
-  if (authored) {
+  if (authored && !authored.querySelector("[data-mela-section]")) {
     let title = root.dataset.lessonTitle || "Current lesson";
     let anchor = "curriculum_navigation_content";
     let text = "";
@@ -48,7 +57,13 @@ export function detectContext(includePublicPage = false): LearningContext {
       if (text.trim()) add(`savanna-${index++}`, title, text, "en", anchor);
       text = "";
     };
-    for (const child of authored.children) {
+    for (const raw of authored.childNodes) {
+      if (raw.nodeType === 3) {
+        text += " " + (raw.textContent || "");
+        continue;
+      }
+      if (raw.nodeType !== 1) continue;
+      const child = raw as HTMLElement;
       if (child.matches("h2,h3,h4")) {
         flush();
         title = child.textContent?.trim() || title;
@@ -80,6 +95,8 @@ export function detectContext(includePublicPage = false): LearningContext {
           "Current page",
         (copy.querySelector("[data-mela-content]") || copy).textContent || "",
         node.lang === "am" ? "am" : "en",
+        id,
+        node.dataset.melaSourceUrl,
       );
     });
   // Generic hosts must opt in from the widget before their public text is used.
@@ -119,7 +136,14 @@ export function detectContext(includePublicPage = false): LearningContext {
               : "unknown",
     courseId: root.dataset.courseId,
     courseTitle: root.dataset.courseTitle,
-    moduleTitle: root.dataset.moduleTitle,
+    moduleTitle:
+      root
+        .querySelector("button[data-section-index].bg-light")
+        ?.textContent?.trim() ||
+      root
+        .querySelector(".homepage-nav .nav-link.active[data-track-id]")
+        ?.textContent?.trim() ||
+      root.dataset.moduleTitle,
     lessonTitle: root.dataset.lessonTitle,
     sections: sections.slice(0, 30),
   };

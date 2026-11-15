@@ -43,9 +43,17 @@ Record device/browser versions, assistive technology, date, participant-approved
 
 ## Known limits
 
-- Official Savanna starter selectors and navigation have not been validated; included pages are representative fixtures.
+- The original public Savanna capture is now imported at a pinned revision, with DOM tests for authored lesson extraction and live module changes. It has not been verified by organisers or tested visually here. Upstream host accessibility defects are not certified as fixed.
 - Amharic translations need fluent review; browser speech availability varies.
 - Cloud citation checks cannot establish semantic accuracy of generated prose. Default extractive answers avoid unsupported generation.
 - Tutor/alert/channel/relay services need live configuration and end-to-end validation. No always-online tutor promise is made.
 - Sign-language translation, validated EthSL clips, tenant-aware LMS authorisation, and durable learner ticket recovery are not implemented.
 - Real screenshot safety, production TURN credentials, distributed rate limits, retention operations and deployment security need hardening beyond this demo.
+
+## Savanna/video/training update
+
+The learner entry points use the imported Savanna capture. English training content, all 18 supplied slides, revealable quiz answers, prominent support entry points and slide-level citations are included. DOM tests cover offline training retrieval and live page/transcript context.
+
+YouTube is loaded only on learner action. Gemini transcription requires separate consent and produces explicitly unreviewed English text; saved public transcripts can be restored locally. Live Gemini, captions quality, YouTube controls and signing synchronization have not been browser-verified here. The EthSL square remains unavailable until a reviewed clip is bound to the exact lesson video. The optional avatar remains a separate presentation feature.
+
+Browser axe tests target the added assistant; a full audit of the imported host is still required.

@@ -81,9 +81,9 @@ export default function Docs() {
           <h2>For platforms and developers</h2>
           <p>
             The learner widget runs independently of React, Tailwind, or
-            Savanna. Demo Savanna pages are representative fixtures, not the
-            official starter. Use the same script and component installation on
-            all supported hosts.
+            Savanna. The learner pages use the imported original Savanna static
+            capture at a pinned revision. Real account integration remains
+            unverified. Use the same component installation on other hosts.
           </p>
           <pre>
             <code>{`<script src="https://YOUR-MELA-HOST/db-assistant.js" defer></script>
@@ -100,12 +100,33 @@ export default function Docs() {
           </p>
           <div className="meta-row">
             <a href="/openapi.yaml">OpenAPI specification</a>
-            <Link href="/savanna/pages/paced.html">Paced fixture</Link>
-            <Link href="/savanna/pages/self-paced.html">
+            <Link href="/savanna/pages/homepage-v1-paced.html">
+              Paced fixture
+            </Link>
+            <Link href="/savanna/pages/homepage-v1-self-paced.html">
               Self-paced fixture
             </Link>
-            <Link href="/savanna/pages/lesson.html">Lesson fixture</Link>
+            <Link href="/savanna/pages/concept-with-navigation.html">
+              Lesson fixture
+            </Link>
           </div>
+        </section>
+        <section className="content-card">
+          <h2>Offline-First &amp; Localized AI training</h2>
+          <p>
+            Study the supplied 18-slide AI engineering session by Kidus
+            Yohannes, including its quiz, answer key, and cited offline lesson
+            search.
+          </p>
+          <Link href="/savanna/pages/offline-first-localized-ai.html">
+            Open the training lesson →
+          </Link>
+          <p>
+            Course videos use an optional public YouTube example. English
+            transcription requires your sharing choice and an available Gemini
+            service. The signing square needs a validated interpretation for
+            that exact video; no session recording or signer clip was supplied.
+          </p>
         </section>
         <section className="content-card">
           <h2>What’s a demo, and what’s ready to connect?</h2>

@@ -83,3 +83,23 @@ test("current page content overrides a stale indexed section with the same id", 
   );
   assert.match(result.answer, /updated password lesson/);
 });
+test("supplied offline-first training is searchable with slide-level citations", () => {
+  const training = {
+    pageType: "lesson" as const,
+    courseId: "offline-first-localized-ai",
+    sections: [],
+  };
+  const result = groundedAnswer(
+    "What is quantization?",
+    sections,
+    training,
+    "en",
+  );
+  assert.equal(result.matched, true);
+  assert.match(result.answer, /4-bit/);
+  assert.ok(
+    result.citations.some((c) =>
+      c.url.includes("offline-first-localized-ai.html#offline-ai-slide-07"),
+    ),
+  );
+});

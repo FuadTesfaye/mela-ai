@@ -1,6 +1,6 @@
 # MELA AI
 
-**A little support. A world of possibility.** An accessible English/Amharic learning companion for Digital Bridge Track 3.
+**A little support. A world of possibility.** An accessible English/Amharic learning companion for Digital Bridge Track 3, integrated into the original Savanna static UI.
 
 Next.js powers the learner workspace, tutor portal, and APIs. An independent TypeScript Web Component provides chat on plain HTML or another LMS. PostgreSQL persists consented support requests and channel preferences. No AI key is needed for the default source-extraction mode.
 
@@ -35,18 +35,55 @@ npm run db:seed
 npm run dev
 ```
 
-Without PostgreSQL, the workspace, lessons, demo jobs, and source-backed answers still run. Ticket creation, tutor tools, alert subscriptions and signaling return explicit service-unavailable responses.
+Without PostgreSQL, Savanna demo pages, lessons, demo jobs, training and source-backed answers still run. Ticket creation, tutor tools, alert subscriptions and signaling return explicit service-unavailable responses.
+
+## Savanna UI and training lesson
+
+The app now opens the original Savanna self-paced capture instead of the custom MELA dashboard. The original paced, self-paced and concept layouts, styles, fonts, images and interaction scripts were imported from [Savanna-static-pages](https://github.com/AaUel-Knight27/Savanna-static-pages/tree/7e54f6d0fc3728568054fdb58b2d48523bc778ae). Shell Git cloning was blocked by DNS, so the connected GitHub source export was used. `public/savanna/UPSTREAM.json` records the pinned revision. This is a local demo capture, not an authenticated Savanna account or an organiser-verified integration.
+
+- `/` opens `/savanna/pages/homepage-v1-self-paced.html`.
+- `/learn` opens `/savanna/pages/concept-with-navigation.html`.
+- `/savanna/pages/homepage-v1-paced.html` preserves the working captured week switcher.
+- `/savanna/pages/offline-first-localized-ai.html` contains the user-supplied **Offline-First & Localized AI** training session by **Kidus Yohannes · Senior ML Engineer**: 18 English slides, quiz, revealable answer key and slide-level source links.
+
+A prominent training card appears on Savanna homepages and a training link appears in the sidebar. The support panel is docked and open on desktop; smaller screens use the floating launcher. Course UI defaults to English. The older bilingual Digital Foundations demonstration is at `/demo/digital-foundations`.
+
+Ask “What is shaping the future of virtual assistant work?” on the VA concept page, or “What is quantization?” on the training page. The assistant reads only approved lesson regions and the currently displayed module/week. It refreshes scope after those panels change. It cannot read unrelated browser tabs. On a generic host, **Page context** explicitly opts into public main/article text while excluding forms, private nodes and editable fields.
+
+## Gemini, course video and the signing square
+
+Set `AI_PROVIDER=gemini`, `GEMINI_API_KEY` and `GEMINI_MODEL` in `.env.local` or your server secret store. The key stays server-side and `.env.local` is ignored by Git. Learners must select the cloud-sharing choice before questions/excerpts go to Gemini. Provider errors display source text with an explicit notice; no working connection is implied by merely configuring a key. Model availability and key validity must be checked against your Google project.
+
+The native provider uses Google's [generateContent API](https://ai.google.dev/api/generate-content). Video input follows the documented [Gemini video-understanding capability](https://ai.google.dev/gemini-api/docs/video-understanding). The model name is configurable; no paid service is required for offline source retrieval.
+
+Each course concept includes a YouTube video box. Load the public example or paste another HTTPS YouTube watch/share/embed URL. Loading connects to YouTube. Select the separate video-sharing choice, then **Generate English transcript**. The server sends the actual video to Gemini and validates timestamped English cues. Cues support seeking, text download, browser-local saving and current-page chat context, with timestamped YouTube citations. Generated transcripts are labelled unreviewed. A text-only training deck is not misrepresented as a session recording.
+
+Generation needs connectivity, a usable key/model, an accessible public video and provider quota. It can fail for long videos or unclear/missing speech; there is no fabricated fallback transcript. Successful server results are cached for one hour in memory; browser-saved public transcripts can be restored offline. YouTube video playback itself is not available offline.
+
+The small **EthSL signing panel** is visible in the video box and can be hidden. Configure a real `.mp4`/`.webm` interpretation only after fluent-signer review:
+
+```dotenv
+SIGN_LANGUAGE_VIDEO_URL=/signing/reviewed-lesson.mp4
+SIGN_LANGUAGE_VALIDATED=true
+SIGN_LANGUAGE_REVIEWER=your-review-reference
+SIGN_LANGUAGE_LESSON_VIDEO_ID=EXACT_11_CHARACTER_YOUTUBE_ID
+SIGN_LANGUAGE_OFFSET_SECONDS=0
+```
+
+The player shows and synchronizes that clip only for its exact configured YouTube video. Playing, pausing, seeking and playback rate follow the main player. For other videos, it clearly states that no validated signing clip is connected. No signer clip was supplied, so signing is currently unavailable; an avatar is not used as a sign-language substitute.
+
+For Docker, configure those variables in `.env` or the deployment environment. Local Next.js also loads `.env.local`; Compose does not automatically read `.env.local`.
 
 ## Main demo task
 
-1. Open `/learn` or any `/savanna/pages/*.html` fixture.
-2. Open MELA and ask “How do I keep a password safe?” or select Amharic and ask “የይለፍ ቃል”.
-3. Follow a citation. Select Listen if the device has a matching voice; text remains available.
-4. Choose Talk to a person. Review and select the conversation/context to share, optionally attach a screenshot, and confirm consent.
-5. Open `/dashboard` in another browser context and sign in with the tutor password. Reply to the ticket. The learner’s open widget polls for replies every five seconds.
-6. The learner may start screen sharing and select a window through the browser picker. The tutor selects Connect to shared screen. The learner can stop immediately; no media is recorded.
+1. Open `/learn` or the offline-first training lesson.
+2. Ask an English question about the displayed lesson and follow its source link.
+3. Optionally load a YouTube lesson, consent to Gemini transcription, and ask about the resulting English transcript.
+4. Choose Talk to a person, review the sharing preview, and confirm the selected information.
+5. Open `/dashboard` in another browser context, sign in, and reply to the ticket. The learner’s widget polls every five seconds.
+6. The learner may initiate screen sharing; the tutor connects from their workspace. The learner controls stopping capture.
 
-The provided Savanna pages are **representative fixtures**, not the official starter. Real starter integration must be verified when those files become available. All job listings and employers are clearly marked demonstrations.
+All job listings remain clearly marked demonstrations. Real Savanna account integration, fluent review, browser/screen-reader testing and signing-asset validation remain release gates.
 
 ## Embed on another site
 
@@ -90,7 +127,7 @@ Try `/demo/blank.html`, `/savanna/pages/paced.html`, `/savanna/pages/self-paced.
 
 ## Knowledge, AI and languages
 
-Default `AI_PROVIDER=none` retrieves and quotes relevant public sections, current-page first, with source links. English/Amharic paired fixtures and a small bilingual keyword map support both languages without a model. A retrieval miss offers human help; it never triggers unsupported generation. This is keyword retrieval, not vector search.
+With `AI_PROVIDER=none`, the default no-key mode, MELA retrieves and quotes relevant public sections, current-page first, with source links. English/Amharic paired fixtures and a small bilingual keyword map support both languages without a model. A retrieval miss offers human help; it never triggers unsupported generation. This is keyword retrieval, not vector search.
 
 Optional providers:
 

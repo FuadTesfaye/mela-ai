@@ -64,9 +64,11 @@ export function retrieve(
   for (const [en, am] of Object.entries(bilingual))
     if (q.some((t) => t === en || am.some((a) => t.includes(a))))
       q.push(en, ...am);
-  const contextual = /current lesson|this lesson|የአሁኑ|ትምህርት|በአማርኛ/.test(
-    question.toLowerCase(),
-  );
+  const videoScope = /\b(video|transcript)\b/i.test(question);
+  const contextual =
+    /current lesson|this lesson|this page|current page|summari[sz]e|transcript|this video|the video|የአሁኑ|ትምህርት|በአማርኛ/.test(
+      question.toLowerCase(),
+    );
   const unique = new Map<string, Section>();
   for (const s of [...sections, ...context.sections])
     if (
@@ -78,7 +80,9 @@ export function retrieve(
     )
       unique.set(s.id, s);
   const active = new Set(context.sections.map((s) => s.id));
+  const hasVideo = context.sections.some((s) => s.id.startsWith("video-"));
   return [...unique.values()]
+    .filter((s) => !videoScope || !hasVideo || s.id.startsWith("video-"))
     .map((s) => {
       const title = tokenize(s.title + " " + (s.keywords || []).join(" "));
       const body = tokenize(s.content);

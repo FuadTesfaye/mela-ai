@@ -1,0 +1,49 @@
+import { api, preflight } from "@/lib/security/http";
+import { HttpError } from "@/lib/security/auth";
+export const OPTIONS = preflight;
+export const GET = (
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) =>
+  api(request, async () => {
+    if (
+      !["va-future", "offline-first-localized-ai"].includes((await params).id)
+    )
+      throw new HttpError(404, "Lesson not found.");
+    const url = process.env.SIGN_LANGUAGE_VIDEO_URL;
+    let safe = false;
+    try {
+      const parsed = new URL(
+        url || "",
+        process.env.APP_URL || "http://localhost:3000",
+      );
+      safe =
+        parsed.protocol === "https:" ||
+        (url?.startsWith("/") && !url.startsWith("//")) ||
+        false;
+    } catch {}
+    const validated =
+      safe &&
+      process.env.SIGN_LANGUAGE_VALIDATED === "true" &&
+      !!process.env.SIGN_LANGUAGE_REVIEWER &&
+      /^[-_a-zA-Z0-9]{11}$/.test(
+        process.env.SIGN_LANGUAGE_LESSON_VIDEO_ID || "",
+      );
+    return {
+      defaultVideoUrl:
+        process.env.COURSE_VIDEO_URL ||
+        "https://www.youtube.com/watch?v=9hE5-98ZeCg",
+      signLanguage: validated
+        ? {
+            url,
+            videoId: process.env.SIGN_LANGUAGE_LESSON_VIDEO_ID,
+            language: "EthSL",
+            reviewer: process.env.SIGN_LANGUAGE_REVIEWER,
+            offsetSeconds: Math.max(
+              0,
+              Number(process.env.SIGN_LANGUAGE_OFFSET_SECONDS) || 0,
+            ),
+          }
+        : null,
+    };
+  });

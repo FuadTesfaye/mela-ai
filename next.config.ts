@@ -15,6 +15,8 @@ const config: NextConfig = {
       },
       ...[
         "/db-assistant.js",
+        "/course-media.js",
+        "/savanna-integration.js",
         "/avatar-view.js",
         "/content.json",
         "/openapi.yaml",

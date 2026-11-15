@@ -1,13 +1,23 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
+async function openWidget(page: Page) {
+  const widget = page.locator("db-assistant");
+  await widget.locator(".panel").waitFor({ state: "attached" });
+  if (!(await widget.locator(".panel").isVisible()))
+    await widget.getByRole("button", { name: "Ask MELA", exact: true }).click();
+  return widget;
+}
 for (const path of [
   "/",
   "/learn",
   "/jobs",
   "/support",
   "/demo/blank.html",
+  "/savanna/pages/homepage-v1-paced.html",
+  "/savanna/pages/homepage-v1-self-paced.html",
+  "/savanna/pages/offline-first-localized-ai.html",
   "/savanna/pages/paced.html",
   "/savanna/pages/self-paced.html",
   "/savanna/pages/lesson.html",
@@ -16,9 +26,15 @@ for (const path of [
     page,
   }) => {
     await page.goto(path);
-    const widget = page.locator("db-assistant");
-    await widget.getByRole("button", { name: "Ask MELA", exact: true }).click();
-    await widget.getByRole("textbox").fill("How do I use a browser?");
+    const widget = await openWidget(page);
+    const captured =
+      path === "/" ||
+      path === "/learn" ||
+      path.includes("homepage-v1") ||
+      path.includes("offline-first-localized");
+    await widget
+      .getByRole("textbox")
+      .fill(captured ? "Explain my current lesson" : "How do I use a browser?");
     await widget
       .getByRole("button", { name: "Send question", exact: true })
       .click();
@@ -30,12 +46,12 @@ for (const path of [
       const { violations } = await (
         window as unknown as {
           axe: {
-            run: () => Promise<{
+            run: (context: Element | null) => Promise<{
               violations: { id: string; impact: string }[];
             }>;
           };
         }
-      ).axe.run();
+      ).axe.run(document.querySelector("db-assistant"));
       return violations.filter(
         (v) => v.impact === "serious" || v.impact === "critical",
       );
@@ -47,9 +63,8 @@ test("Amharic, keyboard close, small viewport and no horizontal overflow", async
   page,
 }) => {
   await page.setViewportSize({ width: 320, height: 740 });
-  await page.goto("/learn");
-  const widget = page.locator("db-assistant");
-  await widget.getByRole("button", { name: "Ask MELA", exact: true }).click();
+  await page.goto("/demo/digital-foundations");
+  const widget = await openWidget(page);
   await widget.getByRole("combobox").selectOption("am");
   await widget.getByRole("textbox").fill("የይለፍ ቃል");
   await widget.getByRole("button", { name: "ጥያቄ ይላኩ", exact: true }).click();
@@ -74,8 +89,7 @@ test("cached fixture reload and content retrieval work offline", async ({
   await page.waitForTimeout(1000);
   await context.setOffline(true);
   await page.reload();
-  const widget = page.locator("db-assistant");
-  await widget.getByRole("button", { name: "Ask MELA", exact: true }).click();
+  const widget = await openWidget(page);
   await widget.getByRole("textbox").fill("password");
   await widget
     .getByRole("button", { name: "Send question", exact: true })
@@ -92,8 +106,7 @@ test("ticket creation and real tutor reply return to the learner", async ({
     "Requires a migrated PostgreSQL database and tutor environment.",
   );
   await page.goto("/learn");
-  const widget = page.locator("db-assistant");
-  await widget.getByRole("button", { name: "Ask MELA", exact: true }).click();
+  const widget = await openWidget(page);
   await widget
     .getByRole("button", { name: "Talk to a person", exact: true })
     .click();

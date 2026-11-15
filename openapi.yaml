@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: MELA AI API
-  version: 0.1.0
+  version: 0.2.0
   description: Accessible learning companion. One public demo catalogue; bearer-protected
     learner tickets and cookie-protected tutor tools. Browser origins must be allowlisted.
     Errors expose no credentials or database details.
@@ -1627,6 +1627,105 @@ paths:
                 $ref: '#/components/schemas/Error'
       description: Returns 503 when PostgreSQL or migrations are unavailable. Demo
         retrieval remains available.
+  /api/v1/transcriptions:
+    options:
+      summary: CORS preflight
+      responses:
+        '204':
+          description: Allowed origin
+    post:
+      summary: Generate an English transcript from a public YouTube video
+      description: Requires explicit consent. Sends the actual video URL to the server-side
+        Gemini provider. Three requests per minute per process/address; successful
+        results cached in-process for one hour. No generated transcript is returned
+        when the provider fails. Transcripts are AI-generated and unreviewed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - videoUrl
+              - consent
+              properties:
+                videoUrl:
+                  type: string
+                  format: uri
+                  maxLength: 2000
+                consent:
+                  type: boolean
+                  enum:
+                  - true
+                language:
+                  type: string
+                  enum:
+                  - en
+                  default: en
+      responses:
+        '200':
+          description: Timestamped English transcript
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transcript'
+        '400':
+          description: Invalid YouTube URL or missing consent
+        '429':
+          description: Rate limit exceeded
+        '502':
+          description: Gemini rejected the request or could not provide a usable transcript
+        '503':
+          description: Gemini key is not configured
+  /api/v1/lessons/{id}/media:
+    options:
+      summary: CORS preflight
+      responses:
+        '204':
+          description: Allowed origin
+    get:
+      summary: Read lesson media and validated signing configuration
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          enum:
+          - va-future
+          - offline-first-localized-ai
+      description: Signing metadata is null unless a safe media URL, validation flag,
+        reviewer and exact YouTube video ID are configured. The browser hides a signing
+        clip for any other video.
+      responses:
+        '200':
+          description: Public media metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  defaultVideoUrl:
+                    type: string
+                    format: uri
+                  signLanguage:
+                    type: object
+                    nullable: true
+                    properties:
+                      url:
+                        type: string
+                      videoId:
+                        type: string
+                      language:
+                        type: string
+                        enum:
+                        - EthSL
+                      reviewer:
+                        type: string
+                      offsetSeconds:
+                        type: number
+        '404':
+          description: Unknown lesson
 components:
   securitySchemes:
     tutorSession:
@@ -1779,6 +1878,7 @@ components:
           - none
           - local
           - cloud
+          - gemini
         matched:
           type: boolean
         actions:
@@ -1787,6 +1887,9 @@ components:
             type: string
             maxLength: 2000
           maxItems: 10
+        notice:
+          type: string
+          description: Explains an AI failure when source text is shown instead.
       required:
       - answer
       - citations
@@ -2008,3 +2111,48 @@ components:
           type: boolean
       required:
       - ok
+    Transcript:
+      type: object
+      required:
+      - title
+      - language
+      - cues
+      - videoUrl
+      - generated
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        language:
+          type: string
+          enum:
+          - en
+        generated:
+          type: boolean
+          enum:
+          - true
+        videoUrl:
+          type: string
+          format: uri
+        cues:
+          type: array
+          minItems: 1
+          maxItems: 240
+          items:
+            type: object
+            required:
+            - start
+            - end
+            - text
+            properties:
+              start:
+                type: number
+                minimum: 0
+                maximum: 14400
+              end:
+                type: number
+                minimum: 0
+                maximum: 14400
+              text:
+                type: string
+                maxLength: 1500

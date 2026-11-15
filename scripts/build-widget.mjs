@@ -25,5 +25,21 @@ await build({
 await copyFile("openapi.yaml", "public/openapi.yaml");
 await copyFile("data/content.json", "public/content.json");
 
-await build({entryPoints:["module/savanna/integration.ts"],bundle:true,minify:true,target:"es2020",format:"iife",outfile:"public/savanna-integration.js"});
+await build({
+  entryPoints: ["module/savanna/integration.ts"],
+  bundle: true,
+  minify: true,
+  target: "es2020",
+  format: "iife",
+  outfile: "public/savanna-integration.js",
+});
 await import("./integrate-savanna.mjs");
+
+await build({
+  entryPoints: ["module/media/course-media.ts"],
+  bundle: true,
+  minify: true,
+  target: "es2020",
+  format: "iife",
+  outfile: "public/course-media.js",
+});
