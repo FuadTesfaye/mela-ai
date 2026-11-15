@@ -1,5 +1,5 @@
 import { api, preflight } from "@/lib/security/http";
-import { PROGRAMMING_LESSON, lessonIds } from "@/lib/media/lesson-catalog";
+import { DEFAULT_LESSON_VIDEO, lessonIds } from "@/lib/media/lesson-catalog";
 import { HttpError } from "@/lib/security/auth";
 import { approvedSigning } from "@/lib/signing/service";
 import { youtubeId } from "@/lib/media/youtube";
@@ -12,11 +12,7 @@ export const GET = (
     const lessonId = (await params).id;
     if (!(lessonIds as readonly string[]).includes(lessonId))
       throw new HttpError(404, "Lesson not found.");
-    const defaultVideoUrl =
-      lessonId === PROGRAMMING_LESSON.id
-        ? PROGRAMMING_LESSON.videoUrl
-        : process.env.COURSE_VIDEO_URL ||
-          "https://www.youtube.com/watch?v=9hE5-98ZeCg";
+    const defaultVideoUrl = DEFAULT_LESSON_VIDEO.videoUrl;
     const selectedId =
       new URL(request.url).searchParams.get("videoId") ||
       youtubeId(defaultVideoUrl);
@@ -43,11 +39,8 @@ export const GET = (
         process.env.SIGN_LANGUAGE_LESSON_VIDEO_ID || "",
       );
     return {
-      defaultVideoUrl:
-        lessonId === PROGRAMMING_LESSON.id
-          ? PROGRAMMING_LESSON.videoUrl
-          : process.env.COURSE_VIDEO_URL ||
-            "https://www.youtube.com/watch?v=9hE5-98ZeCg",
+      defaultVideoUrl,
+      transcriptUrl: `/transcripts/${selectedId}.json`,
       signLanguage:
         approved ||
         (validated

@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: MELA AI API
-  version: 0.3.0
+  version: 0.4.0
   description: Accessible learning companion. One public demo catalogue; bearer-protected
     learner tickets and cookie-protected tutor tools. Browser origins must be allowlisted.
     Errors expose no credentials or database details.
@@ -1724,6 +1724,11 @@ paths:
                         type: string
                       offsetSeconds:
                         type: number
+                  transcriptUrl:
+                    type: string
+                    description: Public prepared-caption URL on the backend origin.
+                      May return 404 until the selected-video preparation step is
+                      run.
         '404':
           description: Unknown lesson
   /api/v1/lessons/{id}/signing:

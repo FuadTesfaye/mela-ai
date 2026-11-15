@@ -17,7 +17,8 @@
     "worker:alerts": "node --env-file-if-exists=.env --import tsx workers/alerts.ts",
     "test:db": "node --import tsx tests/integration/postgres.test.ts",
     "test:widget": "npm run widget:build && node --import tsx tests/widget.mjs",
-    "format": "prettier --write app components lib module workers scripts tests *.ts *.json *.yml *.md"
+    "format": "prettier --write app components lib module workers scripts tests *.ts *.json *.yml *.md",
+    "prepare:video": "python3 scripts/prepare-video.py"
   },
   "dependencies": {
     "lucide-react": "0.475.0",

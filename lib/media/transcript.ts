@@ -34,7 +34,8 @@ export const transcriptSchema = z
   });
 export type Transcript = z.infer<typeof transcriptSchema> & {
   videoUrl: string;
-  generated: true;
+  generated: boolean;
+  source?: "gemini" | "youtube-captions";
 };
 const resultSchema = {
   type: "object",

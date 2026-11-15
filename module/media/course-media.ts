@@ -1,7 +1,8 @@
 import { youtubeId, youtubeUrl } from "../../lib/media/youtube";
 import { youtubeAPI, type YouTubePlayer } from "./youtube-player";
 import { transcriptRevision } from "../../lib/media/video-context";
-import { PROGRAMMING_LESSON } from "../../lib/media/lesson-catalog";
+import { DEFAULT_LESSON_VIDEO } from "../../lib/media/lesson-catalog";
+import { validTranscript } from "./transcript-client";
 import { mountLearningPreview } from "./learning-preview";
 import type { Transcript } from "../../lib/media/transcript";
 const make = <K extends keyof HTMLElementTagNameMap>(
@@ -24,6 +25,7 @@ type Sign = {
 class CourseMedia extends HTMLElement {
   private root!: ShadowRoot;
   private player?: YouTubePlayer;
+  private playerReady = false;
   private timer?: ReturnType<typeof setInterval>;
   private controller?: AbortController;
   private sign?: Sign;
@@ -38,7 +40,7 @@ class CourseMedia extends HTMLElement {
   private signingPlayPending?: HTMLVideoElement;
   private signingMessage?: HTMLElement;
   private signingAction?: HTMLButtonElement;
-  private videoUrl = "https://www.youtube.com/watch?v=9hE5-98ZeCg";
+  private videoUrl = DEFAULT_LESSON_VIDEO.videoUrl;
   private lastTick = -1;
   private frame?: HTMLIFrameElement;
   private status!: HTMLParagraphElement;
@@ -49,8 +51,12 @@ class CourseMedia extends HTMLElement {
   private transcriptionError = "";
   connectedCallback() {
     if (this.root) return;
-    if (this.getAttribute("lesson-id") === PROGRAMMING_LESSON.id)
-      this.videoUrl = PROGRAMMING_LESSON.videoUrl;
+    const source = this.getAttribute("video-src");
+    if (source) {
+      try {
+        this.videoUrl = youtubeUrl(source);
+      } catch {}
+    }
     this.root = this.attachShadow({ mode: "open" });
     this.render();
     void this.configuration();
@@ -64,9 +70,29 @@ class CourseMedia extends HTMLElement {
     this.player?.destroy();
     this.signVideo?.pause();
   }
+  static get observedAttributes() {
+    return ["video-src"];
+  }
+  attributeChangedCallback(
+    name: string,
+    oldValue: string | null,
+    value: string | null,
+  ) {
+    if (name === "video-src" && this.root && value && value !== oldValue)
+      void this.load(value);
+  }
+  private apiUrl(path: string) {
+    return new URL(
+      (this.getAttribute("api") || "/api").replace(/\/$/, "") + path,
+      location.href,
+    ).href;
+  }
+  private remoteUrl(path: string) {
+    return new URL(path, new URL(this.apiUrl("/")).origin).href;
+  }
   private render() {
     const style = make("style");
-    style.textContent = `:host{display:block;font:14px/1.6 Arial,sans-serif;color:#17394e}*{box-sizing:border-box}[hidden]{display:none!important}button,input{font:inherit}button{cursor:pointer;padding:10px 13px;border:1px solid #b5cbd8;border-radius:5px;background:#fff;color:#16445e}button:hover{background:#edf8fc}button:disabled{opacity:.6;cursor:wait}button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #cc940c;outline-offset:3px}.card{border:1px solid #cfdee7;border-radius:9px;overflow:hidden;background:white}.bar{display:flex;align-items:center;gap:12px;background:#eef7fb;padding:16px 18px}.bar strong{font-size:16px}.badge{font-size:11px;margin-left:auto;background:white;border:1px solid #c7dce7;border-radius:20px;padding:4px 9px}.body{padding:18px}.url-form{display:flex;gap:8px;margin-bottom:12px}.url-form input{padding:10px;border:1px solid #adc2cf;border-radius:5px;flex:1;min-width:0}.stage{background:#062c40;aspect-ratio:16/9;min-height:220px;position:relative;display:grid;place-items:center;overflow:hidden;border-radius:6px}.stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0}.placeholder{text-align:center;color:#fff;padding:20px}.placeholder strong{display:block;font-size:19px}.placeholder p{font-size:13px;color:#cfdfeb;max-width:330px}.player-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:start}.player-layout.with-signing{grid-template-columns:minmax(0,1fr) 250px}.sign-box{width:250px;background:#f7fafc;border:1px solid #b8d2df;border-radius:7px;overflow:hidden;color:#355a70;animation:sign-open 150ms ease-out}.sign-label{font-size:11px;font-weight:bold;letter-spacing:.5px;background:#003c54;color:white;padding:8px}.sign-placeholder,.sign-status{margin:0;padding:10px;font-size:12px;line-height:1.5}.sign-viewport{aspect-ratio:1;background:#182e3e;display:grid;place-items:center}.sign-viewport video{width:100%;height:100%;min-height:0;object-fit:contain;aspect-ratio:1}.sign-action,.expand-sign{margin:0 8px 9px;font-size:12px;padding:7px}.sign-dialog{width:min(640px,95vw);max-height:90vh;overflow:auto;padding:16px;border:2px solid #006b89;border-radius:8px;color:#17394e}.sign-dialog::backdrop{background:#00192799}.sign-dialog h3{margin:0 0 12px;font-size:17px}.sign-dialog .sign-viewport{margin-top:12px;aspect-ratio:auto}.sign-dialog video{max-height:65vh;aspect-ratio:auto}.sign-dialog .sign-status{font-size:14px}.preview-mode{display:flex;gap:6px;align-items:center;padding:8px;font-size:11px}.preview-mode select{min-width:0;flex:1;padding:7px;border:1px solid #b6cbd6;border-radius:5px;background:white;color:#17394e;font:inherit}.gesture-viewport{background:#eaf3f6}.gesture-viewport svg{display:block;width:100%;height:auto;max-height:400px}.gesture-note{font-size:10px;line-height:1.5;padding:8px 10px;margin:0;color:#6c512c;background:#fff7e7}.gesture-description{font-size:10px;color:#4f6b7b;padding:5px 10px;margin:0}.live-caption{padding:12px;border-top:1px solid #d6e5eb;background:white}.caption-heading{display:flex;justify-content:space-between;gap:8px;font-size:10px;letter-spacing:.5px;color:#006783}.caption-time{font-variant-numeric:tabular-nums}.caption-words{font-size:15px;line-height:1.65;margin:10px 0;max-height:210px;overflow:auto;overflow-wrap:anywhere;color:#153b50}.live-caption small{display:block;font-size:10px;color:#637985}.preview-generate{font-size:12px;background:#006b89;border-color:#006b89;color:white;margin:0 0 8px}.sign-dialog .caption-words{font-size:19px;max-height:300px}.sign-dialog .gesture-viewport svg{max-height:45vh}.sign-dialog .preview-mode{font-size:14px}@keyframes sign-open{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}@media(prefers-reduced-motion:reduce){.sign-box{animation:none}}.controls{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:13px}.primary{background:#006b89;color:white;border-color:#006b89}.controls label{display:flex;align-items:center;gap:7px;font-size:12px}.controls input{width:17px;height:17px}.status{font-size:12px;color:#3b5f75;margin:12px 0 0;min-height:20px}.transcript{margin-top:18px;border-top:1px solid #dce6ed;padding-top:15px}.transcript h3{font-size:16px;margin:0 0 7px}.transcript small{display:block;font-size:12px;color:#5b6f7c}.cues{max-height:300px;overflow:auto;margin-top:12px}.cue{width:100%;text-align:left;display:flex;align-items:baseline;gap:12px;border:0;border-top:1px solid #e8eff4;border-radius:0;padding:11px 5px;background:white;font-size:13px}.cue.active{background:#eaf7fc}.time{font-weight:bold;white-space:nowrap;color:#006580;font-size:11px}.download{font-size:12px;color:#005d7b;text-decoration:underline;margin-left:auto}@media(max-width:650px){.player-layout.with-signing{grid-template-columns:minmax(0,1fr)}.sign-box{width:min(220px,100%)}.url-form{flex-wrap:wrap}.url-form input{flex-basis:100%}.bar{padding:12px}.body{padding:12px}.bar strong{font-size:14px}.badge{font-size:10px}.placeholder strong{font-size:15px}.placeholder p{font-size:11px;max-width:190px}.stage{min-height:230px}.controls label{font-size:11px}}`;
+    style.textContent = `:host{display:block;font:14px/1.6 Arial,sans-serif;color:#17394e}*{box-sizing:border-box}[hidden]{display:none!important}button,input{font:inherit}button{cursor:pointer;padding:10px 13px;border:1px solid #b5cbd8;border-radius:5px;background:#fff;color:#16445e}button:hover{background:#edf8fc}button:disabled{opacity:.6;cursor:wait}button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #cc940c;outline-offset:3px}.card{border:1px solid #cfdee7;border-radius:9px;overflow:hidden;background:white}.bar{display:flex;align-items:center;gap:12px;background:#eef7fb;padding:16px 18px}.bar strong{font-size:16px}.badge{font-size:11px;margin-left:auto;background:white;border:1px solid #c7dce7;border-radius:20px;padding:4px 9px}.body{padding:18px;container-type:inline-size}.url-form{display:flex;gap:8px;margin-bottom:12px}.url-form input{padding:10px;border:1px solid #adc2cf;border-radius:5px;flex:1;min-width:0}.stage{width:100%;min-width:0;background:#062c40;aspect-ratio:16/9;min-height:220px;position:relative;display:grid;place-items:center;overflow:hidden;border-radius:6px}.stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0}.placeholder{text-align:center;color:#fff;padding:20px}.placeholder strong{display:block;font-size:19px}.placeholder p{font-size:13px;color:#cfdfeb;max-width:330px}.player-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:start}.player-layout.with-signing{grid-template-columns:minmax(0,1fr) 250px}.sign-box{width:250px;background:#f7fafc;border:1px solid #b8d2df;border-radius:7px;overflow:hidden;color:#355a70;animation:sign-open 150ms ease-out}.sign-label{font-size:11px;font-weight:bold;letter-spacing:.5px;background:#003c54;color:white;padding:8px}.sign-placeholder,.sign-status{margin:0;padding:10px;font-size:12px;line-height:1.5}.sign-viewport{aspect-ratio:1;background:#182e3e;display:grid;place-items:center}.sign-viewport video{width:100%;height:100%;min-height:0;object-fit:contain;aspect-ratio:1}.sign-action,.expand-sign{margin:0 8px 9px;font-size:12px;padding:7px}.sign-dialog{width:min(640px,95vw);max-height:90vh;overflow:auto;padding:16px;border:2px solid #006b89;border-radius:8px;color:#17394e}.sign-dialog::backdrop{background:#00192799}.sign-dialog h3{margin:0 0 12px;font-size:17px}.sign-dialog .sign-viewport{margin-top:12px;aspect-ratio:auto}.sign-dialog video{max-height:65vh;aspect-ratio:auto}.sign-dialog .sign-status{font-size:14px}.preview-mode{display:flex;gap:6px;align-items:center;padding:8px;font-size:11px}.preview-mode select{min-width:0;flex:1;padding:7px;border:1px solid #b6cbd6;border-radius:5px;background:white;color:#17394e;font:inherit}.gesture-viewport{background:#eaf3f6}.gesture-viewport svg{display:block;width:100%;height:auto;max-height:400px}.gesture-note{font-size:10px;line-height:1.5;padding:8px 10px;margin:0;color:#6c512c;background:#fff7e7}.spelling-label{margin:0;padding:8px;text-align:center;font-size:18px;font-weight:bold;color:#006783}.animation-controls{display:grid;gap:7px;padding:8px}.animation-controls select{width:100%;padding:6px;font:inherit;font-size:11px}.motion-toggle{font-size:11px;padding:7px}.motion-state{margin:0;font-size:11px;color:#4d6b7b}.alphabet-reference{display:block;padding:0 10px 8px;font-size:10px;color:#006783}.gesture-description{font-size:10px;color:#4f6b7b;padding:5px 10px;margin:0}.live-caption{padding:12px;border-top:1px solid #d6e5eb;background:white}.caption-heading{display:flex;justify-content:space-between;gap:8px;font-size:10px;letter-spacing:.5px;color:#006783}.caption-time{font-variant-numeric:tabular-nums}.caption-words{font-size:15px;line-height:1.65;margin:10px 0;max-height:210px;overflow:auto;overflow-wrap:anywhere;color:#153b50}.live-caption small{display:block;font-size:10px;color:#637985}.preview-generate{font-size:12px;background:#006b89;border-color:#006b89;color:white;margin:0 0 8px}.sign-dialog .caption-words{font-size:19px;max-height:300px}.sign-dialog .gesture-viewport svg{max-height:45vh}.sign-dialog .preview-mode{font-size:14px}@keyframes sign-open{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}@media(prefers-reduced-motion:reduce){.sign-box{animation:none}}.controls{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:13px}.primary{background:#006b89;color:white;border-color:#006b89}.playback-controls{margin:0 0 12px}.caption-options{margin-top:12px}.caption-options summary{cursor:pointer;color:#006783;font-size:12px}.playback-speed{padding:8px;font:inherit;border:1px solid #b5cbd8;border-radius:5px}.controls label{display:flex;align-items:center;gap:7px;font-size:12px}.controls input{width:17px;height:17px}.status{font-size:12px;color:#3b5f75;margin:12px 0 0;min-height:20px}.transcript{margin-top:18px;border-top:1px solid #dce6ed;padding-top:15px}.transcript h3{font-size:16px;margin:0 0 7px}.transcript small{display:block;font-size:12px;color:#5b6f7c}.cues{max-height:300px;overflow:auto;margin-top:12px}.cue{width:100%;text-align:left;display:flex;align-items:baseline;gap:12px;border:0;border-top:1px solid #e8eff4;border-radius:0;padding:11px 5px;background:white;font-size:13px}.cue.active{background:#eaf7fc}.time{font-weight:bold;white-space:nowrap;color:#006580;font-size:11px}.download{font-size:12px;color:#005d7b;text-decoration:underline;margin-left:auto}@container(max-width:700px){.player-layout.with-signing{grid-template-columns:minmax(0,1fr)}.sign-box{width:100%}.learning-preview[data-mode=both]{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.preview-mode{grid-column:1/-1}.gesture-viewport,.sign-viewport,.spelling-label,.gesture-note,.gesture-description,.animation-controls,.alphabet-reference{grid-column:1}.live-caption{grid-column:2;grid-row:2/span 8;border-left:1px solid #d6e5eb}.gesture-viewport svg{max-height:260px}}@container(max-width:400px){.learning-preview[data-mode=both]{display:block}.sign-box{width:100%}.caption-words{font-size:16px}}@media(max-width:650px){.player-layout.with-signing{grid-template-columns:minmax(0,1fr)}.sign-box{width:100%}.url-form{flex-wrap:wrap}.url-form input{flex-basis:100%}.bar{padding:12px}.body{padding:12px}.bar strong{font-size:14px}.badge{font-size:10px}.placeholder strong{font-size:15px}.placeholder p{font-size:11px;max-width:190px}.stage{min-height:230px}.controls label{font-size:11px}}`;
     const card = make("section", undefined, "card");
     card.setAttribute(
       "aria-label",
@@ -132,6 +158,8 @@ class CourseMedia extends HTMLElement {
         this.transcriptionError =
           "Select the video-sharing checkbox below, then generate captions.";
         this.learningPreview?.error(this.transcriptionError);
+        this.root.querySelector<HTMLDetailsElement>(".caption-options")!.open =
+          true;
         check.focus();
         return;
       }
@@ -204,14 +232,36 @@ class CourseMedia extends HTMLElement {
         }),
       );
     };
-    controls.append(consent, transcribe, toggle, explain);
+    const play = make("button", "Play lesson", "play-lesson");
+    play.type = "button";
+    play.disabled = true;
+    play.onclick = () => {
+      if (!this.playerReady) return;
+      if (this.player?.getPlayerState() === 1) this.player.pauseVideo();
+      else this.player?.playVideo();
+    };
+    const speed = make("select", undefined, "playback-speed");
+    speed.setAttribute("aria-label", "Playback speed");
+    speed.disabled = true;
+    for (const rate of [0.5, 0.75, 1, 1.25, 1.5, 2]) {
+      const option = make("option", `${rate}× speed`);
+      option.value = String(rate);
+      speed.append(option);
+    }
+    speed.value = "1";
+    speed.onchange = () => this.player?.setPlaybackRate(Number(speed.value));
+    const playback = make("div", undefined, "controls playback-controls");
+    playback.append(play, speed, toggle, explain);
+    controls.append(consent, transcribe);
+    const captionOptions = make("details", undefined, "caption-options");
+    captionOptions.append(make("summary", "Caption tools"), controls);
     this.status = make(
       "p",
       "Generate captions from your video, then open the learning panel. Captions and experimental gestures follow playback.",
       "status",
     );
     this.status.setAttribute("role", "status");
-    body.append(form, layout, controls, this.status);
+    body.append(form, playback, layout, captionOptions, this.status);
     card.append(bar, body);
     this.root.append(style, card);
   }
@@ -222,7 +272,9 @@ class CourseMedia extends HTMLElement {
     const source = this.videoUrl;
     try {
       const response = await fetch(
-        `/api/v1/lessons/${encodeURIComponent(this.getAttribute("lesson-id") || "va-future")}/media${this.frame ? "?videoId=" + youtubeId(source) : ""}`,
+        this.apiUrl(
+          `/v1/lessons/${encodeURIComponent(this.getAttribute("lesson-id") || "va-future")}/media?videoId=${youtubeId(source)}`,
+        ),
         { signal: this.configurationController.signal },
       );
       if (version !== this.configurationVersion || !this.isConnected) return;
@@ -235,18 +287,27 @@ class CourseMedia extends HTMLElement {
         !this.isConnected
       )
         return;
-      if (!this.frame && config.defaultVideoUrl) {
+      if (
+        !this.frame &&
+        !this.getAttribute("video-src") &&
+        config.defaultVideoUrl
+      ) {
         this.videoUrl = youtubeUrl(config.defaultVideoUrl);
         this.root.querySelector<HTMLInputElement>(".url-form input")!.value =
           this.videoUrl;
       }
       this.sign =
         config.signLanguage?.videoId === youtubeId(this.videoUrl)
-          ? config.signLanguage
+          ? {
+              ...config.signLanguage,
+              url: this.remoteUrl(config.signLanguage.url),
+            }
           : undefined;
       this.showSigning();
       this.restoreTranscript();
       this.publishVideo();
+      if (!this.transcript)
+        await this.loadPreparedTranscript(config.transcriptUrl, version);
     } catch {
       if (version !== this.configurationVersion || !this.isConnected) return;
       this.sign = undefined;
@@ -256,7 +317,45 @@ class CourseMedia extends HTMLElement {
       );
       this.restoreTranscript();
       this.publishVideo();
+      if (!this.transcript)
+        await this.loadPreparedTranscript(
+          `/transcripts/${youtubeId(this.videoUrl)}.json`,
+          version,
+        );
     }
+  }
+  private async loadPreparedTranscript(
+    path: string | undefined,
+    version: number,
+  ) {
+    if (!path) return;
+    const source = this.videoUrl;
+    try {
+      const response = await fetch(this.remoteUrl(path), {
+        signal: this.configurationController?.signal,
+      });
+      if (!response.ok) return;
+      const data = await response.json();
+      if (
+        version !== this.configurationVersion ||
+        source !== this.videoUrl ||
+        !this.isConnected ||
+        !validTranscript(data, source)
+      )
+        return;
+      this.transcript = data;
+      try {
+        localStorage.setItem(
+          "mela-video-transcript:" + youtubeId(source),
+          JSON.stringify(data),
+        );
+      } catch {}
+      this.drawTranscript(data);
+      this.updateLearningPreview();
+      this.dispatchTranscript(data.cues);
+      this.status.textContent =
+        "English course captions ready. Open the learning panel and play the video.";
+    } catch {}
   }
   private restoreTranscript() {
     try {
@@ -265,24 +364,7 @@ class CourseMedia extends HTMLElement {
           "mela-video-transcript:" + youtubeId(this.videoUrl),
         ) || "null",
       );
-      if (
-        !data ||
-        data.language !== "en" ||
-        youtubeUrl(data.videoUrl) !== this.videoUrl ||
-        !Array.isArray(data.cues) ||
-        !data.cues.length ||
-        data.cues.length > 240 ||
-        data.cues.some(
-          (c: { start: number; end: number; text: string }) =>
-            typeof c.text !== "string" ||
-            c.text.length > 1500 ||
-            !Number.isFinite(c.start) ||
-            !Number.isFinite(c.end) ||
-            c.start < 0 ||
-            c.end <= c.start,
-        )
-      )
-        return;
+      if (!validTranscript(data, this.videoUrl)) return;
       this.transcript = data;
       this.drawTranscript(data);
       this.updateLearningPreview();
@@ -308,9 +390,15 @@ class CourseMedia extends HTMLElement {
     clearInterval(this.timer);
     this.player?.destroy();
     this.player = undefined;
+    this.playerReady = false;
+    this.root.querySelector<HTMLButtonElement>(".play-lesson")!.disabled = true;
+    this.root.querySelector<HTMLSelectElement>(".playback-speed")!.disabled =
+      true;
     this.clearSigning();
     this.sign = undefined;
     this.videoUrl = canonical;
+    this.root.querySelector<HTMLInputElement>(".url-form input")!.value =
+      canonical;
     this.root.querySelector("iframe")?.remove();
     this.root.querySelector(".placeholder")?.remove();
     const frame = make("iframe");
@@ -319,7 +407,7 @@ class CourseMedia extends HTMLElement {
       "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen";
     frame.allowFullscreen = true;
     frame.referrerPolicy = "strict-origin-when-cross-origin";
-    frame.src = `https://www.youtube-nocookie.com/embed/${youtubeId(canonical)}?enablejsapi=1&rel=0&playsinline=1&origin=${encodeURIComponent(location.origin)}`;
+    frame.src = `https://www.youtube-nocookie.com/embed/${youtubeId(canonical)}?enablejsapi=1&rel=0&playsinline=1&hl=en&origin=${encodeURIComponent(location.origin)}`;
     this.root.querySelector(".stage")!.prepend(frame);
     this.frame = frame;
     this.lastTick = -1;
@@ -334,8 +422,26 @@ class CourseMedia extends HTMLElement {
       if (this.frame !== frame || !this.isConnected) return;
       this.player = new api.Player(frame, {
         events: {
-          onReady: () => this.synchronize(),
+          onReady: () => {
+            if (this.frame !== frame || !this.isConnected) return;
+            this.playerReady = true;
+            this.root.querySelector<HTMLButtonElement>(
+              ".play-lesson",
+            )!.disabled = false;
+            this.root.querySelector<HTMLSelectElement>(
+              ".playback-speed",
+            )!.disabled = false;
+            this.status.textContent =
+              "Video ready. Play the lesson to start synchronized captions and animation.";
+            this.synchronize();
+          },
           onStateChange: () => this.synchronize(),
+          onPlaybackRateChange: () => this.synchronize(),
+          onError: () => {
+            if (this.frame === frame)
+              this.status.textContent =
+                "YouTube could not play this video here. Check your connection or open it on YouTube.";
+          },
         },
       });
       this.timer = setInterval(() => this.synchronize(), 350);
@@ -467,6 +573,10 @@ class CourseMedia extends HTMLElement {
     const visible = !this.root.querySelector<HTMLElement>(".sign-box")?.hidden;
     this.learningPreview?.update({
       cues: this.transcript?.cues || [],
+      sourceLabel:
+        this.transcript?.generated === false
+          ? "COURSE CAPTIONS"
+          : "AI CAPTIONS",
       seconds: Math.max(0, this.player?.getCurrentTime?.() || 0),
       playing: this.player?.getPlayerState?.() === 1,
       rate: this.player?.getPlaybackRate?.() || 1,
@@ -531,6 +641,12 @@ class CourseMedia extends HTMLElement {
     if (!this.player || typeof this.player.getCurrentTime !== "function")
       return;
     const seconds = this.player.getCurrentTime() || 0;
+    const play = this.root.querySelector<HTMLButtonElement>(".play-lesson");
+    if (play)
+      play.textContent =
+        this.player.getPlayerState() === 1 ? "Pause lesson" : "Play lesson";
+    const speed = this.root.querySelector<HTMLSelectElement>(".playback-speed");
+    if (speed) speed.value = String(this.player.getPlaybackRate() || 1);
     if (Math.floor(seconds) !== this.lastTick) {
       this.lastTick = Math.floor(seconds);
       this.publishVideo();
@@ -647,7 +763,7 @@ class CourseMedia extends HTMLElement {
     this.controller = new AbortController();
     this.status.textContent =
       "Gemini is processing the video’s speech. This may take up to 90 seconds…";
-    const response = await fetch("/api/v1/transcriptions", {
+    const response = await fetch(this.apiUrl("/v1/transcriptions"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ videoUrl, language: "en", consent: true }),
@@ -657,6 +773,10 @@ class CourseMedia extends HTMLElement {
     if (version !== this.requestVersion || !this.isConnected) return;
     if (!response.ok)
       throw new Error(data.error || "Video transcription failed.");
+    if (!validTranscript(data, videoUrl))
+      throw new Error(
+        "The provider returned invalid caption timing. Please retry.",
+      );
     this.transcript = data;
     try {
       localStorage.setItem(
@@ -677,7 +797,9 @@ class CourseMedia extends HTMLElement {
       make("h3", "English transcript"),
       make(
         "small",
-        "AI-generated from this video’s audio · review before relying on it",
+        data.generated === false
+          ? "English source captions · review against the audio"
+          : "AI-generated from this video’s audio · review before relying on it",
       ),
     );
     const download = make("button", "Download transcript", "download");

@@ -147,3 +147,18 @@ test("a reviewed signing clip is advertised only with an explicit video binding"
     });
   }
 });
+test("all demo courses resolve the same selected 149-second source video", async () => {
+  const { lessonIds } = await import("../../lib/media/lesson-catalog");
+  for (const id of lessonIds) {
+    const response = await GET(
+      new Request(`http://localhost:3000/api/v1/lessons/${id}/media`),
+      { params: Promise.resolve({ id }) },
+    );
+    const data = await response.json();
+    assert.equal(
+      data.defaultVideoUrl,
+      "https://www.youtube.com/watch?v=9hE5-98ZeCg",
+    );
+    assert.equal(data.transcriptUrl, "/transcripts/9hE5-98ZeCg.json");
+  }
+});

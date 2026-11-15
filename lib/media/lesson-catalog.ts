@@ -1,8 +1,10 @@
+import selectedVideo from "../../data/lesson-media.json";
+export const DEFAULT_LESSON_VIDEO = selectedVideo;
 export const PROGRAMMING_LESSON = {
   id: "programming-for-beginners",
   title: "Programming for Beginners",
-  videoId: "bJzb-RuUcMU",
-  videoUrl: "https://www.youtube.com/watch?v=bJzb-RuUcMU",
+  videoId: selectedVideo.videoId,
+  videoUrl: selectedVideo.videoUrl,
 } as const;
 export const lessonIds = [
   "va-future",

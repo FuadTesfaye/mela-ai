@@ -1,5 +1,6 @@
 /** Captions are transcript evidence. Procedural gestures below are illustrative,
  * not a signed-language vocabulary or an English-to-EthSL translation model. */
+import { handshapeFor, spellingAt } from "./fingerspelling";
 export type Cue = { start: number; end: number; text: string };
 export type Gesture =
   | "wave"
@@ -58,6 +59,8 @@ export type PreviewState = {
   playing: boolean;
   rate: number;
   visible: boolean;
+  sourceLabel?: string;
+  playback?: "not-loaded" | "loading" | "ready";
 };
 export function mountLearningPreview(
   host: HTMLElement,
@@ -93,7 +96,8 @@ export function mountLearningPreview(
   caption.setAttribute("aria-label", "Synchronized English captions");
   const stamp = el("span", "00:00", "caption-time");
   const heading = el("div", undefined, "caption-heading");
-  heading.append(el("strong", "AI CAPTIONS"), stamp);
+  const sourceLabel = el("strong", "AI CAPTIONS");
+  heading.append(sourceLabel, stamp);
   const words = el(
     "p",
     "Generate captions to follow this lesson.",
@@ -108,8 +112,39 @@ export function mountLearningPreview(
   );
   caption.append(heading, words, generate, hint);
   const description = el("p", "Waiting for captions", "gesture-description");
+  const animationMode = el("select");
+  animationMode.setAttribute("aria-label", "Animation style");
+  for (const [value, label] of [
+    ["spelling", "English fingerspelling (preview)"],
+    ["gestures", "Illustrative gestures"],
+  ]) {
+    const option = el("option", label);
+    option.value = value;
+    animationMode.append(option);
+  }
+  animationMode.value = "spelling";
+  const motion = el("button", "Pause animation", "motion-toggle");
+  motion.type = "button";
+  const motionState = el("p", "Paused with video", "motion-state");
+  const letterLabel = el("p", "", "spelling-label");
+  letterLabel.setAttribute("aria-hidden", "true");
+  const animationControls = el("div", undefined, "animation-controls");
+  animationControls.append(animationMode, motion, motionState);
+  const reference = el("a", "Alphabet reference", "alphabet-reference");
+  reference.href =
+    "https://www.cdc.gov/hearing-loss-children-guide/media/pdfs/fingerspelling.pdf";
+  reference.target = "_blank";
+  reference.rel = "noopener noreferrer";
+
   wrapper.append(controls, visual);
-  if (!approved) wrapper.append(note, description);
+  if (!approved)
+    wrapper.append(
+      letterLabel,
+      note,
+      description,
+      animationControls,
+      reference,
+    );
   wrapper.append(caption);
   host.prepend(wrapper);
   let state: PreviewState = {
@@ -129,6 +164,8 @@ export function mountLearningPreview(
     typeof matchMedia === "function"
       ? matchMedia("(prefers-reduced-motion: reduce)")
       : undefined;
+  let motionOverride: boolean | undefined;
+  const motionEnabled = () => motionOverride ?? !reduced?.matches;
   let root: SVGSVGElement | undefined,
     arms: SVGPathElement[] = [],
     hands: SVGGElement[] = [];
@@ -136,7 +173,8 @@ export function mountLearningPreview(
     root = svg("svg", {
       viewBox: "0 0 320 320",
       role: "img",
-      "aria-label": "Animated person making experimental illustrative gestures",
+      "aria-label":
+        "Animated person with experimental English fingerspelling and illustrative gestures",
     });
     root.append(
       svg("rect", { width: 320, height: 320, rx: 16, fill: "#eaf3f6" }),
@@ -243,6 +281,16 @@ export function mountLearningPreview(
     if (!root) return;
     const gesture = gestureFor(cue?.text || "");
     root.setAttribute("data-gesture", gesture);
+    const spelling =
+      animationMode.value === "spelling" ? spellingAt(cue, seconds) : undefined;
+    const shape = spelling
+      ? handshapeFor(spelling.letter, spelling.phase)
+      : undefined;
+    root.setAttribute("data-letter", spelling?.letter || "");
+    letterLabel.textContent = spelling
+      ? `${spelling.word} · ${spelling.letter}`
+      : "";
+
     const local = cue ? Math.max(0, seconds - cue.start) : 0;
     const beat = gesture === "rest" ? 0 : Math.sin(local * 3.2);
     const slow = Math.sin(local * 1.8);
@@ -269,6 +317,14 @@ export function mountLearningPreview(
       left = [104 - slow * 7, 215 + beat * 8, -35];
       right = [216 + slow * 7, 215 - beat * 8, 35];
     }
+    if (shape) {
+      left = [115, 250, -8];
+      right = [
+        212 + shape.offset[0],
+        161 + shape.offset[1],
+        shape.rotation + Math.sin((spelling?.phase || 0) * Math.PI) * 2,
+      ];
+    }
     [left, right].forEach(([x, y, rotation], i) => {
       const shoulder = i ? 211 : 109;
       const elbow = i ? 234 : 86;
@@ -293,30 +349,39 @@ export function mountLearningPreview(
           third: 3,
         }[numeral || ""] ??
           3);
-      Array.from(hands[i].querySelectorAll("path"))
-        .slice(0, 4)
-        .forEach((finger, j) => {
-          const extended =
-            i === 0 ||
-            (gesture !== "point" && gesture !== "count") ||
-            j < (gesture === "point" ? 1 : count);
-          const x = -8 + j * 5;
-          finger.setAttribute(
-            "d",
-            extended
-              ? `M${x} -4 L${x} ${-22 - Math.sin((j / 3) * Math.PI) * 5}`
+      const paths = Array.from(hands[i].querySelectorAll("path"));
+      paths.slice(0, 4).forEach((finger, j) => {
+        const extended =
+          i === 0 ||
+          (gesture !== "point" && gesture !== "count") ||
+          j < (gesture === "point" ? 1 : count);
+        const x = -8 + j * 5;
+        const mode = i === 1 && shape ? shape.fingers[j] : extended ? 1 : 0;
+        const spread =
+          i === 1 && shape ? (j - 1.5) * (shape.spread - 1) * 5 : 0;
+        finger.setAttribute(
+          "d",
+          mode === 1
+            ? `M${x} -4 L${x + spread} ${-22 - Math.sin((j / 3) * Math.PI) * 5}`
+            : mode === 2
+              ? `M${x} -4 Q${x + spread - 5} -25 ${x + 5} -12`
               : `M${x} -4 Q${x + 4} -12 ${x + 2} -1`,
-          );
-        });
+        );
+      });
+      paths[4]?.setAttribute(
+        "d",
+        i === 1 && shape ? shape.thumb : "M-6 5 L-18 -5",
+      );
     });
-    description.textContent =
-      gesture === "rest"
+    description.textContent = spelling
+      ? `Cue-timed spelling · estimated word timing`
+      : gesture === "rest"
         ? "Waiting for speech"
         : `Illustrative gesture · ${gesture}`;
   }
   function draw() {
     const cue = cueAt(state.cues, state.seconds);
-    pose(reduced?.matches && cue ? cue.start : state.seconds, cue);
+    pose(!motionEnabled() && cue ? cue.start : state.seconds, cue);
   }
   function stop() {
     if (frame !== undefined && typeof cancelAnimationFrame === "function")
@@ -327,11 +392,12 @@ export function mountLearningPreview(
     frame = undefined;
     if (
       disposed ||
+      approved ||
       !wrapper.isConnected ||
       !state.visible ||
       !state.playing ||
       select.value === "captions" ||
-      reduced?.matches
+      !motionEnabled()
     )
       return;
     const seconds = state.seconds + ((Date.now() - anchor) / 1000) * state.rate;
@@ -341,6 +407,7 @@ export function mountLearningPreview(
   }
   let lastVisual: boolean | undefined;
   function refresh() {
+    wrapper.dataset.mode = select.value;
     const captions = select.value !== "avatar",
       showVisual = select.value !== "captions";
     visual.hidden = !showVisual;
@@ -352,6 +419,30 @@ export function mountLearningPreview(
       options.onModeChange?.(showVisual);
     }
     const cue = cueAt(state.cues, state.seconds);
+    sourceLabel.textContent = state.sourceLabel || "AI CAPTIONS";
+    hint.textContent =
+      state.sourceLabel === "COURSE CAPTIONS"
+        ? "Source English captions · word timing is estimated."
+        : "Generated from the video's audio. Review for accuracy.";
+    note.textContent =
+      animationMode.value === "spelling"
+        ? "Experimental English fingerspelling preview · not EthSL translation or full ASL. Fluent review pending."
+        : "Experimental gesture preview · illustrative movement, not EthSL translation.";
+    motion.textContent = motionEnabled()
+      ? "Pause animation"
+      : "Enable animation";
+
+    motionState.textContent = !state.cues.length
+      ? "Waiting for captions"
+      : !motionEnabled()
+        ? "Animation paused · reduced motion or your preference"
+        : state.playing
+          ? `Following video · ${state.rate}×`
+          : state.playback === "loading"
+            ? "Waiting for video controls"
+            : state.playback === "not-loaded"
+              ? "Load the video to begin"
+              : "Paused with video";
     const text = generating
       ? "Transcribing the video…"
       : failure ||
@@ -369,16 +460,22 @@ export function mountLearningPreview(
     draw();
     stop();
     if (
+      !approved &&
       state.visible &&
       state.playing &&
       !!cueAt(state.cues, state.seconds) &&
       showVisual &&
-      !reduced?.matches &&
+      motionEnabled() &&
       typeof requestAnimationFrame === "function"
     )
       frame = requestAnimationFrame(animate);
   }
   select.onchange = refresh;
+  animationMode.onchange = refresh;
+  motion.onclick = () => {
+    motionOverride = !motionEnabled();
+    refresh();
+  };
   const motionChange = () => refresh();
   reduced?.addEventListener?.("change", motionChange);
   refresh();

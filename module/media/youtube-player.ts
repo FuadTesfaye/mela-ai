@@ -5,6 +5,7 @@ export interface YouTubePlayer {
   playVideo(): void;
   getPlayerState(): number;
   getPlaybackRate(): number;
+  setPlaybackRate(rate: number): void;
   seekTo(seconds: number, allowSeekAhead: boolean): void;
   destroy(): void;
 }
@@ -15,6 +16,8 @@ interface YouTubeAPI {
       events: {
         onReady: () => void;
         onStateChange: (event: { data: number }) => void;
+        onPlaybackRateChange?: () => void;
+        onError?: (event: { data: number }) => void;
       };
     },
   ) => YouTubePlayer;

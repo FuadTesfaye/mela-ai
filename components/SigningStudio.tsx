@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { DEFAULT_LESSON_VIDEO } from "@/lib/media/lesson-catalog";
 import { youtubeId } from "@/lib/media/youtube";
 import { youtubeAPI, type YouTubePlayer } from "@/module/media/youtube-player";
 type Track = {
@@ -22,7 +23,7 @@ const checks = {
 };
 export default function SigningStudio() {
   const [lesson, setLesson] = useState("programming-for-beginners"),
-    [url, setUrl] = useState("https://youtu.be/bJzb-RuUcMU"),
+    [url, setUrl] = useState(DEFAULT_LESSON_VIDEO.videoUrl),
     [tracks, setTracks] = useState<Track[]>([]),
     [password, setPassword] = useState(""),
     [authorized, setAuthorized] = useState(false),

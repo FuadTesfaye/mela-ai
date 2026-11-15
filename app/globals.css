@@ -371,11 +371,14 @@ select:focus-visible {
   }
   .savanna-sidebar nav {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-around;
+    gap: 4px;
   }
   .savanna-sidebar nav a {
     padding: 9px;
     margin: 0;
+    gap: 0;
   }
   .savanna-page {
     margin: 0;
