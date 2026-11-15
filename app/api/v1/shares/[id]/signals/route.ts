@@ -1,0 +1,9 @@
+import {z} from "zod";
+import {api,jsonBody,preflight} from "@/lib/security/http";
+import {sessionAccess} from "@/lib/support/tickets";
+import {HttpError} from "@/lib/security/auth";
+import {db} from "@/lib/database/db";
+type Params={params:Promise<{id:string}>};
+export const OPTIONS=preflight;
+export const GET=(request:Request,{params}:Params)=>api(request,async()=>{const {id}=await params;const {session,role}=await sessionAccess(request,id);if(!session.active||Date.now()-new Date(session.created_at).getTime()>1800000)return {active:false,signals:[]};const after=z.coerce.number().int().min(0).max(Number.MAX_SAFE_INTEGER).parse(new URL(request.url).searchParams.get("after")||0);const result=await db().query("SELECT id,data FROM share_signals WHERE session_id=$1 AND sender<>$2 AND id>$3 ORDER BY id LIMIT 100",[id,role,after]);return {active:true,signals:result.rows};},240);
+export const POST=(request:Request,{params}:Params)=>api(request,async()=>{const {id}=await params;const {session,role}=await sessionAccess(request,id);if(!session.active||Date.now()-new Date(session.created_at).getTime()>1800000)throw new HttpError(410,"Sharing stopped.");const data=z.discriminatedUnion("type",[z.object({type:z.enum(["offer","answer"]),sdp:z.string().max(50000)}),z.object({type:z.literal("ice"),candidate:z.object({candidate:z.string().max(3000),sdpMid:z.string().nullable().optional(),sdpMLineIndex:z.number().int().nullable().optional(),usernameFragment:z.string().nullable().optional()})})]).parse(await jsonBody(request,60000));if((data.type==="offer"&&role!=="learner")||(data.type==="answer"&&role!=="tutor"))throw new HttpError(403,"Invalid signaling role.");await db().query("INSERT INTO share_signals(session_id,sender,data) VALUES($1,$2,$3)",[id,role,JSON.stringify(data)]);return {ok:true};},240);
