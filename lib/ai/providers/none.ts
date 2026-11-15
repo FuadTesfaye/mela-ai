@@ -1,2 +1,2 @@
-import {groundedAnswer} from "../../retrieval/search";
-export const none=groundedAnswer;
+import { groundedAnswer } from "../../retrieval/search";
+export const none = groundedAnswer;

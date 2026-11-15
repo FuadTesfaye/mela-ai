@@ -1,8 +1,95 @@
-import {randomUUID,randomInt} from "node:crypto";
-import {db} from "../database/db";
-import {token,hash,equal,HttpError} from "../security/auth";
-import {deliver} from "./transports";
-import type {Language} from "../types";
-export async function subscribe(input:{channel:"telegram"|"sms";destination:string;language:Language;keywords:string},verified=false){const access=token();const code=String(randomInt(100000,1000000));const result=await db().query("INSERT INTO subscriptions(id,token_hash,channel,destination,language,keywords,verified,verification_hash,verification_expires) VALUES($1,$2,$3,$4,$5,$6,$7,$8,now()+interval '10 minutes') ON CONFLICT(channel,destination) DO UPDATE SET token_hash=EXCLUDED.token_hash,language=EXCLUDED.language,keywords=EXCLUDED.keywords,verified=EXCLUDED.verified,verification_hash=EXCLUDED.verification_hash,verification_expires=EXCLUDED.verification_expires,active=true WHERE subscriptions.active=false OR subscriptions.verified=false RETURNING id",[randomUUID(),hash(access),input.channel,input.destination,input.language,input.keywords,verified,hash(code)]);if(!result.rows[0])throw new HttpError(409,"This destination already has alerts. Unsubscribe before changing preferences.");const id=result.rows[0].id;if(!verified){try{await deliver(input.channel,input.destination,`MELA verification: ${code}. Expires in 10 minutes. Reply VERIFY ${code} or enter it in MELA. Ignore if you did not request alerts.`);}catch{await db().query("DELETE FROM subscriptions WHERE id=$1 AND verified=false",[id]);throw new HttpError(503,"Alert delivery is not configured or could not send a verification code.");}}return {id,token:access,verified};}
-export async function verifyCode(input:{id?:string;token?:string;destination?:string;channel?:string;code:string}){const result=input.id?await db().query("SELECT * FROM subscriptions WHERE id=$1 AND active=true",[input.id]):await db().query("SELECT * FROM subscriptions WHERE destination=$1 AND channel=$2 AND active=true",[input.destination,input.channel]);const row=result.rows[0];if(!row||(input.id&&!equal(hash(input.token||""),row.token_hash))||!row.verification_hash||!equal(hash(input.code),row.verification_hash)||new Date(row.verification_expires).getTime()<Date.now())throw new HttpError(400,"Verification code is invalid or expired.");await db().query("UPDATE subscriptions SET verified=true,verification_hash=null WHERE id=$1",[row.id]);return {verified:true};}
-export async function unsubscribeDestination(channel:string,destination:string){await db().query("UPDATE subscriptions SET active=false WHERE channel=$1 AND destination=$2",[channel,destination]);}
+import { randomUUID, randomInt } from "node:crypto";
+import { db } from "../database/db";
+import { token, hash, equal, HttpError } from "../security/auth";
+import { deliver } from "./transports";
+import type { Language } from "../types";
+export async function subscribe(
+  input: {
+    channel: "telegram" | "sms";
+    destination: string;
+    language: Language;
+    keywords: string;
+  },
+  verified = false,
+) {
+  const access = token();
+  const code = String(randomInt(100000, 1000000));
+  const result = await db().query(
+    "INSERT INTO subscriptions(id,token_hash,channel,destination,language,keywords,verified,verification_hash,verification_expires) VALUES($1,$2,$3,$4,$5,$6,$7,$8,now()+interval '10 minutes') ON CONFLICT(channel,destination) DO UPDATE SET token_hash=EXCLUDED.token_hash,language=EXCLUDED.language,keywords=EXCLUDED.keywords,verified=EXCLUDED.verified,verification_hash=EXCLUDED.verification_hash,verification_expires=EXCLUDED.verification_expires,active=true WHERE subscriptions.active=false OR subscriptions.verified=false RETURNING id",
+    [
+      randomUUID(),
+      hash(access),
+      input.channel,
+      input.destination,
+      input.language,
+      input.keywords,
+      verified,
+      hash(code),
+    ],
+  );
+  if (!result.rows[0])
+    throw new HttpError(
+      409,
+      "This destination already has alerts. Unsubscribe before changing preferences.",
+    );
+  const id = result.rows[0].id;
+  if (!verified) {
+    try {
+      await deliver(
+        input.channel,
+        input.destination,
+        `MELA verification: ${code}. Expires in 10 minutes. Reply VERIFY ${code} or enter it in MELA. Ignore if you did not request alerts.`,
+      );
+    } catch {
+      await db().query(
+        "DELETE FROM subscriptions WHERE id=$1 AND verified=false",
+        [id],
+      );
+      throw new HttpError(
+        503,
+        "Alert delivery is not configured or could not send a verification code.",
+      );
+    }
+  }
+  return { id, token: access, verified };
+}
+export async function verifyCode(input: {
+  id?: string;
+  token?: string;
+  destination?: string;
+  channel?: string;
+  code: string;
+}) {
+  const result = input.id
+    ? await db().query(
+        "SELECT * FROM subscriptions WHERE id=$1 AND active=true",
+        [input.id],
+      )
+    : await db().query(
+        "SELECT * FROM subscriptions WHERE destination=$1 AND channel=$2 AND active=true",
+        [input.destination, input.channel],
+      );
+  const row = result.rows[0];
+  if (
+    !row ||
+    (input.id && !equal(hash(input.token || ""), row.token_hash)) ||
+    !row.verification_hash ||
+    !equal(hash(input.code), row.verification_hash) ||
+    new Date(row.verification_expires).getTime() < Date.now()
+  )
+    throw new HttpError(400, "Verification code is invalid or expired.");
+  await db().query(
+    "UPDATE subscriptions SET verified=true,verification_hash=null WHERE id=$1",
+    [row.id],
+  );
+  return { verified: true };
+}
+export async function unsubscribeDestination(
+  channel: string,
+  destination: string,
+) {
+  await db().query(
+    "UPDATE subscriptions SET active=false WHERE channel=$1 AND destination=$2",
+    [channel, destination],
+  );
+}

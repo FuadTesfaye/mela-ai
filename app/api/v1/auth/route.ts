@@ -1,5 +1,53 @@
-import {z} from "zod";
-import {api,jsonBody} from "@/lib/security/http";
-import {createSession,equal,HttpError} from "@/lib/security/auth";
-export const POST=(request:Request)=>api(request,async()=>{const origin=request.headers.get("origin");if(origin!==new URL(process.env.APP_URL||request.url).origin)throw new HttpError(403,"Same-origin request required.");const {password}=z.object({password:z.string().max(300)}).parse(await jsonBody(request,2000));if(!process.env.ADMIN_PASSWORD||process.env.ADMIN_PASSWORD.length<12||!process.env.SESSION_SECRET||process.env.SESSION_SECRET.length<32)throw new HttpError(503,"Set ADMIN_PASSWORD (12+ characters) and SESSION_SECRET (32+ characters).");if(!equal(password,process.env.ADMIN_PASSWORD))throw new HttpError(401,"Incorrect password.");return Response.json({ok:true},{headers:{"Set-Cookie":`mela_session=${createSession()}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${process.env.NODE_ENV==="production"&&new URL(process.env.APP_URL||request.url).protocol==="https:"?"; Secure":""}`}});},8);
-export const DELETE=(request:Request)=>api(request,async()=>{if(request.headers.get("origin")!==new URL(process.env.APP_URL||request.url).origin)throw new HttpError(403,"Same-origin request required.");return Response.json({ok:true},{headers:{"Set-Cookie":"mela_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0"}});});
+import { z } from "zod";
+import { api, jsonBody } from "@/lib/security/http";
+import { createSession, equal, HttpError } from "@/lib/security/auth";
+export const POST = (request: Request) =>
+  api(
+    request,
+    async () => {
+      const origin = request.headers.get("origin");
+      if (origin !== new URL(process.env.APP_URL || request.url).origin)
+        throw new HttpError(403, "Same-origin request required.");
+      const { password } = z
+        .object({ password: z.string().max(300) })
+        .parse(await jsonBody(request, 2000));
+      if (
+        !process.env.ADMIN_PASSWORD ||
+        process.env.ADMIN_PASSWORD.length < 12 ||
+        !process.env.SESSION_SECRET ||
+        process.env.SESSION_SECRET.length < 32
+      )
+        throw new HttpError(
+          503,
+          "Set ADMIN_PASSWORD (12+ characters) and SESSION_SECRET (32+ characters).",
+        );
+      if (!equal(password, process.env.ADMIN_PASSWORD))
+        throw new HttpError(401, "Incorrect password.");
+      return Response.json(
+        { ok: true },
+        {
+          headers: {
+            "Set-Cookie": `mela_session=${createSession()}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${process.env.NODE_ENV === "production" && new URL(process.env.APP_URL || request.url).protocol === "https:" ? "; Secure" : ""}`,
+          },
+        },
+      );
+    },
+    8,
+  );
+export const DELETE = (request: Request) =>
+  api(request, async () => {
+    if (
+      request.headers.get("origin") !==
+      new URL(process.env.APP_URL || request.url).origin
+    )
+      throw new HttpError(403, "Same-origin request required.");
+    return Response.json(
+      { ok: true },
+      {
+        headers: {
+          "Set-Cookie":
+            "mela_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0",
+        },
+      },
+    );
+  });

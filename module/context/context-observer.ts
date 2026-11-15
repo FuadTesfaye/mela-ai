@@ -1,3 +1,48 @@
-import {detectContext} from "./savanna-adapter";
-import type {LearningContext} from "../../lib/types";
-export function observeContext(onChange:(context:LearningContext)=>void){let previous=JSON.stringify(detectContext());let timer:ReturnType<typeof setTimeout>;const check=()=>{clearTimeout(timer);timer=setTimeout(()=>{const context=detectContext();const next=JSON.stringify(context);if(next!==previous){previous=next;onChange(context);}},200);};const observer=new MutationObserver(check);observer.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:["data-course-id","data-module-title","data-lesson-title","data-page-type"]});window.addEventListener("popstate",check);window.addEventListener("hashchange",check);window.addEventListener("mela:context-changed",check);let previousUrl=location.href;const navigation=setInterval(()=>{if(previousUrl!==location.href){previousUrl=location.href;check();}},500);return()=>{observer.disconnect();clearTimeout(timer);clearInterval(navigation);window.removeEventListener("popstate",check);window.removeEventListener("hashchange",check);window.removeEventListener("mela:context-changed",check);};}
+import { detectContext } from "./savanna-adapter";
+import type { LearningContext } from "../../lib/types";
+export function observeContext(onChange: (context: LearningContext) => void) {
+  let previous = JSON.stringify(detectContext());
+  let timer: ReturnType<typeof setTimeout>;
+  const check = () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const context = detectContext();
+      const next = JSON.stringify(context);
+      if (next !== previous) {
+        previous = next;
+        onChange(context);
+      }
+    }, 200);
+  };
+  const observer = new MutationObserver(check);
+  observer.observe(document.body, {
+    subtree: true,
+    childList: true,
+    characterData: true,
+    attributes: true,
+    attributeFilter: [
+      "data-course-id",
+      "data-module-title",
+      "data-lesson-title",
+      "data-page-type",
+    ],
+  });
+  window.addEventListener("popstate", check);
+  window.addEventListener("hashchange", check);
+  window.addEventListener("mela:context-changed", check);
+  let previousUrl = location.href;
+  const navigation = setInterval(() => {
+    if (previousUrl !== location.href) {
+      previousUrl = location.href;
+      check();
+    }
+  }, 500);
+  return () => {
+    observer.disconnect();
+    clearTimeout(timer);
+    clearInterval(navigation);
+    window.removeEventListener("popstate", check);
+    window.removeEventListener("hashchange", check);
+    window.removeEventListener("mela:context-changed", check);
+  };
+}

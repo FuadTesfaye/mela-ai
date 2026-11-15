@@ -4,18 +4,18 @@ Target: WCAG 2.2 AA. **Status: not yet independently verified.** This is an impl
 
 ## Implemented support
 
-| Area | Implementation | Verification status |
-| --- | --- | --- |
-| Keyboard and focus | Native controls, visible outlines, skip link, Escape closes chat, focus returns to launcher; chat is nonmodal | DOM workflow tests pass; real keyboard/browser validation pending |
-| Screen-reader chat | Named dialog, labelled input and controls, role=log with polite additions, separate status region | Markup and DOM tests; NVDA/TalkBack pending |
-| Language and text | English/Amharic labels and content, message dir=auto, Unicode retrieval | Bilingual unit/API/DOM tests pass; fluent review and Arabic RTL test pending |
-| Reflow and zoom | Responsive workspace, mobile widget bounded by dynamic viewport, wrapping messages | Type/build checks pass; 320px and 200% manual checks pending |
-| Contrast and motion | Green/cream palette, visible focus, reduced-motion CSS and avatar support | Browser axe/contrast audit pending |
-| Alternatives to audio | Full text and source links, sound-off operation by design | DOM answer tests pass; manual task pending |
-| Speech | Capability detection, matching language voice, microphone confirmation, text fallback | Device and Amharic voice validation pending |
-| Human help | Sharing preview, explicit consent, private tickets, optional screenshot and stoppable capture | Consent DOM tests pass; PostgreSQL/tutor/browser integration pending |
-| Offline | Public knowledge cache and host-owned public-page worker | In-memory offline retrieval test passes; real offline reload pending |
-| Avatar and signing | Optional WebGL speaking character; no fabricated signing | WebGL/browser preview pending; EthSL not enabled |
+| Area                  | Implementation                                                                                                | Verification status                                                          |
+| --------------------- | ------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Keyboard and focus    | Native controls, visible outlines, skip link, Escape closes chat, focus returns to launcher; chat is nonmodal | DOM workflow tests pass; real keyboard/browser validation pending            |
+| Screen-reader chat    | Named dialog, labelled input and controls, role=log with polite additions, separate status region             | Markup and DOM tests; NVDA/TalkBack pending                                  |
+| Language and text     | English/Amharic labels and content, message dir=auto, Unicode retrieval                                       | Bilingual unit/API/DOM tests pass; fluent review and Arabic RTL test pending |
+| Reflow and zoom       | Responsive workspace, mobile widget bounded by dynamic viewport, wrapping messages                            | Type/build checks pass; 320px and 200% manual checks pending                 |
+| Contrast and motion   | Green/cream palette, visible focus, reduced-motion CSS and avatar support                                     | Browser axe/contrast audit pending                                           |
+| Alternatives to audio | Full text and source links, sound-off operation by design                                                     | DOM answer tests pass; manual task pending                                   |
+| Speech                | Capability detection, matching language voice, microphone confirmation, text fallback                         | Device and Amharic voice validation pending                                  |
+| Human help            | Sharing preview, explicit consent, private tickets, optional screenshot and stoppable capture                 | Consent DOM tests pass; PostgreSQL/tutor/browser integration pending         |
+| Offline               | Public knowledge cache and host-owned public-page worker                                                      | In-memory offline retrieval test passes; real offline reload pending         |
+| Avatar and signing    | Optional WebGL speaking character; no fabricated signing                                                      | WebGL/browser preview pending; EthSL not enabled                             |
 
 ## Automated evidence in this workspace
 

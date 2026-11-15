@@ -1,5 +1,270 @@
 import Link from "next/link";
-import {ArrowUpRight, ArrowRight, BookOpen, Check, Clock3, Headphones, MessageCircle, Mic, Sparkles, Play, Globe2, WifiOff, ChevronRight, Sprout} from "lucide-react";
+import {
+  ArrowUpRight,
+  ArrowRight,
+  BookOpen,
+  Check,
+  Clock3,
+  Headphones,
+  MessageCircle,
+  Mic,
+  Sparkles,
+  Play,
+  Globe2,
+  WifiOff,
+  ChevronRight,
+  Sprout,
+} from "lucide-react";
 import Shell from "@/components/Shell";
-import {AskButton} from "@/components/Widget";
-export default function Home(){return <Shell><div className="page-heading"><div><div className="eyebrow"><span className="live-dot"/> YOUR COMPANION FOR THE JOURNEY</div><h1>Small steps. <em>Big possibilities.</em></h1><p>A space to learn, ask, and grow — in a way that works for you.</p></div><span className="date-pill"><Sprout size={15}/> Let’s grow together</span></div><section className="hero-card" aria-labelledby="hero-heading"><div className="hero-copy"><span className="hero-label"><Sparkles size={15}/> MEET MELA, YOUR LEARNING COMPANION</span><h2 id="hero-heading">You bring the curiosity.<br/>We’ll bring the support.</h2><p>Stuck on a lesson? Need it in Amharic? Just ask.<br/>Your next step is a conversation away.</p><AskButton className="button cream">Let’s talk <ArrowUpRight size={17}/></AskButton><div className="hero-features"><span><Check size={14}/>In your language</span><span><Check size={14}/>At your pace</span><span><Check size={14}/>Always accessible</span></div></div><div className="hero-art" aria-hidden="true"><div className="orbit orbit-one"/><div className="orbit orbit-two"/><span className="art-star star-one">✦</span><span className="art-star star-two">✧</span><div className="illustration-window"><div className="window-bar"><i/><i/><i/><span>ROOM TO GROW</span></div><div className="plant-scene"><div className="leaf leaf-one"/><div className="leaf leaf-two"/><div className="leaf leaf-three"/><div className="leaf leaf-four"/><div className="stem"/><div className="plant-pot"/><div className="ground-line"/></div><div className="art-bubble bubble-one"><Check size={14}/> You’ve got this.</div></div><span className="art-bubble bubble-two"><MessageCircle size={17}/> አብረን እንማር</span></div></section><div className="overview-grid"><section className="learning-section"><div className="section-heading"><h2>Pick up where you left off</h2><Link href="/learn">My learning <ArrowUpRight size={16}/></Link></div><article className="course-card" data-mela-context data-course-id="digital-foundations" data-course-title="Digital Foundations" data-module-title="Finding your way online"><div className="course-art"><div className="browser-sketch"><div className="sketch-top"><i/><i/><i/></div><div className="sketch-content"><span/><span/><b><Globe2 size={38}/></b></div></div><span className="course-art-label">BUILD YOUR FOUNDATION</span></div><div className="course-body"><div className="course-meta"><span className="tag">DIGITAL FOUNDATIONS</span><span><Clock3 size={13}/> 8 min read</span></div><h3>Finding your way online</h3><p>Build confidence, one click at a time.</p><div className="course-progress"><span>Module 2 of 5</span><strong>40%</strong></div><div className="progress-track" role="progressbar" aria-label="Course progress" aria-valuenow={40} aria-valuemin={0} aria-valuemax={100}><span style={{width:"40%"}}/></div><Link className="button primary full" href="/learn">Continue learning <ArrowRight size={16}/></Link></div></article><div className="tip-card"><span className="tip-icon"><Headphones size={22}/></span><div><h3>There’s more than one way to learn.</h3><p>Read it. Hear it. Ask about it. Make this space yours.</p></div></div></section><section className="ask-section"><div className="section-heading"><h2>A question is a good beginning</h2><Sparkles size={19}/></div><div className="ask-card"><div className="mela-intro"><span className="mela-avatar"><Sprout size={23}/></span><div><strong>Hi, I’m Mela <span>✦</span></strong><small>Your learning companion</small></div><span className="online-label"><i/>Ready to help</span></div><div className="chat-bubble">No question is too small. Let’s make your next step a little easier.<br/><span lang="am">ሰላም! ዛሬ በምን ልርዳዎ?</span></div><p className="try-label">NOT SURE WHERE TO START? TRY THIS</p><div className="suggestions">{[{text:"Explain my current lesson",icon:BookOpen},{text:"በአማርኛ እርዳኝ",icon:Globe2},{text:"I’d like to talk to a person",icon:MessageCircle}].map(({text,icon:Icon})=><AskButton key={text} className="suggestion" question={text}><Icon size={16}/>{text}<ChevronRight size={16}/></AskButton>)}</div><AskButton className="ask-input"><span>What’s on your mind?</span><span className="input-icons"><Mic size={18}/><span className="send-circle"><ArrowUpRight size={18}/></span></span></AskButton><p className="grounded-note"><Check size={12}/>Grounded in your lessons. Here for you.</p></div></section></div><section className="journey-section"><div className="section-heading"><h2>Support for every part of your journey</h2><span className="muted">A little closer to what’s next.</span></div><div className="journey-grid"><Link href="/support" className="journey-card"><span className="journey-icon peach"><MessageCircle size={22}/></span><ArrowUpRight className="journey-arrow" size={18}/><h3>Real people. Real support.</h3><p>Connect with a tutor who can help you find your way.</p><span className="journey-link">Find human help <ArrowRight size={14}/></span></Link><Link href="/jobs" className="journey-card"><span className="journey-icon lavender"><ArrowUpRight size={22}/></span><ArrowUpRight className="journey-arrow" size={18}/><h3>Your next chapter starts here.</h3><p>Explore opportunities and ask for the support you need.</p><span className="journey-link">Explore career space <ArrowRight size={14}/></span></Link><Link href="/docs#offline" className="journey-card"><span className="journey-icon sage"><WifiOff size={22}/></span><ArrowUpRight className="journey-arrow" size={18}/><h3>Less connection. Still learning.</h3><p>Keep your learning close, even when the internet isn’t.</p><span className="journey-link">Learn about offline mode <ArrowRight size={14}/></span></Link></div></section></Shell>}
+import { AskButton } from "@/components/Widget";
+export default function Home() {
+  return (
+    <Shell>
+      <div className="page-heading">
+        <div>
+          <div className="eyebrow">
+            <span className="live-dot" /> YOUR COMPANION FOR THE JOURNEY
+          </div>
+          <h1>
+            Small steps. <em>Big possibilities.</em>
+          </h1>
+          <p>A space to learn, ask, and grow — in a way that works for you.</p>
+        </div>
+        <span className="date-pill">
+          <Sprout size={15} /> Let’s grow together
+        </span>
+      </div>
+      <section className="hero-card" aria-labelledby="hero-heading">
+        <div className="hero-copy">
+          <span className="hero-label">
+            <Sparkles size={15} /> MEET MELA, YOUR LEARNING COMPANION
+          </span>
+          <h2 id="hero-heading">
+            You bring the curiosity.
+            <br />
+            We’ll bring the support.
+          </h2>
+          <p>
+            Stuck on a lesson? Need it in Amharic? Just ask.
+            <br />
+            Your next step is a conversation away.
+          </p>
+          <AskButton className="button cream">
+            Let’s talk <ArrowUpRight size={17} />
+          </AskButton>
+          <div className="hero-features">
+            <span>
+              <Check size={14} />
+              In your language
+            </span>
+            <span>
+              <Check size={14} />
+              At your pace
+            </span>
+            <span>
+              <Check size={14} />
+              Always accessible
+            </span>
+          </div>
+        </div>
+        <div className="hero-art" aria-hidden="true">
+          <div className="orbit orbit-one" />
+          <div className="orbit orbit-two" />
+          <span className="art-star star-one">✦</span>
+          <span className="art-star star-two">✧</span>
+          <div className="illustration-window">
+            <div className="window-bar">
+              <i />
+              <i />
+              <i />
+              <span>ROOM TO GROW</span>
+            </div>
+            <div className="plant-scene">
+              <div className="leaf leaf-one" />
+              <div className="leaf leaf-two" />
+              <div className="leaf leaf-three" />
+              <div className="leaf leaf-four" />
+              <div className="stem" />
+              <div className="plant-pot" />
+              <div className="ground-line" />
+            </div>
+            <div className="art-bubble bubble-one">
+              <Check size={14} /> You’ve got this.
+            </div>
+          </div>
+          <span className="art-bubble bubble-two">
+            <MessageCircle size={17} /> አብረን እንማር
+          </span>
+        </div>
+      </section>
+      <div className="overview-grid">
+        <section className="learning-section">
+          <div className="section-heading">
+            <h2>Pick up where you left off</h2>
+            <Link href="/learn">
+              My learning <ArrowUpRight size={16} />
+            </Link>
+          </div>
+          <article
+            className="course-card"
+            data-mela-context
+            data-course-id="digital-foundations"
+            data-course-title="Digital Foundations"
+            data-module-title="Finding your way online"
+          >
+            <div className="course-art">
+              <div className="browser-sketch">
+                <div className="sketch-top">
+                  <i />
+                  <i />
+                  <i />
+                </div>
+                <div className="sketch-content">
+                  <span />
+                  <span />
+                  <b>
+                    <Globe2 size={38} />
+                  </b>
+                </div>
+              </div>
+              <span className="course-art-label">BUILD YOUR FOUNDATION</span>
+            </div>
+            <div className="course-body">
+              <div className="course-meta">
+                <span className="tag">DIGITAL FOUNDATIONS</span>
+                <span>
+                  <Clock3 size={13} /> 8 min read
+                </span>
+              </div>
+              <h3>Finding your way online</h3>
+              <p>Build confidence, one click at a time.</p>
+              <div className="course-progress">
+                <span>Module 2 of 5</span>
+                <strong>40%</strong>
+              </div>
+              <div
+                className="progress-track"
+                role="progressbar"
+                aria-label="Course progress"
+                aria-valuenow={40}
+                aria-valuemin={0}
+                aria-valuemax={100}
+              >
+                <span style={{ width: "40%" }} />
+              </div>
+              <Link className="button primary full" href="/learn">
+                Continue learning <ArrowRight size={16} />
+              </Link>
+            </div>
+          </article>
+          <div className="tip-card">
+            <span className="tip-icon">
+              <Headphones size={22} />
+            </span>
+            <div>
+              <h3>There’s more than one way to learn.</h3>
+              <p>Read it. Hear it. Ask about it. Make this space yours.</p>
+            </div>
+          </div>
+        </section>
+        <section className="ask-section">
+          <div className="section-heading">
+            <h2>A question is a good beginning</h2>
+            <Sparkles size={19} />
+          </div>
+          <div className="ask-card">
+            <div className="mela-intro">
+              <span className="mela-avatar">
+                <Sprout size={23} />
+              </span>
+              <div>
+                <strong>
+                  Hi, I’m Mela <span>✦</span>
+                </strong>
+                <small>Your learning companion</small>
+              </div>
+              <span className="online-label">
+                <i />
+                Ready to help
+              </span>
+            </div>
+            <div className="chat-bubble">
+              No question is too small. Let’s make your next step a little
+              easier.
+              <br />
+              <span lang="am">ሰላም! ዛሬ በምን ልርዳዎ?</span>
+            </div>
+            <p className="try-label">NOT SURE WHERE TO START? TRY THIS</p>
+            <div className="suggestions">
+              {[
+                { text: "Explain my current lesson", icon: BookOpen },
+                { text: "በአማርኛ እርዳኝ", icon: Globe2 },
+                { text: "I’d like to talk to a person", icon: MessageCircle },
+              ].map(({ text, icon: Icon }) => (
+                <AskButton key={text} className="suggestion" question={text}>
+                  <Icon size={16} />
+                  {text}
+                  <ChevronRight size={16} />
+                </AskButton>
+              ))}
+            </div>
+            <AskButton className="ask-input">
+              <span>What’s on your mind?</span>
+              <span className="input-icons">
+                <Mic size={18} />
+                <span className="send-circle">
+                  <ArrowUpRight size={18} />
+                </span>
+              </span>
+            </AskButton>
+            <p className="grounded-note">
+              <Check size={12} />
+              Grounded in your lessons. Here for you.
+            </p>
+          </div>
+        </section>
+      </div>
+      <section className="journey-section">
+        <div className="section-heading">
+          <h2>Support for every part of your journey</h2>
+          <span className="muted">A little closer to what’s next.</span>
+        </div>
+        <div className="journey-grid">
+          <Link href="/support" className="journey-card">
+            <span className="journey-icon peach">
+              <MessageCircle size={22} />
+            </span>
+            <ArrowUpRight className="journey-arrow" size={18} />
+            <h3>Real people. Real support.</h3>
+            <p>Connect with a tutor who can help you find your way.</p>
+            <span className="journey-link">
+              Find human help <ArrowRight size={14} />
+            </span>
+          </Link>
+          <Link href="/jobs" className="journey-card">
+            <span className="journey-icon lavender">
+              <ArrowUpRight size={22} />
+            </span>
+            <ArrowUpRight className="journey-arrow" size={18} />
+            <h3>Your next chapter starts here.</h3>
+            <p>Explore opportunities and ask for the support you need.</p>
+            <span className="journey-link">
+              Explore career space <ArrowRight size={14} />
+            </span>
+          </Link>
+          <Link href="/docs#offline" className="journey-card">
+            <span className="journey-icon sage">
+              <WifiOff size={22} />
+            </span>
+            <ArrowUpRight className="journey-arrow" size={18} />
+            <h3>Less connection. Still learning.</h3>
+            <p>Keep your learning close, even when the internet isn’t.</p>
+            <span className="journey-link">
+              Learn about offline mode <ArrowRight size={14} />
+            </span>
+          </Link>
+        </div>
+      </section>
+    </Shell>
+  );
+}

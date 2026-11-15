@@ -59,7 +59,13 @@ services:
       db-init:
         condition: service_completed_successfully
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/v1/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:3000/api/v1/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -89,7 +95,20 @@ services:
   turn:
     profiles: ["turn"]
     image: coturn/coturn:4.6.3
-    command: ["-n", "--log-file=stdout", "--listening-port=3478", "--min-port=49160", "--max-port=49200", "--realm=mela", "--lt-cred-mech", "--user=${TURN_USERNAME:-mela}:${TURN_CREDENTIAL:-set-a-secret}", "--no-cli", "--no-multicast-peers", "--no-loopback-peers"]
+    command:
+      [
+        "-n",
+        "--log-file=stdout",
+        "--listening-port=3478",
+        "--min-port=49160",
+        "--max-port=49200",
+        "--realm=mela",
+        "--lt-cred-mech",
+        "--user=${TURN_USERNAME:-mela}:${TURN_CREDENTIAL:-set-a-secret}",
+        "--no-cli",
+        "--no-multicast-peers",
+        "--no-loopback-peers",
+      ]
     ports:
       - "3478:3478/tcp"
       - "3478:3478/udp"

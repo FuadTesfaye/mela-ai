@@ -55,7 +55,8 @@ The provided Savanna pages are **representative fixtures**, not the official sta
 <db-assistant
   lang="am"
   api="https://YOUR-MELA-HOST/api"
-  content="https://YOUR-MELA-HOST/content.json">
+  content="https://YOUR-MELA-HOST/content.json"
+>
 </db-assistant>
 ```
 
@@ -64,9 +65,13 @@ Add the exact host origin to `ALLOWED_ORIGINS`. `api` is the base before `/v1`, 
 Approve extractable lesson containers using these attributes:
 
 ```html
-<main data-mela-context data-course-id="digital-foundations"
-      data-course-title="Digital Foundations" data-module-title="Module 2"
-      data-lesson-title="Using a browser">
+<main
+  data-mela-context
+  data-course-id="digital-foundations"
+  data-course-title="Digital Foundations"
+  data-module-title="Module 2"
+  data-lesson-title="Using a browser"
+>
   <section id="browser-en" data-mela-section lang="en">
     <h2>Using a browser</h2>
     <p data-mela-content>Approved lesson text goes here.</p>

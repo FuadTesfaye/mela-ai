@@ -1,17 +1,486 @@
 "use client";
-import {useState,useEffect,useCallback,useRef} from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
-type Ticket={id:string;status:string;language:string;kind:string;created_at:string};
-type Detail={id:string;status:string;language:string;kind:string;conversation:{role:string;content:string}[];context:unknown;hasScreenshot:boolean;messages:{id:string;content:string}[]};
-export default function TutorPortal({id,content=false}:{id?:string;content?:boolean}){
- const [authorized,setAuthorized]=useState(false);const [password,setPassword]=useState("");const [error,setError]=useState("");const [notice,setNotice]=useState("");const [tickets,setTickets]=useState<Ticket[]>([]);const [ticket,setTicket]=useState<Detail>();const [reply,setReply]=useState("");const [busy,setBusy]=useState(false);const [material,setMaterial]=useState("");
- const refresh=useCallback(async()=>{try{const response=await fetch(id?"/api/v1/escalations/"+id:"/api/v1/escalations");if(response.status===401){setAuthorized(false);return;}const data=await response.json();if(!response.ok)throw new Error(data.error);setAuthorized(true);setError("");if(id)setTicket(data);else setTickets(data.tickets);}catch(e){setError(e instanceof Error?e.message:"Could not load tickets.");}},[id]);
- useEffect(()=>{void refresh();const timer=setInterval(()=>void refresh(),10000);return()=>clearInterval(timer);},[refresh]);
- async function signIn(e:React.FormEvent){e.preventDefault();setBusy(true);setError("");try{const response=await fetch("/api/v1/auth",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password})});const data=await response.json();if(!response.ok)throw new Error(data.error);setPassword("");setAuthorized(true);await refresh();}catch(e){setError(e instanceof Error?e.message:"Sign-in failed.");}finally{setBusy(false);}}
- async function update(status?:string){setBusy(true);try{const response=await fetch("/api/v1/escalations/"+id,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({...(reply.trim()?{reply}:{}),...(status?{status}:{})})});const data=await response.json();if(!response.ok)throw new Error(data.error);setReply("");setNotice("Ticket updated. The learner receives replies in their open chat.");await refresh();}catch(e){setError(e instanceof Error?e.message:"Update failed.");}finally{setBusy(false);}}
- async function index(e:React.FormEvent){e.preventDefault();setBusy(true);try{const parsed=JSON.parse(material);const response=await fetch("/api/v1/content",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({sections:Array.isArray(parsed)?parsed:parsed.sections})});const data=await response.json();if(!response.ok)throw new Error(data.error);setNotice(`${data.indexed} public sections indexed.`);setMaterial("");}catch(e){setError(e instanceof Error?e.message:"Indexing failed.");}finally{setBusy(false);}}
- if(!authorized)return <section className="content-card prose"><span className="tag">TUTOR ACCESS</span><h2>A place to help someone move forward.</h2><p>Sign in with the configured tutor password. Learner conversations are available only when learners choose to share them.</p><form onSubmit={signIn}><label htmlFor="password">Tutor password</label><input id="password" type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} className="field" required/><button disabled={busy} className="button primary">{busy?"Signing in…":"Sign in"}</button></form>{error&&<p role="alert" className="notice error">{error}</p>}<p>For local setup, configure ADMIN_PASSWORD and SESSION_SECRET in the server environment, and start PostgreSQL.</p></section>;
- return <><div className="meta-row" style={{marginBottom:20}}><Link href="/dashboard" className="button secondary">Support queue</Link><Link href="/dashboard/content" className="button secondary">Course materials</Link><button className="button secondary" onClick={async()=>{await fetch("/api/v1/auth",{method:"DELETE"});setAuthorized(false);}}>Sign out</button></div>{error&&<p role="alert" className="notice error">{error}</p>}{notice&&<p role="status" className="notice">{notice}</p>}{content?<section className="content-card"><h2>Give MELA something reliable to learn from.</h2><p>Index public, approved course sections as JSON. Each section needs id, title, content, url, and language (en or am). Optional fields: courseId and keywords. This demo uses one public content catalogue; do not index private course material.</p><form onSubmit={index}><label htmlFor="materials">Course sections JSON</label><textarea id="materials" rows={14} className="field" value={material} onChange={e=>setMaterial(e.target.value)} required/><button className="button primary" disabled={busy}>Index public material</button></form></section>:id&&ticket?<><section className="content-card"><span className="tag">{ticket.kind==="accommodation"?"INTERVIEW ACCOMMODATION":"LEARNING SUPPORT"}</span><h2>Request #{ticket.id.slice(0,8)}</h2><div className="meta-row"><span className="pill">{ticket.status}</span><span className="pill">{ticket.language==="am"?"አማርኛ":"English"}</span></div><h3>Shared conversation</h3>{ticket.conversation.length?ticket.conversation.map((m,i)=><p key={i} dir="auto"><strong>{m.role}: </strong>{m.content}</p>):<p>The learner did not share a conversation.</p>}<h3>Shared page context</h3><pre style={{whiteSpace:"pre-wrap",overflowWrap:"anywhere",fontSize:12}}>{ticket.context?JSON.stringify(ticket.context,null,2):"No page information shared."}</pre>{ticket.hasScreenshot&&<a className="button secondary" href={`/api/v1/escalations/${id}/screenshot`} target="_blank" rel="noopener noreferrer">View consented screenshot</a>}</section><ScreenViewer ticketId={id}/><section className="content-card"><h2>Tutor replies</h2>{ticket.messages.map(m=><p key={m.id}>{m.content}</p>)}<form onSubmit={e=>{e.preventDefault();void update();}}><label htmlFor="reply">Your reply</label><textarea id="reply" className="field" rows={4} maxLength={6000} value={reply} onChange={e=>setReply(e.target.value)} required/><div className="form-row"><button disabled={busy} className="button primary">Send reply</button><button disabled={busy} type="button" className="button secondary" onClick={()=>void update("resolved")}>Mark resolved</button><button disabled={busy} type="button" className="button secondary" onClick={()=>void update("queued")}>Return to queue</button></div></form></section></>:<section className="content-card"><h2>A helping hand, one conversation at a time.</h2><p>{tickets.length} recent support requests. The queue refreshes every ten seconds.</p>{!tickets.length&&<div className="notice">No requests yet. Learners can create a ticket from the MELA widget.</div>}{tickets.map(t=><Link className="ticket-link" key={t.id} href={`/dashboard/tickets/${t.id}`}><strong>#{t.id.slice(0,8)}</strong><div className="meta-row" style={{marginTop:8}}><span className="pill">{t.status}</span><span className="pill">{t.language}</span><span className="pill">{t.kind}</span><small>{new Date(t.created_at).toLocaleString()}</small></div></Link>)}</section>}</>;
+type Ticket = {
+  id: string;
+  status: string;
+  language: string;
+  kind: string;
+  created_at: string;
+};
+type Detail = {
+  id: string;
+  status: string;
+  language: string;
+  kind: string;
+  conversation: { role: string; content: string }[];
+  context: unknown;
+  hasScreenshot: boolean;
+  messages: { id: string; content: string }[];
+};
+export default function TutorPortal({
+  id,
+  content = false,
+}: {
+  id?: string;
+  content?: boolean;
+}) {
+  const [authorized, setAuthorized] = useState(false);
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [ticket, setTicket] = useState<Detail>();
+  const [reply, setReply] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [material, setMaterial] = useState("");
+  const refresh = useCallback(async () => {
+    try {
+      const response = await fetch(
+        id ? "/api/v1/escalations/" + id : "/api/v1/escalations",
+      );
+      if (response.status === 401) {
+        setAuthorized(false);
+        return;
+      }
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+      setAuthorized(true);
+      setError("");
+      if (id) setTicket(data);
+      else setTickets(data.tickets);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not load tickets.");
+    }
+  }, [id]);
+  useEffect(() => {
+    void refresh();
+    const timer = setInterval(() => void refresh(), 10000);
+    return () => clearInterval(timer);
+  }, [refresh]);
+  async function signIn(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      const response = await fetch("/api/v1/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+      setPassword("");
+      setAuthorized(true);
+      await refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Sign-in failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function update(status?: string) {
+    setBusy(true);
+    try {
+      const response = await fetch("/api/v1/escalations/" + id, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...(reply.trim() ? { reply } : {}),
+          ...(status ? { status } : {}),
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+      setReply("");
+      setNotice(
+        "Ticket updated. The learner receives replies in their open chat.",
+      );
+      await refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Update failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function index(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      const parsed = JSON.parse(material);
+      const response = await fetch("/api/v1/content", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sections: Array.isArray(parsed) ? parsed : parsed.sections,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+      setNotice(`${data.indexed} public sections indexed.`);
+      setMaterial("");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Indexing failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  if (!authorized)
+    return (
+      <section className="content-card prose">
+        <span className="tag">TUTOR ACCESS</span>
+        <h2>A place to help someone move forward.</h2>
+        <p>
+          Sign in with the configured tutor password. Learner conversations are
+          available only when learners choose to share them.
+        </p>
+        <form onSubmit={signIn}>
+          <label htmlFor="password">Tutor password</label>
+          <input
+            id="password"
+            type="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="field"
+            required
+          />
+          <button disabled={busy} className="button primary">
+            {busy ? "Signing in…" : "Sign in"}
+          </button>
+        </form>
+        {error && (
+          <p role="alert" className="notice error">
+            {error}
+          </p>
+        )}
+        <p>
+          For local setup, configure ADMIN_PASSWORD and SESSION_SECRET in the
+          server environment, and start PostgreSQL.
+        </p>
+      </section>
+    );
+  return (
+    <>
+      <div className="meta-row" style={{ marginBottom: 20 }}>
+        <Link href="/dashboard" className="button secondary">
+          Support queue
+        </Link>
+        <Link href="/dashboard/content" className="button secondary">
+          Course materials
+        </Link>
+        <button
+          className="button secondary"
+          onClick={async () => {
+            await fetch("/api/v1/auth", { method: "DELETE" });
+            setAuthorized(false);
+          }}
+        >
+          Sign out
+        </button>
+      </div>
+      {error && (
+        <p role="alert" className="notice error">
+          {error}
+        </p>
+      )}
+      {notice && (
+        <p role="status" className="notice">
+          {notice}
+        </p>
+      )}
+      {content ? (
+        <section className="content-card">
+          <h2>Give MELA something reliable to learn from.</h2>
+          <p>
+            Index public, approved course sections as JSON. Each section needs
+            id, title, content, url, and language (en or am). Optional fields:
+            courseId and keywords. This demo uses one public content catalogue;
+            do not index private course material.
+          </p>
+          <form onSubmit={index}>
+            <label htmlFor="materials">Course sections JSON</label>
+            <textarea
+              id="materials"
+              rows={14}
+              className="field"
+              value={material}
+              onChange={(e) => setMaterial(e.target.value)}
+              required
+            />
+            <button className="button primary" disabled={busy}>
+              Index public material
+            </button>
+          </form>
+        </section>
+      ) : id && ticket ? (
+        <>
+          <section className="content-card">
+            <span className="tag">
+              {ticket.kind === "accommodation"
+                ? "INTERVIEW ACCOMMODATION"
+                : "LEARNING SUPPORT"}
+            </span>
+            <h2>Request #{ticket.id.slice(0, 8)}</h2>
+            <div className="meta-row">
+              <span className="pill">{ticket.status}</span>
+              <span className="pill">
+                {ticket.language === "am" ? "አማርኛ" : "English"}
+              </span>
+            </div>
+            <h3>Shared conversation</h3>
+            {ticket.conversation.length ? (
+              ticket.conversation.map((m, i) => (
+                <p key={i} dir="auto">
+                  <strong>{m.role}: </strong>
+                  {m.content}
+                </p>
+              ))
+            ) : (
+              <p>The learner did not share a conversation.</p>
+            )}
+            <h3>Shared page context</h3>
+            <pre
+              style={{
+                whiteSpace: "pre-wrap",
+                overflowWrap: "anywhere",
+                fontSize: 12,
+              }}
+            >
+              {ticket.context
+                ? JSON.stringify(ticket.context, null, 2)
+                : "No page information shared."}
+            </pre>
+            {ticket.hasScreenshot && (
+              <a
+                className="button secondary"
+                href={`/api/v1/escalations/${id}/screenshot`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View consented screenshot
+              </a>
+            )}
+          </section>
+          <ScreenViewer ticketId={id} />
+          <section className="content-card">
+            <h2>Tutor replies</h2>
+            {ticket.messages.map((m) => (
+              <p key={m.id}>{m.content}</p>
+            ))}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                void update();
+              }}
+            >
+              <label htmlFor="reply">Your reply</label>
+              <textarea
+                id="reply"
+                className="field"
+                rows={4}
+                maxLength={6000}
+                value={reply}
+                onChange={(e) => setReply(e.target.value)}
+                required
+              />
+              <div className="form-row">
+                <button disabled={busy} className="button primary">
+                  Send reply
+                </button>
+                <button
+                  disabled={busy}
+                  type="button"
+                  className="button secondary"
+                  onClick={() => void update("resolved")}
+                >
+                  Mark resolved
+                </button>
+                <button
+                  disabled={busy}
+                  type="button"
+                  className="button secondary"
+                  onClick={() => void update("queued")}
+                >
+                  Return to queue
+                </button>
+              </div>
+            </form>
+          </section>
+        </>
+      ) : (
+        <section className="content-card">
+          <h2>A helping hand, one conversation at a time.</h2>
+          <p>
+            {tickets.length} recent support requests. The queue refreshes every
+            ten seconds.
+          </p>
+          {!tickets.length && (
+            <div className="notice">
+              No requests yet. Learners can create a ticket from the MELA
+              widget.
+            </div>
+          )}
+          {tickets.map((t) => (
+            <Link
+              className="ticket-link"
+              key={t.id}
+              href={`/dashboard/tickets/${t.id}`}
+            >
+              <strong>#{t.id.slice(0, 8)}</strong>
+              <div className="meta-row" style={{ marginTop: 8 }}>
+                <span className="pill">{t.status}</span>
+                <span className="pill">{t.language}</span>
+                <span className="pill">{t.kind}</span>
+                <small>{new Date(t.created_at).toLocaleString()}</small>
+              </div>
+            </Link>
+          ))}
+        </section>
+      )}
+    </>
+  );
 }
-function ScreenViewer({ticketId}:{ticketId:string}){const video=useRef<HTMLVideoElement>(null);const stopRef=useRef<()=>void>(()=>{});const [status,setStatus]=useState("The learner must start sharing from their widget first.");const [active,setActive]=useState(false);useEffect(()=>()=>stopRef.current(),[]);async function connect(){stopRef.current();let pc:RTCPeerConnection|undefined;let timer:ReturnType<typeof setInterval>|undefined;let sessionId="";let closed=false;const stop=()=>{if(closed)return;closed=true;clearInterval(timer);pc?.close();if(video.current)video.current.srcObject=null;setActive(false);setStatus("Viewing stopped.");};stopRef.current=stop;try{const r=await fetch(`/api/v1/escalations/${ticketId}/shares`);const data=await r.json();if(!r.ok)throw new Error(data.error);if(!data.session)throw new Error("The learner has not started a screen-sharing session.");sessionId=data.session.id;const config=await (await fetch(`/api/v1/shares/${sessionId}`)).json();pc=new RTCPeerConnection({iceServers:config.iceServers});const peer=pc;peer.ontrack=e=>{if(video.current){video.current.srcObject=e.streams[0];void video.current.play().catch(()=>{});}setStatus("Viewing the learner’s shared screen. The learner can stop at any time.");};const post=async(d:unknown)=>{const r=await fetch(`/api/v1/shares/${sessionId}/signals`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)});if(!r.ok)throw new Error("Signaling unavailable.");};peer.onicecandidate=e=>{if(e.candidate)void post({type:"ice",candidate:e.candidate.toJSON()}).catch(stop);};peer.onconnectionstatechange=()=>{if(["closed","failed"].includes(peer.connectionState))stop();};let after=0;let polling=false;const pending:RTCIceCandidateInit[]=[];const poll=async()=>{if(polling||closed)return;polling=true;try{const r=await fetch(`/api/v1/shares/${sessionId}/signals?after=${after}`);const signals=await r.json();if(!r.ok)throw new Error(signals.error);if(!signals.active){stop();return;}for(const signal of signals.signals){const d=signal.data;if(d.type==="offer"&&!peer.remoteDescription){await peer.setRemoteDescription(d);const answer=await peer.createAnswer();await peer.setLocalDescription(answer);await post({type:"answer",sdp:answer.sdp});for(const candidate of pending)await peer.addIceCandidate(candidate);pending.length=0;}if(d.type==="ice"){if(peer.remoteDescription)await peer.addIceCandidate(d.candidate);else pending.push(d.candidate);}after=signal.id;}}catch{stop();}finally{polling=false;}};timer=setInterval(()=>void poll(),2000);setActive(true);setStatus("Connecting to the learner’s screen…");await poll();}catch(e){stop();setStatus(e instanceof Error?e.message:"Cannot connect.");}}
- return <section className="content-card video-grid"><h2>Learner-controlled screen sharing</h2><p role="status">{status}</p><video ref={video} autoPlay playsInline muted aria-label="Learner’s shared screen" hidden={!active}/><div className="form-row"><button className="button secondary" onClick={()=>void connect()} disabled={active}>Connect to shared screen</button>{active&&<button className="button secondary" onClick={()=>stopRef.current()}>Stop viewing</button>}</div></section>;}
+function ScreenViewer({ ticketId }: { ticketId: string }) {
+  const video = useRef<HTMLVideoElement>(null);
+  const stopRef = useRef<() => void>(() => {});
+  const [status, setStatus] = useState(
+    "The learner must start sharing from their widget first.",
+  );
+  const [active, setActive] = useState(false);
+  useEffect(() => () => stopRef.current(), []);
+  async function connect() {
+    stopRef.current();
+    let pc: RTCPeerConnection | undefined;
+    let timer: ReturnType<typeof setInterval> | undefined;
+    let sessionId = "";
+    let closed = false;
+    const stop = () => {
+      if (closed) return;
+      closed = true;
+      clearInterval(timer);
+      pc?.close();
+      if (video.current) video.current.srcObject = null;
+      setActive(false);
+      setStatus("Viewing stopped.");
+    };
+    stopRef.current = stop;
+    try {
+      const r = await fetch(`/api/v1/escalations/${ticketId}/shares`);
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error);
+      if (!data.session)
+        throw new Error(
+          "The learner has not started a screen-sharing session.",
+        );
+      sessionId = data.session.id;
+      const config = await (await fetch(`/api/v1/shares/${sessionId}`)).json();
+      pc = new RTCPeerConnection({ iceServers: config.iceServers });
+      const peer = pc;
+      peer.ontrack = (e) => {
+        if (video.current) {
+          video.current.srcObject = e.streams[0];
+          void video.current.play().catch(() => {});
+        }
+        setStatus(
+          "Viewing the learner’s shared screen. The learner can stop at any time.",
+        );
+      };
+      const post = async (d: unknown) => {
+        const r = await fetch(`/api/v1/shares/${sessionId}/signals`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(d),
+        });
+        if (!r.ok) throw new Error("Signaling unavailable.");
+      };
+      peer.onicecandidate = (e) => {
+        if (e.candidate)
+          void post({ type: "ice", candidate: e.candidate.toJSON() }).catch(
+            stop,
+          );
+      };
+      peer.onconnectionstatechange = () => {
+        if (["closed", "failed"].includes(peer.connectionState)) stop();
+      };
+      let after = 0;
+      let polling = false;
+      const pending: RTCIceCandidateInit[] = [];
+      const poll = async () => {
+        if (polling || closed) return;
+        polling = true;
+        try {
+          const r = await fetch(
+            `/api/v1/shares/${sessionId}/signals?after=${after}`,
+          );
+          const signals = await r.json();
+          if (!r.ok) throw new Error(signals.error);
+          if (!signals.active) {
+            stop();
+            return;
+          }
+          for (const signal of signals.signals) {
+            const d = signal.data;
+            if (d.type === "offer" && !peer.remoteDescription) {
+              await peer.setRemoteDescription(d);
+              const answer = await peer.createAnswer();
+              await peer.setLocalDescription(answer);
+              await post({ type: "answer", sdp: answer.sdp });
+              for (const candidate of pending)
+                await peer.addIceCandidate(candidate);
+              pending.length = 0;
+            }
+            if (d.type === "ice") {
+              if (peer.remoteDescription)
+                await peer.addIceCandidate(d.candidate);
+              else pending.push(d.candidate);
+            }
+            after = signal.id;
+          }
+        } catch {
+          stop();
+        } finally {
+          polling = false;
+        }
+      };
+      timer = setInterval(() => void poll(), 2000);
+      setActive(true);
+      setStatus("Connecting to the learner’s screen…");
+      await poll();
+    } catch (e) {
+      stop();
+      setStatus(e instanceof Error ? e.message : "Cannot connect.");
+    }
+  }
+  return (
+    <section className="content-card video-grid">
+      <h2>Learner-controlled screen sharing</h2>
+      <p role="status">{status}</p>
+      <video
+        ref={video}
+        autoPlay
+        playsInline
+        muted
+        aria-label="Learner’s shared screen"
+        hidden={!active}
+      />
+      <div className="form-row">
+        <button
+          className="button secondary"
+          onClick={() => void connect()}
+          disabled={active}
+        >
+          Connect to shared screen
+        </button>
+        {active && (
+          <button
+            className="button secondary"
+            onClick={() => stopRef.current()}
+          >
+            Stop viewing
+          </button>
+        )}
+      </div>
+    </section>
+  );
+}

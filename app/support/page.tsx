@@ -1,4 +1,51 @@
 import Shell from "@/components/Shell";
-import {AskButton} from "@/components/Widget";
-import {MessageCircle,ShieldCheck,Clock3} from "lucide-react";
-export default function Support(){return <Shell active="Human support" title="Human support"><div className="page-heading"><div><div className="eyebrow">YOU DON’T HAVE TO FIGURE IT OUT ALONE</div><h1>A real person. <em>A helping hand.</em></h1><p>Ask for help, choose what to share, and receive a tutor’s reply in your chat.</p></div></div><div className="cards-grid"><section className="content-card"><MessageCircle size={28}/><h2>Let’s find your next step.</h2><p>Open MELA and choose “Talk to a person.” You’ll review the conversation and page information before sharing anything.</p><AskButton className="button primary" question="I’d like to talk to a person">Talk to a person</AskButton></section><section className="content-card"><ShieldCheck size={28}/><h2>You stay in control.</h2><p>Sharing your conversation, page context, or a screenshot is optional. Screen sharing starts only when you choose it, and you can stop at any time.</p><div className="notice"><Clock3 size={16}/> Tutors may be offline. Your ticket remains queued; keep the chat open for replies. This demo does not promise an immediate response.</div></section></div></Shell>}
+import { AskButton } from "@/components/Widget";
+import { MessageCircle, ShieldCheck, Clock3 } from "lucide-react";
+export default function Support() {
+  return (
+    <Shell active="Human support" title="Human support">
+      <div className="page-heading">
+        <div>
+          <div className="eyebrow">YOU DON’T HAVE TO FIGURE IT OUT ALONE</div>
+          <h1>
+            A real person. <em>A helping hand.</em>
+          </h1>
+          <p>
+            Ask for help, choose what to share, and receive a tutor’s reply in
+            your chat.
+          </p>
+        </div>
+      </div>
+      <div className="cards-grid">
+        <section className="content-card">
+          <MessageCircle size={28} />
+          <h2>Let’s find your next step.</h2>
+          <p>
+            Open MELA and choose “Talk to a person.” You’ll review the
+            conversation and page information before sharing anything.
+          </p>
+          <AskButton
+            className="button primary"
+            question="I’d like to talk to a person"
+          >
+            Talk to a person
+          </AskButton>
+        </section>
+        <section className="content-card">
+          <ShieldCheck size={28} />
+          <h2>You stay in control.</h2>
+          <p>
+            Sharing your conversation, page context, or a screenshot is
+            optional. Screen sharing starts only when you choose it, and you can
+            stop at any time.
+          </p>
+          <div className="notice">
+            <Clock3 size={16} /> Tutors may be offline. Your ticket remains
+            queued; keep the chat open for replies. This demo does not promise
+            an immediate response.
+          </div>
+        </section>
+      </div>
+    </Shell>
+  );
+}
