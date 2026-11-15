@@ -1,0 +1,118 @@
+[
+  {
+    "id": "browser-en",
+    "title": "Using a web browser",
+    "content": "A browser is an application for opening websites. Type a website address into the address bar and press Enter. Use the Back button to return to the previous page. A tab lets you keep more than one page open.",
+    "language": "en",
+    "url": "/learn#browser-en",
+    "courseId": "digital-foundations",
+    "keywords": [
+      "browser",
+      "internet",
+      "tabs",
+      "አሳሽ",
+      "በይነመረብ"
+    ]
+  },
+  {
+    "id": "browser-am",
+    "title": "አሳሽ መጠቀም",
+    "content": "አሳሽ ድረ ገጾችን ለመክፈት የሚያገለግል መተግበሪያ ነው። የድረ ገጹን አድራሻ በአድራሻ መጻፊያው ውስጥ ይጻፉና Enter ይጫኑ። ወደ ቀድሞው ገጽ ለመመለስ የመመለሻ አዝራሩን ይጠቀሙ። ትር ከአንድ በላይ ገጽ ክፍት እንዲቆይ ያደርጋል።",
+    "language": "am",
+    "url": "/learn#browser-am",
+    "courseId": "digital-foundations",
+    "keywords": [
+      "browser",
+      "internet",
+      "tabs",
+      "አሳሽ",
+      "በይነመረብ"
+    ]
+  },
+  {
+    "id": "password-en",
+    "title": "Keeping your password safe",
+    "content": "Use a long, unique password for each account. Do not share passwords or verification codes with anyone. A password manager can help you remember unique passwords. Turn on two-factor authentication when available.",
+    "language": "en",
+    "url": "/learn#password-en",
+    "courseId": "digital-foundations",
+    "keywords": [
+      "password",
+      "safe",
+      "security",
+      "የይለፍ",
+      "ደህንነት"
+    ]
+  },
+  {
+    "id": "password-am",
+    "title": "የይለፍ ቃልዎን ይጠብቁ",
+    "content": "ለእያንዳንዱ መለያ ረጅምና ልዩ የይለፍ ቃል ይጠቀሙ። የይለፍ ቃልዎን ወይም ማረጋገጫ ኮዶችን ለማንም አያጋሩ። የይለፍ ቃል አስተዳዳሪ ልዩ የይለፍ ቃሎችን ለማስታወስ ይረዳል። ሲኖር ባለሁለት ደረጃ ማረጋገጫን ያብሩ።",
+    "language": "am",
+    "url": "/learn#password-am",
+    "courseId": "digital-foundations",
+    "keywords": [
+      "password",
+      "safe",
+      "security",
+      "የይለፍ",
+      "ደህንነት"
+    ]
+  },
+  {
+    "id": "email-en",
+    "title": "Sending your first email",
+    "content": "Open your email application and choose Compose. Enter the recipient’s email address, add a clear subject, and write your message. Review the recipient and message before selecting Send. Never open an attachment from an unknown sender.",
+    "language": "en",
+    "url": "/learn#email-en",
+    "courseId": "digital-foundations",
+    "keywords": [
+      "email",
+      "compose",
+      "send",
+      "ኢሜይል"
+    ]
+  },
+  {
+    "id": "email-am",
+    "title": "የመጀመሪያ ኢሜይልዎን መላክ",
+    "content": "የኢሜይል መተግበሪያዎን ይክፈቱና አዲስ መልዕክት ይምረጡ። የተቀባዩን ኢሜይል አድራሻ ያስገቡ፣ ግልጽ ርዕስ ይጻፉ እና መልዕክትዎን ያዘጋጁ። ከመላክዎ በፊት ተቀባዩንና መልዕክቱን ያረጋግጡ። ከማያውቁት ላኪ የመጣ አባሪ አይክፈቱ።",
+    "language": "am",
+    "url": "/learn#email-am",
+    "courseId": "digital-foundations",
+    "keywords": [
+      "email",
+      "compose",
+      "send",
+      "ኢሜይል"
+    ]
+  },
+  {
+    "id": "offline-en",
+    "title": "Learning with a limited connection",
+    "content": "Open a lesson while connected to save its text in this browser. When the connection drops, MELA can search saved public lesson content. The host page must already be open; first-time offline visits are not supported. Tutor messages, cloud AI, voice services, and screen sharing may require a connection.",
+    "language": "en",
+    "url": "/learn#offline-en",
+    "courseId": "digital-foundations",
+    "keywords": [
+      "offline",
+      "connection",
+      "መስመር",
+      "ውጭ"
+    ]
+  },
+  {
+    "id": "offline-am",
+    "title": "በዝቅተኛ ግንኙነት መማር",
+    "content": "የትምህርቱን ጽሑፍ በዚህ አሳሽ ለማስቀመጥ ከበይነመረብ ጋር ተገናኝተው ትምህርቱን ይክፈቱ። ግንኙነቱ ሲቋረጥ መላ የተቀመጠውን ጽሑፍ መፈለግ ይችላል። ገጹ አስቀድሞ ክፍት መሆን አለበት። የአስተማሪ መልዕክቶችና ማያ ገጽ ማጋራት ግንኙነት ይፈልጋሉ።",
+    "language": "am",
+    "url": "/learn#offline-am",
+    "courseId": "digital-foundations",
+    "keywords": [
+      "offline",
+      "connection",
+      "መስመር",
+      "ውጭ"
+    ]
+  }
+]

@@ -1,0 +1,39 @@
+[
+  {
+    "id": "community-assistant",
+    "title": "Community Support Assistant",
+    "company": "Bridge Learning \u00b7 Demo employer",
+    "location": "Addis Ababa / Hybrid",
+    "type": "Entry level",
+    "description": "Help learners navigate digital tools, respond to questions in English or Amharic, and organize learning sessions. Basic computer skills and clear communication are useful. This is a demonstration listing, not an active vacancy.",
+    "accommodations": [
+      "Flexible interview time",
+      "Written interview questions",
+      "Step-free interview space"
+    ],
+    "keywords": [
+      "support",
+      "community",
+      "english",
+      "amharic"
+    ]
+  },
+  {
+    "id": "junior-data",
+    "title": "Junior Data Assistant",
+    "company": "Grow Together \u00b7 Demo employer",
+    "location": "Remote \u00b7 Ethiopia",
+    "type": "Part time",
+    "description": "Organize simple spreadsheets and check records for accuracy. Familiarity with email and spreadsheet applications is useful. Training is provided in this demonstration role. This is not an active vacancy.",
+    "accommodations": [
+      "Extra interview time",
+      "Screen-reader compatible assessment",
+      "Remote interview"
+    ],
+    "keywords": [
+      "data",
+      "spreadsheet",
+      "remote"
+    ]
+  }
+]
