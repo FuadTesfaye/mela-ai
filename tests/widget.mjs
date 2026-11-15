@@ -345,7 +345,7 @@ test("course player presents English transcript and an honest sign-language squa
     assert.equal(media.shadowRoot.querySelector("iframe"), null);
     assert.match(
       media.shadowRoot.querySelector(".sign-box").textContent,
-      /No validated signing video/,
+      /EthSL interpretation is not available/,
     );
     assert.match(
       media.shadowRoot.querySelector(".card").textContent,
@@ -613,6 +613,432 @@ test("diagram explanations render safe SVG and a complete text alternative", asy
       [...f.root.querySelectorAll("button")].some(
         (b) => b.textContent === "Expand diagram",
       ),
+    );
+  } finally {
+    f.cleanup();
+  }
+});
+
+// The real bundled component runs against controllable YouTube/media shims.
+// Browser autoplay, decoding and interpreter quality still require a real-device review.
+async function signingFixture({ extraFetch, play } = {}) {
+  const id = "bJzb-RuUcMU";
+  const track = {
+    url: "/approved-ethsl.webm",
+    videoId: id,
+    language: "EthSL",
+    reviewer: "Fluent reviewer",
+    offsetSeconds: 1,
+  };
+  const f = setup({
+    extraFetch: async (url, init) => {
+      const overridden = await extraFetch?.(url, init);
+      if (overridden) return overridden;
+      if (String(url).includes("/media"))
+        return Response.json({
+          defaultVideoUrl: `https://youtu.be/${id}`,
+          signLanguage: track,
+        });
+    },
+  });
+  const source = { time: 0, state: 2, rate: 1 };
+  const videos = [];
+  let events;
+  f.window.YT = {
+    Player: class {
+      constructor(_frame, options) {
+        events = options.events;
+      }
+      getCurrentTime() {
+        return source.time;
+      }
+      getDuration() {
+        return 120;
+      }
+      getPlayerState() {
+        return source.state;
+      }
+      getPlaybackRate() {
+        return source.rate;
+      }
+      pauseVideo() {
+        source.state = 2;
+      }
+      destroy() {}
+    },
+  };
+  const create = f.window.document.createElement.bind(f.window.document);
+  f.window.document.createElement = function (tag, ...args) {
+    const node = create(tag, ...args);
+    if (tag.toLowerCase() === "video") {
+      node.calls = 0;
+      node.pauses = 0;
+      Object.defineProperties(node, {
+        currentTime: { writable: true, value: 0 },
+        duration: { writable: true, value: 120 },
+        readyState: { writable: true, value: 0 },
+        paused: { writable: true, value: true },
+        playbackRate: { writable: true, value: 1 },
+      });
+      node.pause = () => {
+        node.paused = true;
+        node.pauses++;
+      };
+      node.play = () => {
+        node.calls++;
+        if (play) return play(node);
+        node.paused = false;
+        return Promise.resolve();
+      };
+      videos.push(node);
+    }
+    if (tag.toLowerCase() === "dialog") {
+      node.showModal = () => node.setAttribute("open", "");
+      node.close = () => {
+        node.removeAttribute("open");
+        node.dispatchEvent(new f.window.Event("close"));
+      };
+    }
+    return node;
+  };
+  vm.runInContext(readFileSync("public/course-media.js", "utf8"), f.sandbox);
+  const media = create("mela-course-media");
+  f.window.document.body.append(media);
+  await wait(10);
+  const root = media.shadowRoot;
+  return {
+    ...f,
+    media,
+    root,
+    source,
+    videos,
+    async load(url = `https://youtu.be/${id}`) {
+      root.querySelector(".url-form input").value = url;
+      root
+        .querySelector(".url-form")
+        .dispatchEvent(new f.window.Event("submit", { cancelable: true }));
+      await wait(10);
+    },
+    state(state, time = source.time) {
+      source.state = state;
+      source.time = time;
+      events.onStateChange({ data: state });
+    },
+    ready(video = videos.at(-1)) {
+      video.readyState = 4;
+      video.onloadedmetadata();
+    },
+    toggle() {
+      root.querySelector(".sign-toggle").click();
+    },
+  };
+}
+test("signing opens paused, waits for metadata and follows play, seek, speed, buffering and replay", async () => {
+  const f = await signingFixture();
+  try {
+    assert.equal(f.root.querySelector(".sign-box").hidden, true);
+    assert.equal(
+      f.root.querySelector(".sign-toggle").getAttribute("aria-expanded"),
+      "false",
+    );
+    assert.equal(
+      f.videos.length,
+      0,
+      "hidden panel must not load an interpreter",
+    );
+    await f.load();
+    f.source.time = 20;
+    f.toggle();
+    const video = f.videos.at(-1);
+    assert.equal(video.calls, 0);
+    assert.equal(video.currentTime, 0, "no seek before metadata");
+    f.ready();
+    assert.equal(video.currentTime, 19);
+    assert.equal(video.calls, 0, "opening never starts a paused source");
+    f.state(1, 21);
+    await wait(0);
+    assert.equal(video.currentTime, 20);
+    assert.equal(video.paused, false);
+    f.source.rate = 1.5;
+    f.state(1, 50);
+    assert.equal(video.currentTime, 49);
+    assert.equal(video.playbackRate, 1.5);
+    video.currentTime = 49.3;
+    f.state(1, 50);
+    assert.equal(video.currentTime, 49.3, "small drift stays untouched");
+    f.state(3);
+    assert.equal(video.paused, true, "source buffering pauses interpreter");
+    f.state(1);
+    await wait(0);
+    assert.equal(video.paused, false);
+    f.state(2);
+    assert.equal(video.paused, true);
+    f.state(1, 121);
+    assert.match(f.root.querySelector(".sign-status").textContent, /ended/);
+    assert.equal(video.paused, true);
+    f.state(1, 0);
+    assert.equal(video.currentTime, 0);
+    assert.equal(video.paused, true, "wait for recording offset");
+    f.state(1, 2);
+    await wait(0);
+    assert.equal(video.currentTime, 1);
+    assert.equal(video.paused, false);
+  } finally {
+    f.cleanup();
+  }
+});
+test("opening midway joins immediately; hiding pauses only signing and enlargement preserves the same media", async () => {
+  const f = await signingFixture();
+  try {
+    await f.load();
+    f.state(1, 40);
+    f.toggle();
+    const video = f.videos.at(-1);
+    f.ready();
+    await wait(0);
+    assert.equal(video.currentTime, 39);
+    assert.equal(video.paused, false);
+    f.toggle();
+    assert.equal(video.paused, true);
+    assert.equal(f.source.state, 1);
+    f.source.time = 65;
+    f.toggle();
+    await wait(0);
+    assert.equal(f.videos.length, 1);
+    assert.equal(video.currentTime, 64);
+    f.root.querySelector(".expand-sign").click();
+    const dialog = f.root.querySelector("dialog");
+    assert.ok(dialog.hasAttribute("open"));
+    assert.equal(dialog.querySelector("video"), video);
+    f.state(1, 70);
+    assert.equal(video.currentTime, 69);
+    dialog.querySelector("button").click();
+    assert.equal(f.root.querySelector("dialog"), null);
+    assert.equal(f.root.querySelector(".sign-box video"), video);
+    assert.equal(video.currentTime, 69);
+    assert.equal(
+      f.root.querySelector(".player-layout").classList.contains("with-signing"),
+      true,
+    );
+  } finally {
+    f.cleanup();
+  }
+});
+test("signing never overlaps play promises and supplies explicit recovery for autoplay rejection", async () => {
+  let reject;
+  const f = await signingFixture({
+    play: () =>
+      new Promise((_resolve, r) => {
+        reject = r;
+      }),
+  });
+  try {
+    await f.load();
+    f.toggle();
+    f.state(1, 10);
+    f.ready();
+    const video = f.videos.at(-1);
+    f.state(1, 11);
+    f.state(1, 12);
+    assert.equal(video.calls, 1);
+    reject(
+      Object.assign(new Error("Permission required"), {
+        name: "NotAllowedError",
+      }),
+    );
+    await wait(0);
+    f.state(1, 13);
+    assert.equal(video.calls, 1, "timer ticks must not retry blocked autoplay");
+    const action = f.root.querySelector(".sign-action");
+    assert.equal(action.hidden, false);
+    assert.equal(action.textContent, "Start interpreter");
+    video.play = () => {
+      video.calls++;
+      video.paused = false;
+      return Promise.resolve();
+    };
+    action.click();
+    await wait(0);
+    assert.equal(video.calls, 2);
+    assert.equal(action.hidden, true);
+    assert.equal(video.currentTime, 12);
+  } finally {
+    f.cleanup();
+  }
+});
+test("late play completion cannot resume a hidden interpreter; media failure has a retry state", async () => {
+  let resolve;
+  const f = await signingFixture({
+    play: () =>
+      new Promise((r) => {
+        resolve = r;
+      }),
+  });
+  try {
+    await f.load();
+    f.toggle();
+    f.state(1, 10);
+    f.ready();
+    const video = f.videos.at(-1);
+    f.toggle();
+    video.paused = false;
+    resolve();
+    await wait(0);
+    assert.equal(video.paused, true);
+    f.toggle();
+    video.onerror();
+    assert.match(
+      f.root.querySelector(".sign-status").textContent,
+      /could not be played/,
+    );
+    const action = f.root.querySelector(".sign-action");
+    assert.equal(action.textContent, "Retry signing");
+    action.click();
+    assert.equal(f.videos.length, 2);
+    assert.match(f.root.querySelector(".sign-status").textContent, /Loading/);
+  } finally {
+    f.cleanup();
+  }
+});
+test("video changes clear enlarged media and ignore stale signing configuration responses", async () => {
+  let deliver;
+  const f = await signingFixture({
+    extraFetch: (url) =>
+      String(url).includes("videoId=9hE5-98ZeCg")
+        ? new Promise((r) => {
+            deliver = r;
+          })
+        : undefined,
+  });
+  try {
+    await f.load();
+    f.toggle();
+    f.ready();
+    const old = f.videos.at(-1);
+    f.root.querySelector(".expand-sign").click();
+    await f.load("https://youtu.be/9hE5-98ZeCg");
+    assert.equal(old.paused, true);
+    assert.equal(f.root.querySelector("dialog"), null);
+    assert.equal(
+      f.root.querySelector("video"),
+      null,
+      "old recording clears before configuration arrives",
+    );
+    await f.load();
+    const current = f.videos.at(-1);
+    assert.notEqual(current, old);
+    deliver(
+      Response.json({
+        signLanguage: {
+          url: "/wrong.webm",
+          videoId: "9hE5-98ZeCg",
+          reviewer: "Other",
+          offsetSeconds: 0,
+        },
+      }),
+    );
+    await wait(0);
+    assert.equal(f.root.querySelector("video"), current);
+    assert.notEqual(current.src, "/wrong.webm");
+  } finally {
+    f.cleanup();
+  }
+});
+test("signing exposes unavailable and configuration failure states without playing unrelated recordings", async () => {
+  let fail = false;
+  const f = await signingFixture({
+    extraFetch: (url) =>
+      String(url).includes("/media")
+        ? fail
+          ? Promise.reject(Error("offline"))
+          : Response.json({ signLanguage: null })
+        : undefined,
+  });
+  try {
+    f.toggle();
+    assert.match(
+      f.root.querySelector(".sign-status").textContent,
+      /not available/,
+    );
+    assert.equal(f.videos.length, 0);
+    fail = true;
+    await f.load();
+    assert.match(
+      f.root.querySelector(".sign-status").textContent,
+      /could not be checked/,
+    );
+    const retry = f.root.querySelector(".sign-action");
+    assert.equal(retry.hidden, false);
+    fail = false;
+    retry.click();
+    await wait(10);
+    assert.match(
+      f.root.querySelector(".sign-status").textContent,
+      /not available/,
+    );
+    assert.equal(f.videos.length, 0);
+  } finally {
+    f.cleanup();
+  }
+});
+test("unsupported signing media keeps a retry error instead of requesting autoplay permission", async () => {
+  const f = await signingFixture({
+    play: () => Promise.reject({ name: "NotSupportedError" }),
+  });
+  try {
+    await f.load();
+    f.toggle();
+    f.state(1, 10);
+    f.ready();
+    await wait(0);
+    const video = f.videos.at(-1);
+    assert.equal(
+      f.root.querySelector(".sign-action").textContent,
+      "Retry signing",
+    );
+    video.oncanplay();
+    video.onwaiting();
+    f.state(1, 20);
+    assert.match(
+      f.root.querySelector(".sign-status").textContent,
+      /could not be played/,
+    );
+    assert.equal(video.calls, 1);
+  } finally {
+    f.cleanup();
+  }
+});
+test("source changes remove an enlarged panel synchronously before a queued native close event", async () => {
+  const f = await signingFixture();
+  try {
+    await f.load();
+    f.toggle();
+    f.ready();
+    f.root.querySelector(".expand-sign").click();
+    const oldDialog = f.root.querySelector("dialog");
+    oldDialog.close = () => {
+      oldDialog.removeAttribute("open");
+      setTimeout(
+        () => oldDialog.dispatchEvent(new f.window.Event("close")),
+        20,
+      );
+    };
+    f.root.querySelector(".url-form input").value =
+      "https://youtu.be/9hE5-98ZeCg";
+    f.root
+      .querySelector(".url-form")
+      .dispatchEvent(new f.window.Event("submit", { cancelable: true }));
+    assert.equal(f.root.querySelector("dialog"), null);
+    assert.equal(f.root.querySelector("video"), null);
+    await f.load();
+    f.ready();
+    f.root.querySelector(".expand-sign").click();
+    const nextDialog = f.root.querySelector("dialog");
+    await wait(30);
+    assert.equal(
+      f.root.querySelector("dialog"),
+      nextDialog,
+      "old close must not affect a new dialog",
     );
   } finally {
     f.cleanup();
