@@ -1,5 +1,5 @@
 /* Offline shell for this MELA-hosted Savanna demo, never registered on unrelated hosts. */
-const CACHE = "mela-public-v5-selected-video-sdk";
+const CACHE = "mela-public-v6-visual-teacher";
 const PAGES = [
   "/jobs",
   "/support",
@@ -105,6 +105,8 @@ self.addEventListener("fetch", (event) => {
   const publicPage = PAGES.includes(url.pathname);
   const asset =
     ASSETS.includes(url.pathname) ||
+    url.pathname === "/avatar/teacher-3d.js" ||
+    url.pathname === "/avatar/storyboard.json" ||
     url.pathname.startsWith("/_next/static/") ||
     url.pathname.startsWith("/savanna/assets/");
   if (!publicPage && !asset) return;

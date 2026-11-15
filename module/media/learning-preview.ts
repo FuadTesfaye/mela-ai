@@ -1,5 +1,7 @@
 /** Captions are transcript evidence. Procedural gestures below are illustrative,
  * not a signed-language vocabulary or an English-to-EthSL translation model. */
+import { mountTeacherPresentation } from "../teacher/presentation";
+import type { RendererPreference } from "../teacher/types";
 import { handshapeFor, spellingAt } from "./fingerspelling";
 export type Cue = { start: number; end: number; text: string };
 export type Gesture =
@@ -60,6 +62,7 @@ export type PreviewState = {
   rate: number;
   visible: boolean;
   sourceLabel?: string;
+  videoId?: string;
   playback?: "not-loaded" | "loading" | "ready";
 };
 export function mountLearningPreview(
@@ -68,6 +71,10 @@ export function mountLearningPreview(
     visual?: HTMLElement;
     onGenerate: () => void;
     onModeChange?: (visible: boolean) => void;
+    renderer?: RendererPreference;
+    runtimeUrl?: string;
+    storyboardUrl?: string;
+    onResume?: (seconds: number) => boolean | void;
   },
 ) {
   const approved = !!options.visual;
@@ -115,6 +122,7 @@ export function mountLearningPreview(
   const animationMode = el("select");
   animationMode.setAttribute("aria-label", "Animation style");
   for (const [value, label] of [
+    ["teacher", "Visual teacher"],
     ["spelling", "English fingerspelling (preview)"],
     ["gestures", "Illustrative gestures"],
   ]) {
@@ -122,7 +130,7 @@ export function mountLearningPreview(
     option.value = value;
     animationMode.append(option);
   }
-  animationMode.value = "spelling";
+  animationMode.value = "teacher";
   const motion = el("button", "Pause animation", "motion-toggle");
   motion.type = "button";
   const motionState = el("p", "Paused with video", "motion-state");
@@ -277,9 +285,35 @@ export function mountLearningPreview(
     }
     visual.append(root);
   }
+  const teaching =
+    !approved && options.runtimeUrl && options.storyboardUrl
+      ? mountTeacherPresentation(visual, wrapper, caption, {
+          runtimeUrl: options.runtimeUrl,
+          storyboardUrl: options.storyboardUrl,
+          renderer: options.renderer,
+          onResume: options.onResume,
+          changed: () => {
+            if (!disposed) refresh();
+          },
+        })
+      : undefined;
   function pose(seconds: number, cue?: Cue) {
     if (!root) return;
-    const gesture = gestureFor(cue?.text || "");
+    const lesson =
+      animationMode.value === "teacher" ? teaching?.tick(seconds) : undefined;
+    const gesture = lesson
+      ? (
+          {
+            welcome: "wave",
+            point: "point",
+            compare: "compare",
+            connect: "connect",
+            count: "count",
+            emphasize: "explain",
+            rest: "rest",
+          } as const
+        )[lesson.frame.gesture]
+      : gestureFor(cue?.text || "");
     root.setAttribute("data-gesture", gesture);
     const spelling =
       animationMode.value === "spelling" ? spellingAt(cue, seconds) : undefined;
@@ -289,9 +323,15 @@ export function mountLearningPreview(
     root.setAttribute("data-letter", spelling?.letter || "");
     letterLabel.textContent = spelling
       ? `${spelling.word} · ${spelling.letter}`
-      : "";
+      : lesson?.segment?.title ||
+        (animationMode.value === "teacher" ? "Visual teacher" : "");
 
-    const local = cue ? Math.max(0, seconds - cue.start) : 0;
+    const poseTime = lesson?.frame.seconds ?? seconds;
+    const local = lesson
+      ? Math.max(0, poseTime - (lesson.segment?.start ?? cue?.start ?? 0))
+      : cue
+        ? Math.max(0, poseTime - cue.start)
+        : 0;
     const beat = gesture === "rest" ? 0 : Math.sin(local * 3.2);
     const slow = Math.sin(local * 1.8);
     let left = [111, 251, -10],
@@ -373,15 +413,29 @@ export function mountLearningPreview(
         i === 1 && shape ? shape.thumb : "M-6 5 L-18 -5",
       );
     });
-    description.textContent = spelling
-      ? `Cue-timed spelling · estimated word timing`
-      : gesture === "rest"
-        ? "Waiting for speech"
-        : `Illustrative gesture · ${gesture}`;
+    description.textContent = lesson
+      ? lesson.segment
+        ? "Two-handed illustration of the current concept."
+        : "Follow the captions. No authored concept is available at this moment."
+      : spelling
+        ? `Cue-timed spelling · estimated word timing`
+        : gesture === "rest"
+          ? "Waiting for speech"
+          : `Illustrative gesture · ${gesture}`;
   }
   function draw() {
-    const cue = cueAt(state.cues, state.seconds);
-    pose(!motionEnabled() && cue ? cue.start : state.seconds, cue);
+    const time = teaching?.isExplaining()
+      ? teaching.sourceTime()
+      : state.seconds;
+    const cue = cueAt(state.cues, time);
+    pose(
+      animationMode.value === "teacher"
+        ? time
+        : !motionEnabled() && cue
+          ? cue.start
+          : time,
+      cue,
+    );
   }
   function stop() {
     if (frame !== undefined && typeof cancelAnimationFrame === "function")
@@ -395,13 +449,22 @@ export function mountLearningPreview(
       approved ||
       !wrapper.isConnected ||
       !state.visible ||
-      !state.playing ||
+      (!state.playing && !teaching?.isReplaying()) ||
+      (animationMode.value === "teacher" &&
+        teaching &&
+        !teaching.isOnscreen()) ||
       select.value === "captions" ||
       !motionEnabled()
     )
       return;
     const seconds = state.seconds + ((Date.now() - anchor) / 1000) * state.rate;
-    pose(seconds, cueAt(state.cues, seconds));
+    pose(
+      seconds,
+      cueAt(
+        state.cues,
+        teaching?.isExplaining() ? teaching.sourceTime() : seconds,
+      ),
+    );
     if (typeof requestAnimationFrame === "function")
       frame = requestAnimationFrame(animate);
   }
@@ -418,7 +481,18 @@ export function mountLearningPreview(
       lastVisual = showVisual;
       options.onModeChange?.(showVisual);
     }
-    const cue = cueAt(state.cues, state.seconds);
+    teaching?.update(
+      state,
+      motionEnabled(),
+      animationMode.value === "teacher",
+      showVisual,
+    );
+    animationControls.hidden = !showVisual;
+    reference.hidden = animationMode.value !== "spelling" || !showVisual;
+    const cue = cueAt(
+      state.cues,
+      teaching?.isExplaining() ? teaching.sourceTime() : state.seconds,
+    );
     sourceLabel.textContent = state.sourceLabel || "AI CAPTIONS";
     hint.textContent =
       state.sourceLabel === "COURSE CAPTIONS"
@@ -427,7 +501,9 @@ export function mountLearningPreview(
     note.textContent =
       animationMode.value === "spelling"
         ? "Experimental English fingerspelling preview · not EthSL translation or full ASL. Fluent review pending."
-        : "Experimental gesture preview · illustrative movement, not EthSL translation.";
+        : animationMode.value === "teacher"
+          ? "Visual illustrations accompany the source captions. This is not sign-language translation."
+          : "Experimental gesture preview · illustrative movement, not EthSL translation.";
     motion.textContent = motionEnabled()
       ? "Pause animation"
       : "Enable animation";
@@ -436,13 +512,15 @@ export function mountLearningPreview(
       ? "Waiting for captions"
       : !motionEnabled()
         ? "Animation paused · reduced motion or your preference"
-        : state.playing
-          ? `Following video · ${state.rate}×`
-          : state.playback === "loading"
-            ? "Waiting for video controls"
-            : state.playback === "not-loaded"
-              ? "Load the video to begin"
-              : "Paused with video";
+        : teaching?.isReplaying()
+          ? "Demonstration · video paused"
+          : state.playing
+            ? `Following video · ${state.rate}×`
+            : state.playback === "loading"
+              ? "Waiting for video controls"
+              : state.playback === "not-loaded"
+                ? "Load the video to begin"
+                : "Paused with video";
     const text = generating
       ? "Transcribing the video…"
       : failure ||
@@ -462,8 +540,11 @@ export function mountLearningPreview(
     if (
       !approved &&
       state.visible &&
-      state.playing &&
-      !!cueAt(state.cues, state.seconds) &&
+      (state.playing || teaching?.isReplaying()) &&
+      (!!cueAt(state.cues, state.seconds) || teaching?.isReplaying()) &&
+      (animationMode.value !== "teacher" ||
+        !teaching ||
+        teaching.isOnscreen()) &&
       showVisual &&
       motionEnabled() &&
       typeof requestAnimationFrame === "function"
@@ -480,6 +561,14 @@ export function mountLearningPreview(
   reduced?.addEventListener?.("change", motionChange);
   refresh();
   return {
+    explain(seconds: number) {
+      animationMode.value = "teacher";
+      teaching?.explain(seconds);
+      refresh();
+    },
+    setRenderer(value: RendererPreference) {
+      teaching?.setRenderer(value);
+    },
     update(next: PreviewState) {
       state = next;
       anchor = Date.now();
@@ -496,6 +585,7 @@ export function mountLearningPreview(
     },
     dispose() {
       disposed = true;
+      teaching?.dispose();
       stop();
       reduced?.removeEventListener?.("change", motionChange);
       wrapper.remove();

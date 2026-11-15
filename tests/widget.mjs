@@ -1079,6 +1079,9 @@ test("MVP captions and experimental avatar follow the transcript without a signi
   try {
     await f.load();
     f.toggle();
+    const style = f.root.querySelector('[aria-label="Animation style"]');
+    style.value = "gestures";
+    style.onchange();
     assert.ok(f.root.querySelector(".gesture-viewport svg"));
     assert.match(
       f.root.querySelector(".gesture-note").textContent,

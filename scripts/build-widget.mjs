@@ -107,3 +107,7 @@ await build({
 const runtime = await readFile("public/avatar/teacher-3d.js");
 if (gzipSync(runtime).length > 250000)
   throw new Error("3D runtime exceeds its 250 KB gzip budget.");
+
+await copyFile("data/visual-teacher.json", "public/avatar/storyboard.json");
+const sdkSize = (await stat("public/mela-sdk.js")).size;
+if (sdkSize > 100000) throw new Error(`Initial SDK exceeds 100 KB: ${sdkSize}`);

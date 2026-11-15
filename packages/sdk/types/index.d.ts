@@ -5,6 +5,7 @@ export interface MelaOptions {
   lessonId?: string;
   language?: "en" | "am";
   assistant?: boolean;
+  renderer?: "auto" | "2d" | "3d";
   contextRoot?: HTMLElement | string;
 }
 export interface MelaHandle {

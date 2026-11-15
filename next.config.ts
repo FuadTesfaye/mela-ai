@@ -18,6 +18,7 @@ const config: NextConfig = {
         "/course-media.js",
         "/savanna-integration.js",
         "/avatar-view.js",
+        "/avatar/:path*",
         "/content.json",
         "/openapi.yaml",
         "/mela-sdk.js",

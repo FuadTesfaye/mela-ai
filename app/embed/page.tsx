@@ -4,7 +4,7 @@ import { youtubeUrl } from "@/lib/media/youtube";
 export default async function Embed({
   searchParams,
 }: {
-  searchParams: Promise<{ video?: string }>;
+  searchParams: Promise<{ video?: string; renderer?: string }>;
 }) {
   const query = await searchParams;
   let video = DEFAULT_LESSON_VIDEO.videoUrl;
@@ -22,7 +22,15 @@ export default async function Embed({
       <h1 style={{ fontSize: 18, margin: "0 0 12px" }}>
         MELA learning companion
       </h1>
-      <MelaCompanion api="/api" videoUrl={video} />
+      <MelaCompanion
+        api="/api"
+        videoUrl={video}
+        renderer={
+          query.renderer === "2d" || query.renderer === "3d"
+            ? query.renderer
+            : "auto"
+        }
+      />
     </main>
   );
 }

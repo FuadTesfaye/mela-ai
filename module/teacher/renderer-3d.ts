@@ -148,9 +148,17 @@ export function mount(
       [0.09, 0.085, 0.09],
     );
   }
-  const eyes: THREE.Mesh[] = [];
+  const eyes: THREE.Mesh[] = [],
+    whiteEyes: THREE.Mesh[] = [];
   for (const side of [-1, 1]) {
-    ellipsoid(head, white, [side * 0.105, 0.24, 0.265], [0.052, 0.035, 0.018]);
+    whiteEyes.push(
+      ellipsoid(
+        head,
+        white,
+        [side * 0.105, 0.24, 0.265],
+        [0.052, 0.035, 0.018],
+      ),
+    );
     const pupil = ellipsoid(
       head,
       ink,
@@ -178,6 +186,8 @@ export function mount(
       lips,
     ),
   );
+  for (const side of [-1, 1])
+    ellipsoid(root, shirt, [side * 0.37, 1.51, 0], [0.105, 0.1, 0.12]);
   const leftArm = {
     upper: segment(root, shirt, 0.08),
     lower: segment(root, skin, 0.057),
@@ -261,7 +271,7 @@ export function mount(
     poorSince = 0,
     lastTick = 0;
   const compact =
-    host.clientWidth < 550 || matchMedia("(pointer: coarse)").matches;
+    window.innerWidth < 768 || matchMedia("(pointer: coarse)").matches;
   let pixelRatio = Math.min(devicePixelRatio || 1, compact ? 1.25 : 1.5);
   const fps = compact ? 30 : 60;
   canvas.dataset.quality = compact ? "balanced" : "high";
@@ -281,8 +291,9 @@ export function mount(
     if (lastFrame) render(lastFrame, true);
   }
   function render(frame: TeacherFrame, force = false) {
-    if (disposed || !frame.visible) return;
+    if (disposed) return;
     lastFrame = frame;
+    if (!frame.visible) return;
     const now = performance.now();
     const identity = JSON.stringify(frame);
     if (!force && identity === lastKey) return;
@@ -322,6 +333,7 @@ export function mount(
     const blink =
       frame.motion && Math.sin(frame.seconds * 0.85) > 0.997 ? 0.15 : 1;
     for (const eye of eyes) eye.scale.y = 0.027 * blink;
+    for (const eye of whiteEyes) eye.scale.y = 0.035 * blink;
     const distance = frame.camera === "hands" ? 4.05 : 5.2;
     camera.position.set(
       0,
@@ -361,6 +373,24 @@ export function mount(
     resize,
     stats: () => ({
       frames,
+      calls: renderer.info.render.calls,
+      fpsTarget: fps,
+      handsInFrame: hands.every((hand) => {
+        const box = new THREE.Box3().setFromObject(hand.group);
+        return [box.min.x, box.max.x].every((x) =>
+          [box.min.y, box.max.y].every((y) =>
+            [box.min.z, box.max.z].every((z) => {
+              const p = new THREE.Vector3(x, y, z).project(camera);
+              return (
+                Math.abs(p.x) <= 0.98 &&
+                Math.abs(p.y) <= 0.98 &&
+                p.z >= -1 &&
+                p.z <= 1
+              );
+            }),
+          ),
+        );
+      }),
       triangles: renderer.info.render.triangles,
       geometries: renderer.info.memory.geometries,
       pixelRatio,

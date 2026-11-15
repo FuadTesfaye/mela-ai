@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "npm run widget:build && next dev --hostname 0.0.0.0",
+    "dev": "npm run widget:build && next dev --webpack --hostname 0.0.0.0",
     "build": "npm run widget:build && next build --webpack",
     "start": "next start --hostname 0.0.0.0",
     "widget:build": "node scripts/build-widget.mjs",

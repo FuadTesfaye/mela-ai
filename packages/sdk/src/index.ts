@@ -7,6 +7,7 @@ export interface MelaOptions {
   lessonId?: string;
   language?: "en" | "am";
   assistant?: boolean;
+  renderer?: "auto" | "2d" | "3d";
   contextRoot?: HTMLElement | string;
 }
 export interface MelaHandle {
@@ -54,6 +55,7 @@ export async function mount(options: MelaOptions): Promise<MelaHandle> {
     "video-src",
     youtubeUrl(options.videoUrl || DEFAULT_LESSON_VIDEO.videoUrl),
   );
+  if (options.renderer) media.setAttribute("renderer", options.renderer);
   root.append(media);
   let assistant: HTMLElement | undefined;
   if (options.assistant !== false) {

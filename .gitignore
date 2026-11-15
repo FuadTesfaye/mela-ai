@@ -21,3 +21,4 @@ public/transcripts/*.json
 .venv-video/
 
 public/avatar/teacher-3d.js
+public/avatar/storyboard.json

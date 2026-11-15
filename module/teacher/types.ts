@@ -24,6 +24,9 @@ export interface TeacherRenderer {
   dispose(): void;
   stats(): {
     frames: number;
+    handsInFrame: boolean;
+    calls: number;
+    fpsTarget: number;
     triangles: number;
     geometries: number;
     pixelRatio: number;

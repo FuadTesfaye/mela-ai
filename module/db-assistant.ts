@@ -987,7 +987,9 @@ class DBAssistant extends HTMLElement {
         "avatar-view.js",
         script?.src || new URL("/db-assistant.js", location.href),
       ).href;
-      const { mountAvatar } = await import(moduleUrl);
+      const { mountAvatar } = await import(
+        /* webpackIgnore: true */ /* turbopackIgnore: true */ moduleUrl
+      );
       mountAvatar(host);
     } catch {
       host.remove();

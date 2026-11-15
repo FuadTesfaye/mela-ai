@@ -54,3 +54,44 @@ test("all gesture frames have bounded readable reaches and deterministic seeking
       );
     }
 });
+import storyboard from "../../data/visual-teacher.json";
+import {
+  gesturePhase,
+  segmentAt,
+  validStoryboard,
+} from "../../module/teacher/storyboard";
+test("authored lesson segments validate and never attach to another video", () => {
+  assert.equal(validStoryboard(storyboard), true);
+  if (!validStoryboard(storyboard)) return;
+  assert.equal(segmentAt(storyboard, "9hE5-98ZeCg", 105)?.id, "memory");
+  assert.equal(segmentAt(storyboard, "bJzb-RuUcMU", 105), undefined);
+  assert.equal(segmentAt(undefined, undefined, 0), undefined);
+  assert.equal(
+    validStoryboard({
+      ...storyboard,
+      segments: [{ ...storyboard.segments[0], gesture: "run arbitrary code" }],
+    }),
+    false,
+  );
+  assert.equal(
+    validStoryboard({
+      ...storyboard,
+      segments: [storyboard.segments[1], storyboard.segments[0]],
+    }),
+    false,
+  );
+});
+test("gesture phases have smooth holds and bounded transitions even for short cues", () => {
+  for (const duration of [0.05, 0.5, 4, 30]) {
+    assert.equal(gesturePhase(0, 0, duration), 0);
+    assert.equal(gesturePhase(duration, 0, duration), 1);
+    const values = Array.from({ length: 21 }, (_, i) =>
+      gesturePhase((duration * i) / 20, 0, duration),
+    );
+    assert.ok(
+      values.every(
+        (v, i) => v >= 0 && v <= 1 && (i === 0 || v >= values[i - 1]),
+      ),
+    );
+  }
+});

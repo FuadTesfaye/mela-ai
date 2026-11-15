@@ -1,0 +1,110 @@
+{
+  "version": 1,
+  "videoId": "9hE5-98ZeCg",
+  "segments": [
+    {
+      "id": "live-stream",
+      "start": 0.333,
+      "end": 10.6,
+      "title": "A live conversation",
+      "explanation": "The demo sends live input into Gemini and receives a response during the interaction. Follow the direction from input to response.",
+      "gesture": "connect",
+      "diagram": {
+        "kind": "flow",
+        "labels": ["Live input", "Gemini", "Live response"]
+      },
+      "cueIds": [0, 1, 2]
+    },
+    {
+      "id": "shared-screen",
+      "start": 10.6,
+      "end": 28.87,
+      "title": "The shared tab becomes input",
+      "explanation": "The learner shares a tab. The model describes visible content in that tab. Pointing links the visible document to the response.",
+      "gesture": "point",
+      "diagram": {
+        "kind": "flow",
+        "labels": ["Shared tab", "Visible document", "Model response"]
+      },
+      "cueIds": [3, 4, 5, 6]
+    },
+    {
+      "id": "selected-text",
+      "start": 28.87,
+      "end": 46.9,
+      "title": "Focus on selected text",
+      "explanation": "The learner asks the model to read highlighted text. The selection narrows what the model should pay attention to.",
+      "gesture": "point",
+      "diagram": {
+        "kind": "flow",
+        "labels": ["Highlight text", "Ask a question", "Read the selection"]
+      },
+      "cueIds": [9, 10, 11, 12]
+    },
+    {
+      "id": "tool-names",
+      "start": 46.9,
+      "end": 50.87,
+      "title": "Different tools, different jobs",
+      "explanation": "The highlighted description names search, code execution and function calling. This part reads those capabilities; it does not demonstrate executing code.",
+      "gesture": "count",
+      "diagram": {
+        "kind": "list",
+        "labels": ["Search", "Code execution", "Function calls"]
+      },
+      "cueIds": [15, 16]
+    },
+    {
+      "id": "multimodal",
+      "start": 50.87,
+      "end": 71.33,
+      "title": "More than one kind of input",
+      "explanation": "Multimodal means working with different input types. The two hands present text on one side and images or audio on the other; the diagram brings them together.",
+      "gesture": "compare",
+      "diagram": {
+        "kind": "merge",
+        "labels": ["Text", "Images / audio", "Combined understanding"]
+      },
+      "cueIds": [20, 21, 22, 23]
+    },
+    {
+      "id": "interruptions",
+      "start": 71.33,
+      "end": 103.13,
+      "title": "An interruption changes the turn",
+      "explanation": "The model begins a story, then the learner interrupts. The current reply gives way to the learner's new turn. Watch the transition, not just the moving hands.",
+      "gesture": "emphasize",
+      "diagram": {
+        "kind": "flow",
+        "labels": ["Model speaks", "Learner interrupts", "Reply changes"]
+      },
+      "cueIds": [24, 28, 32, 33, 34]
+    },
+    {
+      "id": "memory",
+      "start": 103.13,
+      "end": 133.13,
+      "title": "Earlier context helps a later answer",
+      "explanation": "The learner asks about previous parts of the conversation. The model refers back to earlier topics. This illustrates context within the demonstrated conversation, not unlimited permanent memory.",
+      "gesture": "connect",
+      "diagram": {
+        "kind": "flow",
+        "labels": ["Earlier exchange", "Conversation context", "Later question"]
+      },
+      "cueIds": [36, 37, 38, 40, 43]
+    },
+    {
+      "id": "review",
+      "start": 133.13,
+      "end": 149,
+      "title": "Review the main ideas",
+      "explanation": "The demo closes. Replay a section to compare shared input, interruptions and conversation context. These three ideas are the focus of the visual illustrations.",
+      "gesture": "welcome",
+      "diagram": {
+        "kind": "list",
+        "labels": ["Shared input", "Interruptions", "Conversation context"]
+      },
+      "cueIds": [0, 24, 36, 52]
+    }
+  ]
+}

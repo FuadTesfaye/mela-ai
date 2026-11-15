@@ -13,6 +13,7 @@ export function MelaCompanion({
   lessonId,
   language,
   assistant,
+  renderer,
   contextRoot,
   className,
   style,
@@ -32,6 +33,7 @@ export function MelaCompanion({
       lessonId,
       language,
       assistant,
+      renderer,
       contextRoot,
     })
       .then((result) => {
@@ -54,6 +56,6 @@ export function MelaCompanion({
       active = false;
       handle?.destroy();
     };
-  }, [api, videoUrl, lessonId, language, assistant, contextRoot]);
+  }, [api, videoUrl, lessonId, language, assistant, renderer, contextRoot]);
   return <div ref={target} className={className} style={style} />;
 }
