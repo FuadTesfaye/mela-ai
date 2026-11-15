@@ -60,7 +60,7 @@ Each course concept includes a YouTube video box. Load the public example or pas
 
 Generation needs connectivity, a usable key/model, an accessible public video and provider quota. It can fail for long videos or unclear/missing speech; there is no fabricated fallback transcript. Successful server results are cached for one hour in memory; browser-saved public transcripts can be restored offline. YouTube video playback itself is not available offline.
 
-The small **EthSL signing panel** is visible in the video box and can be hidden. Configure a real `.mp4`/`.webm` interpretation only after fluent-signer review:
+The **EthSL signing panel** starts hidden. Click **Show signing panel** to load the reviewed interpreter beside the lesson (below it on mobile). Configure a real `.mp4`/`.webm` interpretation only after fluent-signer review:
 
 ```dotenv
 SIGN_LANGUAGE_VIDEO_URL=/signing/reviewed-lesson.mp4
@@ -70,7 +70,7 @@ SIGN_LANGUAGE_LESSON_VIDEO_ID=EXACT_11_CHARACTER_YOUTUBE_ID
 SIGN_LANGUAGE_OFFSET_SECONDS=0
 ```
 
-The player shows and synchronizes that clip only for its exact configured YouTube video. Playing, pausing, seeking and playback rate follow the main player. For other videos, it clearly states that no validated signing clip is connected. No signer clip was supplied, so signing is currently unavailable; an avatar is not used as a sign-language substitute.
+The player shows and synchronizes that clip only for its exact configured YouTube video. Opening the panel during playback joins at the current moment; opening it while paused keeps it paused. Playing, pausing, buffering, seeking, replay and playback rate follow the main player. Hiding pauses only the interpreter. The enlargement dialog preserves the same media and returns keyboard focus when closed. Loading and media errors have explicit status messages and recovery controls; browsers that block playback show **Start interpreter**. Opening uses a subtle transition that respects reduced-motion preferences. For other videos, it clearly states that no validated signing clip is connected. No signer clip was supplied, so signing is currently unavailable; an avatar is not used as a sign-language substitute.
 
 For Docker, configure those variables in `.env` or the deployment environment. Local Next.js also loads `.env.local`; Compose does not automatically read `.env.local`.
 

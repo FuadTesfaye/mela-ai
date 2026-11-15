@@ -21,11 +21,11 @@ Recorded 15 November 2026. This describes the local implementation and observed 
 | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | TypeScript route generation/type checking                                                           | Passed                                                                       |
 | Retrieval/security/Gemini/media unit tests                                                          | 35 passed                                                                    |
-| Bundled widget, original Savanna DOM, module/week context, transcript UI and offline training tests | 15 passed                                                                    |
+| Bundled widget, original Savanna DOM, module/week context, transcript UI and offline training tests | 23 passed                                                                    |
 | HTTP Route Handler integration tests                                                                | 10 passed                                                                    |
 | Production build                                                                                    | Passed with webpack and compiler-API type checking                           |
 | Chat widget size                                                                                    | 44,828 bytes uncompressed; 15,090 gzip bytes; enforced ceiling 500,000 bytes |
-| Separate course-media module                                                                        | 15,000 bytes uncompressed; 5,689 gzip bytes                                  |
+| Separate course-media module                                                                        | 19,964 bytes uncompressed; 6,799 gzip bytes                                  |
 | Separate Savanna integration module                                                                 | 4,788 bytes uncompressed; 2,047 gzip bytes                                   |
 | Original non-page capture assets                                                                    | All checked Git blob hashes match upstream                                   |
 | Docker Compose configuration                                                                        | Passed `docker compose config --quiet` with temporary validation values      |
@@ -51,4 +51,8 @@ Follow CONFORMANCE.md before claiming production readiness or accessibility conf
 
 ## Latest validation limits
 
-All 60 executable unit/DOM/API-handler cases pass (35 + 15 + 10). Two PostgreSQL integration cases are included but skipped without `TEST_DATABASE_URL`, including approval replacement and unpublishing. The production build passes. Starting the server remains blocked by the sandbox (`listen EPERM` on port 3000); live browser, camera, Gemini and full signer validation are pending.
+All 68 executable unit/DOM/API-handler cases pass (35 + 23 + 10). Two PostgreSQL integration cases are included but skipped without `TEST_DATABASE_URL`, including approval replacement and unpublishing. The production build passes. Starting the server remains blocked by the sandbox (`listen EPERM` on port 3000); live browser, camera, Gemini and full signer validation are pending.
+
+## Signing panel follow-up
+
+The interpreter starts hidden and is loaded explicitly through Show signing panel. Opening midway joins the source timestamp; pause, buffering, seek, replay, speed, hidden state and enlarged playback are covered by eight additional bundled DOM tests. Source changes clear the old media immediately and reject stale configuration responses. Playback errors and blocked autoplay have separate recovery controls. The panel sits beside the video on desktop and below it on small screens, with a reduced-motion-aware transition. Two new native browser cases were attempted but could not launch Chromium (`sandbox_host_linux.cc`, operation not permitted); their assertions have not run.
