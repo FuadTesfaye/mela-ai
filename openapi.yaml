@@ -1,0 +1,2010 @@
+openapi: 3.0.3
+info:
+  title: MELA AI API
+  version: 0.1.0
+  description: Accessible learning companion. One public demo catalogue; bearer-protected
+    learner tickets and cookie-protected tutor tools. Browser origins must be allowlisted.
+    Errors expose no credentials or database details.
+servers:
+- url: http://localhost:3000
+  description: Local development; replace with your HTTPS deployment origin
+paths:
+  /api/v1/ask:
+    post:
+      summary: Answer from retrieved sources
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Answer'
+        '400':
+          description: Invalid fields or JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Origin or role rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Request too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Service unavailable or unconfigured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Ask'
+      description: 'No generative call without retrieved evidence. Cloud mode requires
+        cloudConsent=true. Provider errors or invalid citation IDs fall back to source
+        extracts. Request limit: 250,000 bytes.'
+    options:
+      summary: CORS preflight
+      responses:
+        '204':
+          description: Allowed origin; methods and headers returned
+        '403':
+          description: Origin rejected
+  /api/v1/content:
+    post:
+      summary: Index approved public learning sections
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  indexed:
+                    type: integer
+        '400':
+          description: Invalid fields or JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Origin or role rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Request too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Service unavailable or unconfigured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sections:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        maxLength: 100
+                      title:
+                        type: string
+                        maxLength: 300
+                      content:
+                        type: string
+                        maxLength: 6000
+                      url:
+                        type: string
+                        maxLength: 2000
+                      language:
+                        type: string
+                        enum:
+                        - en
+                        - am
+                        default: en
+                      courseId:
+                        type: string
+                        maxLength: 100
+                      keywords:
+                        type: array
+                        items:
+                          type: string
+                          maxLength: 80
+                        maxItems: 30
+                    required:
+                    - id
+                    - title
+                    - content
+                    - url
+                    - language
+                  maxItems: 100
+              required:
+              - sections
+      security:
+      - tutorSession: []
+      description: 'Upserts by section id. Same-origin tutor request required. Public
+        catalogue only; not tenant-isolated. Request limit: 700,000 bytes.'
+    options:
+      summary: CORS preflight
+      responses:
+        '204':
+          description: Allowed origin; methods and headers returned
+        '403':
+          description: Origin rejected
+  /api/v1/escalations:
+    post:
+      summary: Create a consented human-help ticket
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketCreated'
+        '400':
+          description: Invalid fields or JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Origin or role rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Request too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Service unavailable or unconfigured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TicketCreate'
+      description: 'Ticket token is returned once; keep it private. Widget keeps it
+        in memory. Request limit: 5,000,000 bytes.'
+    get:
+      summary: List the latest 100 support tickets
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tickets:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        language:
+                          type: string
+                          enum:
+                          - en
+                          - am
+                          default: en
+                        status:
+                          type: string
+                          maxLength: 30
+                        kind:
+                          type: string
+                          maxLength: 30
+                        created_at:
+                          type: string
+                          format: date-time
+                    maxItems: 100
+        '400':
+          description: Invalid fields or JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Origin or role rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Request too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Service unavailable or unconfigured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - tutorSession: []
+    options:
+      summary: CORS preflight
+      responses:
+        '204':
+          description: Allowed origin; methods and headers returned
+        '403':
+          description: Origin rejected
+  /api/v1/escalations/{id}:
+    get:
+      summary: Read ticket status and tutor replies
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketDetail'
+        '400':
+          description: Invalid fields or JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Origin or role rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Request too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Service unavailable or unconfigured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - tutorSession: []
+      - ticketToken: []
+      description: 'Conversation, context and hasScreenshot are returned only to authenticated
+        tutors. Missing ticket: 404.'
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      summary: Reply or change ticket status
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ok'
+        '400':
+          description: Invalid fields or JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Origin or role rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Request too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Service unavailable or unconfigured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum:
+                  - queued
+                  - active
+                  - resolved
+                reply:
+                  type: string
+                  maxLength: 6000
+                  minLength: 1
+      security:
+      - tutorSession: []
+      description: Supply status or reply. Resolving a ticket terminates active sharing
+        sessions.
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+    options:
+      summary: CORS preflight
+      responses:
+        '204':
+          description: Allowed origin; methods and headers returned
+        '403':
+          description: Origin rejected
+  /api/v1/escalations/{id}/screenshot:
+    get:
+      summary: Read a private, consented screenshot
+      responses:
+        '200':
+          description: Success
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/webp:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Invalid fields or JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Origin or role rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Request too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Service unavailable or unconfigured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - tutorSession: []
+      description: 'Returns image/png, image/jpeg or image/webp. No screenshot: 404.'
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+    options:
+      summary: CORS preflight
+      responses:
+        '204':
+          description: Allowed origin; methods and headers returned
+        '403':
+          description: Origin rejected
+  /api/v1/escalations/{id}/shares:
+    get:
+      summary: Find the current learner sharing session
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  session:
+                    type: object
+                    nullable: true
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+        '400':
+          description: Invalid fields or JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Origin or role rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Request too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Service unavailable or unconfigured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - tutorSession: []
+      - ticketToken: []
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      summary: Start learner-controlled sharing
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  iceServers:
+                    type: array
+                    items:
+                      type: object
+                    maxItems: 10
+        '400':
+          description: Invalid fields or JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Origin or role rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Request too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Service unavailable or unconfigured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - ticketToken: []
+      description: Requires learner token. Stops prior sessions. Browser capture consent
+        is handled in the widget. Sessions expire after 30 minutes.
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+    options:
+      summary: CORS preflight
+      responses:
+        '204':
+          description: Allowed origin; methods and headers returned
+        '403':
+          description: Origin rejected
+  /api/v1/shares/{id}:
+    get:
+      summary: Read session status and ICE configuration
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  active:
+                    type: boolean
+                  iceServers:
+                    type: array
+                    items:
+                      type: object
+                    maxItems: 10
+        '400':
+          description: Invalid fields or JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Origin or role rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Request too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Service unavailable or unconfigured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - tutorSession: []
+      - ticketToken: []
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      summary: Stop sharing
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ok'
+        '400':
+          description: Invalid fields or JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Origin or role rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Request too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Service unavailable or unconfigured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - tutorSession: []
+      - ticketToken: []
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+    options:
+      summary: CORS preflight
+      responses:
+        '204':
+          description: Allowed origin; methods and headers returned
+        '403':
+          description: Origin rejected
+  /api/v1/shares/{id}/signals:
+    get:
+      summary: Poll signaling messages from the other participant
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  active:
+                    type: boolean
+                  signals:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          maxLength: 50
+                        data:
+                          $ref: '#/components/schemas/Signal'
+                    maxItems: 100
+        '400':
+          description: Invalid fields or JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Origin or role rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Request too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Service unavailable or unconfigured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - tutorSession: []
+      - ticketToken: []
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: after
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+    post:
+      summary: Send SDP or ICE signaling
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ok'
+        '400':
+          description: Invalid fields or JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Origin or role rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Request too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Service unavailable or unconfigured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Signal'
+      security:
+      - tutorSession: []
+      - ticketToken: []
+      description: 'Learners send offers; tutors send answers. Media is peer-to-peer
+        or relayed by TURN, never stored by this API. Inactive session: 410.'
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+    options:
+      summary: CORS preflight
+      responses:
+        '204':
+          description: Allowed origin; methods and headers returned
+        '403':
+          description: Origin rejected
+  /api/v1/jobs:
+    get:
+      summary: Read demonstration job listings
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Job'
+                    maxItems: 100
+                  demo:
+                    type: boolean
+                    enum:
+                    - true
+        '400':
+          description: Invalid fields or JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Origin or role rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Request too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Service unavailable or unconfigured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    options:
+      summary: CORS preflight
+      responses:
+        '204':
+          description: Allowed origin; methods and headers returned
+        '403':
+          description: Origin rejected
+  /api/v1/job-alerts:
+    post:
+      summary: Opt in and send a verification code
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  token:
+                    type: string
+                    maxLength: 100
+                  verified:
+                    type: boolean
+        '400':
+          description: Invalid fields or JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Origin or role rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Request too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Service unavailable or unconfigured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                channel:
+                  type: string
+                  enum:
+                  - telegram
+                  - sms
+                destination:
+                  type: string
+                  maxLength: 30
+                language:
+                  type: string
+                  enum:
+                  - en
+                  - am
+                  default: en
+                keywords:
+                  type: string
+                  maxLength: 200
+                consent:
+                  type: boolean
+                  enum:
+                  - true
+              required:
+              - channel
+              - destination
+              - consent
+      description: 'SMS destination must be E.164; Telegram destination is a numeric
+        chat ID. Codes expire after ten minutes. Existing active subscription: 409.
+        A configured delivery service is required.'
+    delete:
+      summary: Unsubscribe from alerts
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  unsubscribed:
+                    type: boolean
+        '400':
+          description: Invalid fields or JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Origin or role rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Request too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Service unavailable or unconfigured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - subscriptionToken: []
+      parameters:
+      - in: query
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+    options:
+      summary: CORS preflight
+      responses:
+        '204':
+          description: Allowed origin; methods and headers returned
+        '403':
+          description: Origin rejected
+  /api/v1/job-alerts/verify:
+    post:
+      summary: Verify ownership of the alert destination
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  verified:
+                    type: boolean
+        '400':
+          description: Invalid fields or JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Origin or role rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Request too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Service unavailable or unconfigured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                token:
+                  type: string
+                  maxLength: 100
+                code:
+                  type: string
+                  pattern: ^[0-9]{6}$
+              required:
+              - id
+              - token
+              - code
+    options:
+      summary: CORS preflight
+      responses:
+        '204':
+          description: Allowed origin; methods and headers returned
+        '403':
+          description: Origin rejected
+  /api/v1/accommodations:
+    post:
+      summary: Queue an interview support request
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketCreated'
+        '400':
+          description: Invalid fields or JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Origin or role rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Request too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Service unavailable or unconfigured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                jobId:
+                  type: string
+                  maxLength: 100
+                request:
+                  type: string
+                  maxLength: 2000
+                  minLength: 3
+                language:
+                  type: string
+                  enum:
+                  - en
+                  - am
+                  default: en
+                consent:
+                  type: boolean
+                  enum:
+                  - true
+              required:
+              - jobId
+              - request
+              - consent
+      description: Creates a tutor ticket; does not contact an employer.
+    options:
+      summary: CORS preflight
+      responses:
+        '204':
+          description: Allowed origin; methods and headers returned
+        '403':
+          description: Origin rejected
+  /sms/inbound:
+    post:
+      summary: Receive a trusted text-gateway request
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                maxLength: 160
+        '400':
+          description: Invalid fields or JSON
+          content:
+            text/plain:
+              schema:
+                type: string
+                maxLength: 160
+        '401':
+          description: Authentication required
+          content:
+            text/plain:
+              schema:
+                type: string
+                maxLength: 160
+        '403':
+          description: Origin or role rejected
+          content:
+            text/plain:
+              schema:
+                type: string
+                maxLength: 160
+        '413':
+          description: Request too large
+          content:
+            text/plain:
+              schema:
+                type: string
+                maxLength: 160
+        '429':
+          description: Rate limit exceeded
+          content:
+            text/plain:
+              schema:
+                type: string
+                maxLength: 160
+        '503':
+          description: Service unavailable or unconfigured
+          content:
+            text/plain:
+              schema:
+                type: string
+                maxLength: 160
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                from:
+                  type: string
+                  pattern: ^\+[1-9][0-9]{7,14}$
+                text:
+                  type: string
+                  maxLength: 2000
+                  minLength: 1
+              required:
+              - from
+              - text
+      security:
+      - smsGatewayToken: []
+      description: 'Plain text capped at 160 Unicode codepoints, not necessarily one
+        carrier SMS segment. Commands: HELP, CONFIRMHELP, VERIFY <code>, STOP, AM,
+        EN. Gateway is responsible for delivering the HTTP response.'
+  /api/v1/webhooks:
+    post:
+      summary: Register or rotate a host event receiver
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  secret:
+                    type: string
+                    maxLength: 100
+                  events:
+                    type: array
+                    items:
+                      type: string
+                      maxLength: 2000
+                    maxItems: 100
+        '400':
+          description: Invalid fields or JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Origin or role rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Request too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Service unavailable or unconfigured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  maxLength: 2000
+              required:
+              - url
+      security:
+      - tutorSession: []
+      description: HTTPS hostname must be explicitly configured in WEBHOOK_ALLOWED_HOSTS
+        and resolve publicly. HMAC-SHA256 signs timestamp + dot + exact JSON body.
+        Delivers ticket ID only, with up to five attempts. Redirects are rejected.
+        Configure network egress restrictions for production.
+    options:
+      summary: CORS preflight
+      responses:
+        '204':
+          description: Allowed origin; methods and headers returned
+        '403':
+          description: Origin rejected
+  /api/v1/auth:
+    post:
+      summary: Sign in as a tutor
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ok'
+        '400':
+          description: Invalid fields or JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Origin or role rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Request too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Service unavailable or unconfigured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                  maxLength: 300
+              required:
+              - password
+      description: Same-origin request required. Sets HttpOnly SameSite=Strict mela_session
+        cookie for eight hours. Secure flag is used for HTTPS APP_URL. Unconfigured
+        credentials return 503.
+    delete:
+      summary: Sign out
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ok'
+        '400':
+          description: Invalid fields or JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Origin or role rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Request too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Service unavailable or unconfigured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      description: Same-origin request required. Clears session cookie.
+  /api/v1/health:
+    get:
+      summary: Read database migration readiness
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    maxLength: 30
+                  database:
+                    type: string
+                    maxLength: 30
+        '400':
+          description: Invalid fields or JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Origin or role rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Request too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Service unavailable or unconfigured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      description: Returns 503 when PostgreSQL or migrations are unavailable. Demo
+        retrieval remains available.
+components:
+  securitySchemes:
+    tutorSession:
+      type: apiKey
+      in: cookie
+      name: mela_session
+    ticketToken:
+      type: http
+      scheme: bearer
+      description: Ticket-specific secret returned at creation.
+    subscriptionToken:
+      type: http
+      scheme: bearer
+      description: Subscription-specific secret returned at opt-in.
+    smsGatewayToken:
+      type: http
+      scheme: bearer
+      description: Configured SMS_INBOUND_SECRET.
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          maxLength: 2000
+      required:
+      - error
+    Section:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 100
+        title:
+          type: string
+          maxLength: 300
+        content:
+          type: string
+          maxLength: 6000
+        url:
+          type: string
+          maxLength: 2000
+        language:
+          type: string
+          enum:
+          - en
+          - am
+          default: en
+        courseId:
+          type: string
+          maxLength: 100
+        keywords:
+          type: array
+          items:
+            type: string
+            maxLength: 80
+          maxItems: 30
+      required:
+      - id
+      - title
+      - content
+      - url
+    LearningContext:
+      type: object
+      properties:
+        pageType:
+          type: string
+          enum:
+          - dashboard
+          - lesson
+          - jobs
+          - unknown
+        courseId:
+          type: string
+          maxLength: 100
+        courseTitle:
+          type: string
+          maxLength: 300
+        moduleTitle:
+          type: string
+          maxLength: 300
+        lessonTitle:
+          type: string
+          maxLength: 300
+        sections:
+          type: array
+          items:
+            $ref: '#/components/schemas/Section'
+          maxItems: 30
+      required:
+      - pageType
+      - sections
+    Citation:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 100
+        title:
+          type: string
+          maxLength: 300
+        url:
+          type: string
+          maxLength: 2000
+        excerpt:
+          type: string
+          maxLength: 240
+      required:
+      - id
+      - title
+      - url
+      - excerpt
+    Ask:
+      type: object
+      properties:
+        question:
+          type: string
+          maxLength: 2000
+          minLength: 1
+        language:
+          type: string
+          enum:
+          - en
+          - am
+          default: en
+        context:
+          $ref: '#/components/schemas/LearningContext'
+        cloudConsent:
+          type: boolean
+          default: false
+        simple:
+          type: boolean
+          default: false
+      required:
+      - question
+    Answer:
+      type: object
+      properties:
+        answer:
+          type: string
+          maxLength: 18000
+        citations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Citation'
+          maxItems: 3
+        provider:
+          type: string
+          enum:
+          - none
+          - local
+          - cloud
+        matched:
+          type: boolean
+        actions:
+          type: array
+          items:
+            type: string
+            maxLength: 2000
+          maxItems: 10
+      required:
+      - answer
+      - citations
+      - provider
+      - matched
+      - actions
+    TicketCreate:
+      type: object
+      properties:
+        language:
+          type: string
+          enum:
+          - en
+          - am
+          default: en
+        consent:
+          type: boolean
+          enum:
+          - true
+        conversation:
+          type: array
+          items:
+            type: object
+            properties:
+              role:
+                type: string
+                enum:
+                - user
+                - assistant
+                - tutor
+              content:
+                type: string
+                maxLength: 12000
+            required:
+            - role
+            - content
+          maxItems: 100
+        context:
+          $ref: '#/components/schemas/LearningContext'
+        screenshot:
+          type: string
+          maxLength: 2800000
+          description: PNG, JPEG, or WebP data URL; decoded size at most 2 MiB. Magic
+            bytes are checked.
+        kind:
+          type: string
+          enum:
+          - learning
+          - accommodation
+          default: learning
+      required:
+      - consent
+    TicketCreated:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        token:
+          type: string
+          maxLength: 100
+        status:
+          type: string
+          enum:
+          - queued
+      required:
+      - id
+      - token
+      - status
+    TutorMessage:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 50
+        content:
+          type: string
+          maxLength: 6000
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - content
+    TicketDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+          - queued
+          - active
+          - resolved
+        language:
+          type: string
+          enum:
+          - en
+          - am
+          default: en
+        kind:
+          type: string
+          maxLength: 30
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/TutorMessage'
+          maxItems: 1000
+        conversation:
+          type: array
+          items:
+            type: object
+            properties:
+              role:
+                type: string
+                enum:
+                - user
+                - assistant
+                - tutor
+              content:
+                type: string
+                maxLength: 12000
+            required:
+            - role
+            - content
+          maxItems: 100
+        context:
+          $ref: '#/components/schemas/LearningContext'
+        hasScreenshot:
+          type: boolean
+      required:
+      - id
+      - status
+      - messages
+    Job:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 100
+        title:
+          type: string
+          maxLength: 300
+        company:
+          type: string
+          maxLength: 300
+        location:
+          type: string
+          maxLength: 300
+        type:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 6000
+        accommodations:
+          type: array
+          items:
+            type: string
+            maxLength: 300
+          maxItems: 30
+        keywords:
+          type: array
+          items:
+            type: string
+            maxLength: 80
+          maxItems: 30
+      required:
+      - id
+      - title
+      - description
+    Signal:
+      oneOf:
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - offer
+            - answer
+          sdp:
+            type: string
+            maxLength: 50000
+        required:
+        - type
+        - sdp
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - ice
+          candidate:
+            type: object
+            properties:
+              candidate:
+                type: string
+                maxLength: 3000
+              sdpMid:
+                type: string
+                nullable: true
+              sdpMLineIndex:
+                type: integer
+                nullable: true
+              usernameFragment:
+                type: string
+                nullable: true
+            required:
+            - candidate
+        required:
+        - type
+        - candidate
+    Ok:
+      type: object
+      properties:
+        ok:
+          type: boolean
+      required:
+      - ok

@@ -9,3 +9,4 @@ test-results/
 *.tsbuildinfo
 public/db-assistant.js
 public/avatar-view.js
+public/openapi.yaml
