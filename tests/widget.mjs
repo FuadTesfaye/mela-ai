@@ -1277,3 +1277,55 @@ test("avatar animation runs from source playback and stops on pause, captions-on
     f.cleanup();
   }
 });
+test("first prepared transcript selects whole-video context after an earlier player-state event", async () => {
+  const f = setup({
+    html: "<mela-course-media></mela-course-media>",
+    answer: async () =>
+      Response.json({
+        answer: "Grounded video answer",
+        citations: [],
+        provider: "none",
+        matched: true,
+        actions: [],
+      }),
+  });
+  try {
+    const media = f.window.document.querySelector("mela-course-media");
+    const video = {
+      videoId: "9hE5-98ZeCg",
+      url: "https://www.youtube.com/watch?v=9hE5-98ZeCg",
+      title: "Selected video",
+      currentTime: 1,
+      duration: 149,
+      transcriptRevision: "prepared-1",
+    };
+    media.dispatchEvent(
+      new f.window.CustomEvent("mela:video-state", {
+        bubbles: true,
+        detail: video,
+      }),
+    );
+    media.dispatchEvent(
+      new f.window.CustomEvent("mela:transcript-ready", {
+        bubbles: true,
+        detail: {
+          video,
+          cues: [{ start: 0, end: 5, text: "PREPARED_SOURCE_CONTEXT" }],
+        },
+      }),
+    );
+    assert.equal(f.root.querySelector(".context-scope").value, "wholeVideo");
+    await question(f, "Explain this video");
+    const sent = JSON.parse(
+      f.calls.find((c) => String(c.url).endsWith("/ask")).init.body,
+    );
+    assert.equal(sent.scope, "wholeVideo");
+    assert.ok(
+      sent.context.sections.some((section) =>
+        section.content.includes("PREPARED_SOURCE_CONTEXT"),
+      ),
+    );
+  } finally {
+    f.cleanup();
+  }
+});

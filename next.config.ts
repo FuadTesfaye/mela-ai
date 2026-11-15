@@ -20,6 +20,9 @@ const config: NextConfig = {
         "/avatar-view.js",
         "/content.json",
         "/openapi.yaml",
+        "/mela-sdk.js",
+        "/sdk/:path*",
+        "/transcripts/:path*",
       ].map((source) => ({
         source,
         headers: [

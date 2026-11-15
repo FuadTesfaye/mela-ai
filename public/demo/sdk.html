@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MELA SDK · Plain HTML</title><style>body{font:16px/1.6 system-ui,sans-serif;max-width:1100px;margin:32px auto;padding:0 16px;color:#153b50}button{font:inherit;padding:8px 14px;margin:0 8px 16px 0}button:focus-visible,a:focus-visible{outline:3px solid #b98200;outline-offset:3px}code{background:#edf4f7;padding:2px 5px}</style><script src="/mela-sdk.js" defer></script></head>
+<body><h1>MELA on a plain HTML website</h1><p>This page uses the SDK without React, Tailwind or Savanna. The companion is isolated with Shadow DOM.</p><p><a href="/embed">Open the iframe wrapper</a></p><button id="mount">Mount companion</button><button id="remove">Remove companion</button><p id="status" role="status">Loading SDK…</p><div id="companion"></div>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+ let instance;const status=document.querySelector('#status');
+ async function mount(){if(instance)return;try{instance=await MelaAI.mount({container:'#companion',api:new URL('/api',location.href).href});status.textContent='Companion mounted. Load the video, open the learning panel, then play.';}catch(error){status.textContent=error.message;}}
+ document.querySelector('#mount').onclick=mount;document.querySelector('#remove').onclick=()=>{instance?.destroy();instance=undefined;status.textContent='Companion removed.';};void mount();
+});
+</script></body></html>

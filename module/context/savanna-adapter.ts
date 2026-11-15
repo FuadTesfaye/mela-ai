@@ -8,8 +8,12 @@ function clean(node: HTMLElement) {
     .forEach((child) => child.remove());
   return copy;
 }
-export function detectContext(includePublicPage = false): LearningContext {
+export function detectContext(
+  includePublicPage = false,
+  contextRoot?: HTMLElement,
+): LearningContext {
   const root =
+    contextRoot ||
     document.querySelector<HTMLElement>("[data-mela-context]") ||
     document.querySelector<HTMLElement>("main,article");
   if (!root) return { pageType: "unknown", sections: [] };

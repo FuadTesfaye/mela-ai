@@ -1,11 +1,12 @@
 /* Offline shell for this MELA-hosted Savanna demo, never registered on unrelated hosts. */
-const CACHE = "mela-public-v4-caption-preview";
+const CACHE = "mela-public-v5-selected-video-sdk";
 const PAGES = [
   "/jobs",
   "/support",
   "/docs",
   "/demo/digital-foundations",
   "/demo/blank.html",
+  "/demo/sdk.html",
   "/savanna/pages/paced.html",
   "/savanna/pages/self-paced.html",
   "/savanna/pages/lesson.html",
@@ -20,6 +21,10 @@ const ASSETS = [
   "/avatar-view.js",
   "/savanna-integration.js",
   "/course-media.js",
+  "/mela-sdk.js",
+  "/sdk/index.js",
+  "/sdk/react.js",
+  "/transcripts/9hE5-98ZeCg.json",
   "/content.json",
   "/savanna/mela-integration.css",
   "/savanna/assets/css/application_alx.css",

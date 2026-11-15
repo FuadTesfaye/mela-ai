@@ -24,17 +24,25 @@ const el = <K extends keyof HTMLElementTagNameMap>(
 };
 class DBAssistant extends HTMLElement {
   private root!: ShadowRoot;
+  contextRoot?: HTMLElement;
+  private readContext() {
+    return detectContext(this.includePublicPage, this.contextRoot);
+  }
   private video?: VideoSnapshot;
   private explanationMode: ExplanationMode = "auto";
   private visual?: HTMLInputElement;
   private videoCues: VideoCue[] = [];
   private scope: "lesson" | "wholeVideo" | "moment" = "lesson";
   private mediaSource(event: Event) {
-    return (
-      event.target instanceof HTMLElement &&
-      event.target.tagName === "MELA-COURSE-MEDIA" &&
-      !!event.target.closest("main,article")
-    );
+    if (
+      !(event.target instanceof HTMLElement) ||
+      event.target.tagName !== "MELA-COURSE-MEDIA"
+    )
+      return false;
+    const scope = this.closest("[data-mela-sdk-root]");
+    const source = event.target.closest("[data-mela-sdk-root]");
+    if (scope !== source) return false;
+    return !!event.target.closest("main,article,[data-mela-context]");
   }
   private readVideo(value: unknown): VideoSnapshot | undefined {
     if (!value || typeof value !== "object") return;
@@ -93,11 +101,16 @@ class DBAssistant extends HTMLElement {
       this.version++;
       this.abort?.abort();
     }
-    if (!this.video || this.video.videoId !== value.videoId)
+    if (
+      detail.cues.length &&
+      (!this.videoCues.length ||
+        !this.video ||
+        this.video.videoId !== value.videoId)
+    )
       this.scope = "wholeVideo";
     this.video = value;
     this.videoCues = detail.cues;
-    this.context = detectContext(this.includePublicPage);
+    this.context = this.readContext();
     this.updateVideoLabel();
   };
   private momentEvent = (event: Event) => {
@@ -179,7 +192,7 @@ class DBAssistant extends HTMLElement {
     this.locale = this.getAttribute("lang") === "am" ? "am" : "en";
     this.opened = this.hasAttribute("open");
     this.root = this.attachShadow({ mode: "open" });
-    this.context = detectContext();
+    this.context = this.readContext();
     this.render();
     this.stopObserving = observeContext(
       (context) => {
@@ -190,7 +203,7 @@ class DBAssistant extends HTMLElement {
         this.updateContext();
         this.setStatus(this.t.contextChanged);
       },
-      () => detectContext(this.includePublicPage),
+      () => this.readContext(),
     );
     window.addEventListener("mela:open", this.openEvent);
     document.addEventListener("mela:video-state", this.videoEvent);
@@ -280,7 +293,7 @@ class DBAssistant extends HTMLElement {
       )
         return;
       this.includePublicPage = !this.includePublicPage;
-      this.context = detectContext(this.includePublicPage);
+      this.context = this.readContext();
       this.version++;
       this.abort?.abort();
       scope.setAttribute("aria-pressed", String(this.includePublicPage));

@@ -1,7 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
-import { createRequire } from "node:module";
-const require = createRequire(import.meta.url);
+import { resolve } from "node:path";
 async function openWidget(page: Page) {
   const widget = page.locator("db-assistant");
   await widget.locator(".panel").waitFor({ state: "attached" });
@@ -15,6 +14,8 @@ for (const path of [
   "/jobs",
   "/support",
   "/demo/blank.html",
+  "/demo/sdk.html",
+  "/savanna/pages/programming-for-beginners.html",
   "/savanna/pages/homepage-v1-paced.html",
   "/savanna/pages/homepage-v1-self-paced.html",
   "/savanna/pages/offline-first-localized-ai.html",
@@ -31,7 +32,8 @@ for (const path of [
       path === "/" ||
       path === "/learn" ||
       path.includes("homepage-v1") ||
-      path.includes("offline-first-localized");
+      path.includes("offline-first-localized") ||
+      path.includes("programming-for-beginners");
     await widget
       .getByRole("textbox")
       .fill(captured ? "Explain my current lesson" : "How do I use a browser?");
@@ -40,7 +42,10 @@ for (const path of [
       .click();
     await expect(widget.locator(".sources a").first()).toBeVisible();
     await page.addScriptTag({
-      content: await readFile(require.resolve("axe-core/axe.min.js"), "utf8"),
+      content: await readFile(
+        resolve("node_modules/axe-core/axe.min.js"),
+        "utf8",
+      ),
     });
     const violations = await page.evaluate(async () => {
       const { violations } = await (
@@ -65,7 +70,9 @@ test("Amharic, keyboard close, small viewport and no horizontal overflow", async
   await page.setViewportSize({ width: 320, height: 740 });
   await page.goto("/demo/digital-foundations");
   const widget = await openWidget(page);
-  await widget.getByRole("combobox").selectOption("am");
+  await widget
+    .getByRole("combobox", { name: "Language / ቋንቋ", exact: true })
+    .selectOption("am");
   await widget.getByRole("textbox").fill("የይለፍ ቃል");
   await widget.getByRole("button", { name: "ጥያቄ ይላኩ", exact: true }).click();
   await expect(widget.locator(".sources a").first()).toBeVisible();
