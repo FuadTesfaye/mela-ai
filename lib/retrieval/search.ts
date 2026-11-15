@@ -5,7 +5,7 @@ const bilingual:Record<string,string[]>={password:["የይለፍ","ቃል","ደ�
 export function retrieve(question:string,sections:Section[],context:LearningContext,language:Language):Section[]{
  const q=tokenize(question);for(const [en,am]of Object.entries(bilingual))if(q.some(t=>t===en||am.some(a=>t.includes(a))))q.push(en,...am);
  const contextual=/current lesson|this lesson|የአሁኑ|ትምህርት|በአማርኛ/.test(question.toLowerCase());
- const unique=new Map<string,Section>();for(const s of [...context.sections,...sections])if((!s.courseId||!context.courseId||s.courseId===context.courseId||context.pageType==="jobs")&&(!s.language||s.language===language))unique.set(s.id,s);
+ const unique=new Map<string,Section>();for(const s of [...sections,...context.sections])if((!s.courseId||!context.courseId||s.courseId===context.courseId||context.pageType==="jobs")&&(!s.language||s.language===language))unique.set(s.id,s);
  const active=new Set(context.sections.map(s=>s.id));return [...unique.values()].map(s=>{const title=tokenize(s.title+" "+(s.keywords||[]).join(" "));const body=tokenize(s.content);const overlap=q.reduce((n,t)=>n+(title.includes(t)?3:body.includes(t)?1:0),0);const contextualMatch=contextual&&(active.has(s.id)||s.courseId===context.courseId);return {s,score:overlap>0?overlap+(active.has(s.id)?8:0):contextualMatch?2:0};}).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,3).map(x=>x.s);
 }
 export function groundedAnswer(question:string,sections:Section[],context:LearningContext,language:Language,simple=false):Answer {
