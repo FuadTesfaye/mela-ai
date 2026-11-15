@@ -1,6 +1,6 @@
+import { captionMotion } from "../media/caption-motion";
 import { loadTeacherRuntime } from "./runtime-loader";
 import {
-  gesturePhase,
   loadStoryboard,
   segmentAt,
   type Storyboard,
@@ -242,8 +242,9 @@ export function mountTeacherPresentation(
   } {
     const sourceTime = explaining?.at ?? seconds;
     const segment = segmentAt(storyboard, state.videoId, sourceTime);
+    const speech = captionMotion(state.cues, sourceTime, segment?.gesture);
     let time = seconds,
-      phase = segment ? gesturePhase(seconds, segment.start, segment.end) : 0.5;
+      phase = speech.phase;
     if (explaining) {
       const e = explaining;
       const elapsed = Math.min(
@@ -259,19 +260,13 @@ export function mountTeacherPresentation(
           "Demonstration finished. The video remains paused.";
       }
     }
-    const cue = state.cues.find(
-      (c) => sourceTime >= c.start && sourceTime < c.end,
-    );
-    const gesture = segment?.gesture || (cue ? "emphasize" : "rest");
     return {
       segment,
       frame: {
-        seconds: motion ? time : (segment?.start ?? cue?.start ?? 0),
+        seconds: motion ? time : 0,
+        beat: motion ? (explaining ? phase * 4 : speech.beat) : 0,
         phase: motion ? phase : 0.5,
-        gesture:
-          segment?.gesture === "welcome" && time - segment.start > 3
-            ? "rest"
-            : gesture,
+        gesture: speech.gesture,
         playing: !!explaining?.running || (!explaining && state.playing),
         visible: visible(),
         motion,

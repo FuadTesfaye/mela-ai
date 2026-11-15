@@ -95,3 +95,60 @@ test("gesture phases have smooth holds and bounded transitions even for short cu
     );
   }
 });
+
+import { captionMotion } from "../../module/media/caption-motion";
+test("transcript text selects gestures, cue timing controls phase, and silence rests both hands", () => {
+  const cues = [
+    { start: 2, end: 4, text: "Look at the screen" },
+    { start: 5, end: 7, text: "Compare different inputs" },
+    { start: 8, end: 10, text: "Connect them together" },
+  ];
+  assert.equal(captionMotion(cues, 3, "count").gesture, "point");
+  assert.equal(captionMotion(cues, 6, "point").gesture, "compare");
+  assert.equal(captionMotion(cues, 9).gesture, "connect");
+  for (const time of [0, 4, 7.5, 10, 20])
+    assert.equal(captionMotion(cues, time, "welcome").gesture, "rest");
+  assert.equal(captionMotion(cues, 2).phase, 0);
+  assert.deepEqual(captionMotion(cues, 3), captionMotion(cues, 3));
+  assert.notEqual(captionMotion(cues, 2.4).phase, captionMotion(cues, 3).phase);
+  const long = [{ start: 0, end: 20, text: "Explain this idea" }];
+  assert.equal(captionMotion(long, 4).phase, 0);
+  assert.ok(captionMotion(long, 5).phase > 0);
+});
+test("caption beats visibly move both wrists and articulate fingers, while reduced motion stays still", () => {
+  for (const gesture of [
+    "point",
+    "compare",
+    "connect",
+    "count",
+    "emphasize",
+    "welcome",
+  ] as TeacherGesture[]) {
+    const base: TeacherFrame = {
+      seconds: 1,
+      beat: 0.8,
+      phase: 0.5,
+      gesture,
+      playing: true,
+      visible: true,
+      motion: true,
+      camera: "front",
+    };
+    const first = teacherPose(base),
+      later = teacherPose({ ...base, seconds: 2, beat: 1.8 });
+    assert.ok(
+      distance(first.left.wrist, later.left.wrist) > 0.025,
+      gesture + " left hand",
+    );
+    assert.ok(
+      distance(first.right.wrist, later.right.wrist) > 0.025,
+      gesture + " right hand",
+    );
+    assert.notDeepEqual(first.leftCurl, later.leftCurl);
+    assert.notDeepEqual(first.rightCurl, later.rightCurl);
+    assert.deepEqual(
+      teacherPose({ ...base, motion: false }),
+      teacherPose({ ...base, seconds: 20, beat: 20, motion: false }),
+    );
+  }
+});

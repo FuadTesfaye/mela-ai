@@ -3,38 +3,8 @@
 import { mountTeacherPresentation } from "../teacher/presentation";
 import type { RendererPreference } from "../teacher/types";
 import { handshapeFor, spellingAt } from "./fingerspelling";
-export type Cue = { start: number; end: number; text: string };
-export type Gesture =
-  | "wave"
-  | "point"
-  | "compare"
-  | "connect"
-  | "count"
-  | "explain"
-  | "rest";
-export function cueAt(cues: readonly Cue[], seconds: number): Cue | undefined {
-  let lo = 0,
-    hi = cues.length - 1;
-  while (lo <= hi) {
-    const mid = (lo + hi) >>> 1;
-    const cue = cues[mid];
-    if (seconds < cue.start) hi = mid - 1;
-    else if (seconds >= cue.end) lo = mid + 1;
-    else return cue;
-  }
-}
-export function gestureFor(text: string): Gesture {
-  if (!text.trim()) return "rest";
-  if (/\b(hello|welcome|hi|goodbye)\b/i.test(text)) return "wave";
-  if (/\b(one|two|three|first|second|third|steps?|\d+)\b/i.test(text))
-    return "count";
-  if (/\b(compare|versus|different|cloud|local|either)\b/i.test(text))
-    return "compare";
-  if (/\b(connect|together|network|join|combine)\b/i.test(text))
-    return "connect";
-  if (/\b(look|screen|this|example|code|click)\b/i.test(text)) return "point";
-  return "explain";
-}
+import { cueAt, gestureFor, type Cue } from "./caption-motion";
+export { cueAt, gestureFor, type Cue, type Gesture } from "./caption-motion";
 const ns = "http://www.w3.org/2000/svg";
 function svg<K extends keyof SVGElementTagNameMap>(
   tag: K,
@@ -83,9 +53,9 @@ export function mountLearningPreview(
   const select = el("select");
   select.setAttribute("aria-label", "Learning panel view");
   for (const [value, label] of [
-    ["both", approved ? "Captions + interpreter" : "Captions + avatar"],
+    ["both", approved ? "Captions + interpreter" : "Captions + teacher"],
     ["captions", "Captions only"],
-    ["avatar", approved ? "Interpreter only" : "Avatar only"],
+    ["avatar", approved ? "Interpreter only" : "Teacher only"],
   ]) {
     const option = el("option", label);
     option.value = value;
@@ -328,7 +298,7 @@ export function mountLearningPreview(
 
     const poseTime = lesson?.frame.seconds ?? seconds;
     const local = lesson
-      ? Math.max(0, poseTime - (lesson.segment?.start ?? cue?.start ?? 0))
+      ? (lesson.frame.beat ?? 0)
       : cue
         ? Math.max(0, poseTime - cue.start)
         : 0;
@@ -475,7 +445,8 @@ export function mountLearningPreview(
       showVisual = select.value !== "captions";
     visual.hidden = !showVisual;
     note.hidden = !showVisual;
-    description.hidden = !showVisual;
+    description.hidden = !showVisual || animationMode.value === "teacher";
+    letterLabel.hidden = !showVisual || animationMode.value === "teacher";
     caption.hidden = !captions;
     if (lastVisual !== showVisual) {
       lastVisual = showVisual;
@@ -496,13 +467,13 @@ export function mountLearningPreview(
     sourceLabel.textContent = state.sourceLabel || "AI CAPTIONS";
     hint.textContent =
       state.sourceLabel === "COURSE CAPTIONS"
-        ? "Source English captions · word timing is estimated."
+        ? "English source captions."
         : "Generated from the video's audio. Review for accuracy.";
     note.textContent =
       animationMode.value === "spelling"
         ? "Experimental English fingerspelling preview · not EthSL translation or full ASL. Fluent review pending."
         : animationMode.value === "teacher"
-          ? "Visual illustrations accompany the source captions. This is not sign-language translation."
+          ? "Caption-timed visual gestures · not sign-language translation."
           : "Experimental gesture preview · illustrative movement, not EthSL translation.";
     motion.textContent = motionEnabled()
       ? "Pause animation"

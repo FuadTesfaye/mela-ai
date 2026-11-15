@@ -11,6 +11,7 @@ export type RendererPreference = "auto" | "2d" | "3d";
 export type Vec3 = readonly [number, number, number];
 export interface TeacherFrame {
   seconds: number;
+  beat?: number;
   phase: number;
   gesture: TeacherGesture;
   playing: boolean;
