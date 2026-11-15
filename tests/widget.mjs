@@ -607,7 +607,7 @@ test("diagram explanations render safe SVG and a complete text alternative", asy
   try {
     await question(f, "Show a learning diagram");
     assert.ok(f.root.querySelector("svg.explanation-diagram"));
-    assert.match(f.root.querySelector("details").textContent, /Practice/);
+    assert.match(f.root.querySelector(".explanation-block details").textContent, /Practice/);
     assert.equal(f.root.querySelector(".explanation-block script"), null);
     assert.ok(
       [...f.root.querySelectorAll("button")].some(

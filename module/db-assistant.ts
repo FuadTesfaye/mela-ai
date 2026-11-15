@@ -144,6 +144,7 @@ class DBAssistant extends HTMLElement {
 
   private locale: Language = "en";
   private opened = false;
+  private readingMode = false;
   private busy = false;
   private version = 0;
   private includePublicPage = false;
@@ -191,6 +192,9 @@ class DBAssistant extends HTMLElement {
     if (this.root) return;
     this.locale = this.getAttribute("lang") === "am" ? "am" : "en";
     this.opened = this.hasAttribute("open");
+    try {
+      this.readingMode = localStorage.getItem("mela-reading-mode") === "1";
+    } catch {}
     this.root = this.attachShadow({ mode: "open" });
     this.context = this.readContext();
     this.render();
@@ -248,7 +252,9 @@ class DBAssistant extends HTMLElement {
       }
     });
     const header = el("div", undefined, "header");
-    header.append(el("span", "✦", "mark"));
+    const mark = el("span", "✦", "mark");
+    mark.setAttribute("aria-hidden", "true");
+    header.append(mark);
     const name = el("div");
     name.append(el("strong", "mela AI"), el("small", this.t.title));
     const close = el("button", "×");
@@ -300,12 +306,27 @@ class DBAssistant extends HTMLElement {
       this.updateContext();
       this.setStatus(this.t.contextChanged);
     };
-    toolbar.append(scope);
+    const reading = el("button", this.t.readingMode);
+    reading.type = "button";
+    reading.setAttribute("aria-pressed", String(this.readingMode));
+    reading.onclick = () => {
+      this.readingMode = !this.readingMode;
+      reading.setAttribute("aria-pressed", String(this.readingMode));
+      try {
+        localStorage.setItem("mela-reading-mode", this.readingMode ? "1" : "0");
+      } catch {}
+      this.applyReadingMode();
+      this.setStatus(this.readingMode ? this.t.readingOn : this.t.readingOff);
+    };
+    toolbar.append(reading);
+    const options = el("details", undefined, "options");
+    options.append(el("summary", this.t.options), scope);
     this.messages = el("div", undefined, "messages");
     this.messages.setAttribute("role", "log");
     this.messages.setAttribute("aria-label", this.t.title);
     this.messages.setAttribute("aria-live", "polite");
     this.messages.setAttribute("aria-relevant", "additions");
+    this.messages.setAttribute("aria-atomic", "false");
     this.messages.setAttribute("tabindex", "0");
     this.status = el("div", undefined, "status");
     this.status.setAttribute("role", "status");
@@ -339,11 +360,7 @@ class DBAssistant extends HTMLElement {
     mic.type = "button";
     mic.setAttribute("aria-label", this.t.mic);
     mic.onclick = () => this.microphone(mic);
-    const avatar = el("button", "✦");
-    avatar.type = "button";
-    avatar.setAttribute("aria-label", this.t.avatar);
-    avatar.onclick = () => void this.avatar(avatar);
-    footer.append(help, mic, avatar);
+    footer.append(help, mic);
     composer.append(row, privacy, footer);
     composer.onsubmit = (e) => {
       e.preventDefault();
@@ -465,10 +482,11 @@ class DBAssistant extends HTMLElement {
         if (!this.cloud.checked) this.visual.checked = false;
       }
     };
+    options.append(learning);
     this.panel.append(
       header,
       toolbar,
-      learning,
+      options,
       this.messages,
       this.status,
       composer,
@@ -486,6 +504,7 @@ class DBAssistant extends HTMLElement {
       );
     this.updateContext();
     this.updateVideoLabel();
+    this.applyReadingMode();
     if (this.opened) this.open();
     if (this.ticket) this.showTicket();
   }
@@ -620,6 +639,7 @@ class DBAssistant extends HTMLElement {
       node.append(actions);
     }
     this.messages.append(node);
+    this.applyReadingMode();
     this.messages.scrollTop = this.messages.scrollHeight;
   }
   private async ask(simple = false) {
@@ -650,6 +670,7 @@ class DBAssistant extends HTMLElement {
     }
     const mode = simple ? "simple" : this.explanationMode;
     this.busy = true;
+    this.messages.setAttribute("aria-busy", "true");
     const version = this.version;
     let artifactKey: string | undefined;
     try {
@@ -683,6 +704,7 @@ class DBAssistant extends HTMLElement {
     } catch {}
     if (version !== this.version) {
       this.busy = false;
+      this.messages.setAttribute("aria-busy", "false");
       return;
     }
     this.input.value = "";
@@ -742,6 +764,7 @@ class DBAssistant extends HTMLElement {
     } finally {
       clearTimeout(timeout);
       this.busy = false;
+      this.messages.setAttribute("aria-busy", "false");
     }
   }
   private listen(text: string) {
@@ -968,32 +991,13 @@ class DBAssistant extends HTMLElement {
     void poll();
     this.ticketTimer = setInterval(() => void poll(), 5000);
   }
-  private async avatar(button: HTMLButtonElement) {
-    const current = this.root.querySelector(".avatar-host");
-    if (current) {
-      current.remove();
-      button.setAttribute("aria-label", this.t.avatar);
-      return;
-    }
-    const host = el("div", undefined, "avatar-host");
-    host.setAttribute("aria-hidden", "true");
-    this.panel.insertBefore(host, this.messages);
-    button.setAttribute("aria-label", this.t.hideAvatar);
-    try {
-      const script = document.querySelector<HTMLScriptElement>(
-        'script[src*="db-assistant.js"]',
-      );
-      const moduleUrl = new URL(
-        "avatar-view.js",
-        script?.src || new URL("/db-assistant.js", location.href),
-      ).href;
-      const { mountAvatar } = await import(
-        /* webpackIgnore: true */ /* turbopackIgnore: true */ moduleUrl
-      );
-      mountAvatar(host);
-    } catch {
-      host.remove();
-    }
+  private applyReadingMode() {
+    this.panel.classList.toggle("reading-mode", this.readingMode);
+    if (this.readingMode)
+      for (const details of this.messages.querySelectorAll(
+        ".explanation-block details",
+      ))
+        details.setAttribute("open", "");
   }
 }
 interface Recognition {
