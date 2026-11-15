@@ -1,0 +1,1 @@
+export function mountAvatar(host:HTMLElement){const style=document.createElement("style");style.textContent=".mela-character{font-size:60px;text-align:center;padding:5px;transform:perspective(350px) rotateY(-12deg)}";const character=document.createElement("div");character.className="mela-character";character.textContent="✦";host.append(style,character);}
