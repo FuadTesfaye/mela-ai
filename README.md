@@ -4,6 +4,8 @@
 
 Next.js powers the learner workspace, tutor portal, and APIs. An independent TypeScript Web Component provides chat on plain HTML or another LMS. PostgreSQL persists consented support requests and channel preferences. No AI key is needed for the default source-extraction mode.
 
+Try the standalone SDK at `/demo/sdk.html`, the iframe wrapper at `/embed`, or read the [SDK integration guide](packages/sdk/README.md).
+
 ## Run locally
 
 Requires Node.js 22 and PostgreSQL 17, or Docker Compose.
@@ -211,9 +213,9 @@ Work is committed as logical changes, with a push attempted every three commits.
 
 The event brief requires the licence named at kickoff. No licence is invented here; add the organiser’s actual licence and any team attribution before submission.
 
-## Video teaching and EthSL studio
+## Video teaching and signing studio
 
-Open `/savanna/pages/programming-for-beginners.html` for the selected YouTube lesson (`bJzb-RuUcMU`). The separate Offline-First & Localized AI session retains all 18 supplied slides. Load the public video and explicitly consent to English transcription; generated transcripts may contain errors and should be reviewed against the source. The assistant can use the lesson, whole transcript, or a frozen timestamp. **Explain this moment** pauses playback. Choose a simple explanation, example, steps or a diagram; diagrams have readable text equivalents and an enlarged view. Saving an explanation is explicit; **Saved explanations** lets you read or remove these browser-local answers offline. This does not download YouTube videos or AI models.
+Every course player now defaults to `https://www.youtube.com/watch?v=9hE5-98ZeCg` (Google for Developers: Building with Gemini 2.0 — Multimodal live streaming, 149 seconds). Change this once in `data/lesson-media.json`. Open `/savanna/pages/programming-for-beginners.html` for the course demo. The separate Offline-First & Localized AI session retains all 18 supplied slides. Load the public video and explicitly consent to English transcription; generated transcripts may contain errors and should be reviewed against the source. The assistant can use the lesson, whole transcript, or a frozen timestamp. **Explain this moment** pauses playback. Choose a simple explanation, example, steps or a diagram; diagrams have readable text equivalents and an enlarged view. Saving an explanation is explicit; **Saved explanations** lets you read or remove these browser-local answers offline. This does not download YouTube videos or AI models.
 
 **Include on-screen visuals** additionally requires cloud consent and Gemini. It sends the actual public video URL with a roughly 30-second segment around the captured timestamp; transcript-only answers do not establish what is visible on screen. Provider errors fall back transparently to retrieved source text. Model output is bounded JSON; graphs are drawn by local code, never executed model markup.
 
@@ -231,4 +233,47 @@ Camera capture pauses with source playback and stops after 20 minutes. Longer in
 
 Captions come from the actual video through Gemini's [documented YouTube input](https://ai.google.dev/gemini-api/docs/video-understanding). Successful captions are saved locally and can be restored offline. Network, key or quota failures are displayed in the panel with a retry control; words are never invented as a fallback.
 
-The animated person is a lightweight SVG rig with arm, hand and finger motion. Local keyword presets illustrate greetings, pointing, counting, comparison and connection; these are not an EthSL lexicon or a trained sign-language model. Animation follows playback, stops when hidden/paused, and uses static poses for reduced motion. A reviewed interpreter video replaces the preview automatically for the matching lesson. No model-generated code, external animation assets, or additional AI calls are used to animate the person.
+The animated person is a lightweight SVG rig with arm, hand and finger motion. The default experimental English fingerspelling mode maps caption letters to the American manual alphabet; word/letter timing is estimated within each source cue. It does not translate ASL grammar or EthSL and still needs fluent review. A separate illustrative mode demonstrates greetings, pointing, counting, comparison and connection. Animation follows playback, stops when hidden/paused, and uses static poses for reduced motion. A reviewed interpreter video replaces the preview automatically for the matching lesson. No model-generated code, external animation assets, or additional AI calls are used to animate the person.
+
+## Prepare the selected video's source captions
+
+The selected video already has an English caption track. Preparing it avoids waiting for Gemini when demonstrating the MVP:
+
+```sh
+python3 -m venv .venv-video
+.venv-video/bin/pip install -r scripts/requirements-video.txt
+.venv-video/bin/python scripts/prepare-video.py
+npm run dev
+```
+
+The preparation script fetches the selected video's English captions and normalizes overlapping cue boundaries. Its JSON cache is local and excluded from Git; repeat the preparation step on a new deployment if you want instant demo captions. It is served at `/transcripts/9hE5-98ZeCg.json` and checked against the exact selected video before display. The current workspace has 53 source cues prepared. These captions are identified as source captions, rather than freshly generated AI text. Without the cache, the existing consented Gemini option remains available. Python is only an optional preparation tool, not part of the SDK or web runtime.
+
+Use **Load YouTube video → Show learning panel → Play lesson**. Play/Pause and speed controls follow the real YouTube clock. If motion is reduced by your system settings, choose **Enable animation** explicitly. Caption tools remain available for retranscription. English fingerspelling is a preview based on the [CDC/Cleary School manual-alphabet chart](https://www.cdc.gov/hearing-loss-children-guide/media/pdfs/fingerspelling.pdf), with estimated within-cue word timing and no claim of full sign-language translation.
+
+## Embed on another website
+
+See [the SDK guide](packages/sdk/README.md) for the single-script custom elements, JavaScript API, React adapter, local npm tarball, iframe wrapper, lifecycle methods, and explicit context scope. Examples run at `/demo/sdk.html` (plain HTML) and `/embed` (React/iframe wrapper). The host website may use any server language; only browser JavaScript/HTML is required. Add its exact origin to the MELA backend's `ALLOWED_ORIGINS`.
+
+```html
+<script src="https://mela.example/mela-sdk.js" defer></script>
+<mela-course-media
+  api="https://mela.example/api"
+  video-src="https://www.youtube.com/watch?v=9hE5-98ZeCg"
+>
+</mela-course-media>
+```
+
+Or use an isolated wrapper:
+
+```html
+<iframe
+  src="https://mela.example/embed?video=9hE5-98ZeCg"
+  title="MELA learning companion"
+  width="100%"
+  height="900"
+  allow="autoplay; fullscreen"
+  allowfullscreen
+></iframe>
+```
+
+Direct embedding needs the host CSP to permit the chosen SDK scripts, API connections, YouTube frames and component styles. The iframe option isolates the companion from host styles; the host still needs to allow that frame origin. The iframe cannot read parent-page lesson text.

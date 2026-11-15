@@ -59,7 +59,7 @@ The IIFE alternative exposes the same `mount` and `register` methods on `window.
 
 `mount()` returns `{ element, media, assistant, setVideo, destroy }`. The SDK appends its own section and leaves existing host children intact. `destroy()` removes only that instance and stops its playback/animation observers. Multiple instances may share an explicitly approved `contextRoot` without removing each other's context marker. Call `setVideo()` only with an approved public YouTube URL; it starts loading that new source.
 
-`contextRoot` optionally accepts an element or selector for host-authored lesson content. Omit it to limit context to the SDK's own section. The existing assistant sharing consent remains required before private page text goes to an external AI provider. The host can listen for `db-assistant:question`, `db-assistant:escalated`, `mela:video-state`, and `mela:transcript-ready` on the mounted element.
+`contextRoot` optionally accepts an element or selector for host-authored lesson content. Omit it to limit context to the SDK's own section. For generic paragraphs/headings, enable page context in the widget; host-authored `data-mela-section` content is extracted automatically. Scoping does not bypass the existing learner consent before page text goes to an external AI provider. The host can listen for `db-assistant:question`, `db-assistant:escalated`, `mela:video-state`, and `mela:transcript-ready` on the mounted element.
 
 ## React adapter
 

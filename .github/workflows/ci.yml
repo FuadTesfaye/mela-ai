@@ -31,8 +31,14 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
+        env:
+          DATABASE_URL: "" # Fixtures run before the integration database is migrated.
       - run: npm run test:widget
+        env:
+          DATABASE_URL: "" # Fixtures run before the integration database is migrated.
       - run: npm run test:integration
+        env:
+          DATABASE_URL: "" # Fixtures run before the integration database is migrated.
       - run: npm run db:migrate && npm run db:seed
       - run: npm run test:db
       - run: npm run build
