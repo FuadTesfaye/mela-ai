@@ -33,18 +33,30 @@ export interface Citation {
   url: string;
   excerpt: string;
 }
-export type ExplanationMode="auto"|"simple"|"example"|"steps"|"diagram";
-export type ExplanationBlock=
- |{kind:"paragraph"|"example";text:string;sourceIds:string[]}
- |{kind:"steps";items:string[];sourceIds:string[]}
- |{kind:"diagram";title:string;description:string;nodes:{id:string;label:string}[];edges:{from:string;to:string;label?:string}[];sourceIds:string[]};
+export type ExplanationMode =
+  | "auto"
+  | "simple"
+  | "example"
+  | "steps"
+  | "diagram";
+export type ExplanationBlock =
+  | { kind: "paragraph" | "example"; text: string; sourceIds: string[] }
+  | { kind: "steps"; items: string[]; sourceIds: string[] }
+  | {
+      kind: "diagram";
+      title: string;
+      description: string;
+      nodes: { id: string; label: string }[];
+      edges: { from: string; to: string; label?: string }[];
+      sourceIds: string[];
+    };
 export interface Answer {
   answer: string;
   citations: Citation[];
   provider: "none" | "local" | "cloud" | "gemini";
   notice?: string;
-  summary?:string;
-  blocks?:ExplanationBlock[];
+  summary?: string;
+  blocks?: ExplanationBlock[];
   matched: boolean;
   actions: string[];
 }

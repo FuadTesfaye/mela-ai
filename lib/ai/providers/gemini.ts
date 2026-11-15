@@ -1,7 +1,10 @@
-import {explanationJsonSchema} from "../explanations";
+import { explanationJsonSchema } from "../explanations";
 export type GeminiPart =
   | { text: string }
-  | { fileData: { fileUri: string; mimeType?: string };videoMetadata?:{startOffset:string;endOffset:string} };
+  | {
+      fileData: { fileUri: string; mimeType?: string };
+      videoMetadata?: { startOffset: string; endOffset: string };
+    };
 export async function geminiGenerate(
   parts: GeminiPart[],
   options: {
@@ -66,5 +69,10 @@ export async function geminiGenerate(
   if (!text) throw new Error("Gemini returned no usable response.");
   return text as string;
 }
-export const answerSchema=explanationJsonSchema;
-export const gemini=(prompt:string,media?:GeminiPart)=>geminiGenerate([...(media?[media]:[]),{text:prompt}],{schema:answerSchema,timeout:media?60000:20000,maxTokens:4096});
+export const answerSchema = explanationJsonSchema;
+export const gemini = (prompt: string, media?: GeminiPart) =>
+  geminiGenerate([...(media ? [media] : []), { text: prompt }], {
+    schema: answerSchema,
+    timeout: media ? 60000 : 20000,
+    maxTokens: 4096,
+  });

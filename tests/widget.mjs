@@ -65,6 +65,7 @@ function setup({
     MutationObserver: window.MutationObserver,
     CustomEvent: window.CustomEvent,
     URL,
+    TextEncoder,
     AbortController,
     AbortSignal,
     console,
@@ -571,6 +572,47 @@ test("playback ticks do not cancel an explanation submitted at a fixed timestamp
     assert.match(
       f.root.querySelector(".messages").textContent,
       /FROZEN_EXPLANATION/,
+    );
+  } finally {
+    f.cleanup();
+  }
+});
+test("diagram explanations render safe SVG and a complete text alternative", async () => {
+  const f = setup({
+    answer: async () =>
+      Response.json({
+        answer: "Learn → Practice",
+        summary: "A simple path",
+        provider: "gemini",
+        matched: true,
+        actions: [],
+        citations: [
+          { id: "s", title: "Lesson", url: "/lesson", excerpt: "Practice" },
+        ],
+        blocks: [
+          {
+            kind: "diagram",
+            title: "Learning",
+            description: "Learn then practice",
+            nodes: [
+              { id: "a", label: "<script>not executable</script>" },
+              { id: "b", label: "Practice" },
+            ],
+            edges: [{ from: "a", to: "b" }],
+            sourceIds: ["s"],
+          },
+        ],
+      }),
+  });
+  try {
+    await question(f, "Show a learning diagram");
+    assert.ok(f.root.querySelector("svg.explanation-diagram"));
+    assert.match(f.root.querySelector("details").textContent, /Practice/);
+    assert.equal(f.root.querySelector(".explanation-block script"), null);
+    assert.ok(
+      [...f.root.querySelectorAll("button")].some(
+        (b) => b.textContent === "Expand diagram",
+      ),
     );
   } finally {
     f.cleanup();

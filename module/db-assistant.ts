@@ -1,3 +1,4 @@
+import { renderExplanationBlocks } from "./components-explanations";
 import { styles } from "./styles";
 import { strings } from "./i18n/strings";
 import { videoEvidence, type VideoCue } from "../lib/media/video-context";
@@ -6,6 +7,7 @@ import type {
   Language,
   LearningContext,
   VideoSnapshot,
+  ExplanationMode,
 } from "../lib/types";
 import { detectContext } from "./context/savanna-adapter";
 import { observeContext } from "./context/context-observer";
@@ -23,6 +25,8 @@ const el = <K extends keyof HTMLElementTagNameMap>(
 class DBAssistant extends HTMLElement {
   private root!: ShadowRoot;
   private video?: VideoSnapshot;
+  private explanationMode: ExplanationMode = "auto";
+  private visual?: HTMLInputElement;
   private videoCues: VideoCue[] = [];
   private scope: "lesson" | "wholeVideo" | "moment" = "lesson";
   private mediaSource(event: Event) {
@@ -142,6 +146,7 @@ class DBAssistant extends HTMLElement {
     content: string;
     answer?: Answer;
     question?: string;
+    artifactKey?: string;
   }[] = [];
   private messages!: HTMLDivElement;
   private panel!: HTMLDivElement;
@@ -348,6 +353,39 @@ class DBAssistant extends HTMLElement {
       this.scope = select.value as typeof this.scope;
     };
     learning.append(select, el("span", undefined, "video-time"));
+    const mode = el("select");
+    mode.setAttribute("aria-label", "Explanation format");
+    for (const [value, label] of [
+      ["auto", "Explain clearly"],
+      ["simple", "Simplify"],
+      ["example", "Example"],
+      ["steps", "Step by step"],
+      ["diagram", "Diagram"],
+    ]) {
+      const option = el("option", label);
+      option.value = value;
+      mode.append(option);
+    }
+    mode.value = this.explanationMode;
+    mode.onchange = () => {
+      this.explanationMode = mode.value as ExplanationMode;
+    };
+    learning.append(mode);
+    const visualLabel = el("label");
+    this.visual = el("input");
+    this.visual.type = "checkbox";
+    this.visual.disabled = true;
+    visualLabel.append(
+      this.visual,
+      document.createTextNode("Include on-screen visuals (Gemini)"),
+    );
+    learning.append(visualLabel);
+    this.cloud.onchange = () => {
+      if (this.visual) {
+        this.visual.disabled = !this.cloud.checked;
+        if (!this.cloud.checked) this.visual.checked = false;
+      }
+    };
     this.panel.append(
       header,
       toolbar,
@@ -365,6 +403,7 @@ class DBAssistant extends HTMLElement {
         false,
         message.answer,
         message.question,
+        message.artifactKey,
       );
     this.updateContext();
     this.updateVideoLabel();
@@ -406,6 +445,7 @@ class DBAssistant extends HTMLElement {
     save = true,
     answer?: Answer,
     question = this.lastQuestion,
+    artifactKey?: string,
   ) {
     if (save) {
       this.history.push({
@@ -413,6 +453,7 @@ class DBAssistant extends HTMLElement {
         content: text.slice(0, 12000),
         answer,
         question,
+        artifactKey,
       });
       this.history = this.history.slice(-100);
     }
@@ -436,8 +477,9 @@ class DBAssistant extends HTMLElement {
             : "Mela",
         "role",
       ),
-      el("p", text),
+      el("p", answer?.summary || text),
     );
+    if (answer?.blocks?.length) renderExplanationBlocks(answer.blocks, node);
     if (answer?.citations.length) {
       const sources = el("ul", undefined, "sources");
       for (const c of answer.citations) {
@@ -471,6 +513,31 @@ class DBAssistant extends HTMLElement {
         };
         actions.append(simplify);
       }
+      if (answer?.matched && artifactKey) {
+        const save = el("button", "Save explanation offline");
+        save.type = "button";
+        save.onclick = () => {
+          try {
+            let keys: string[] = [];
+            for (let i = 0; i < localStorage.length; i++) {
+              const key = localStorage.key(i);
+              if (key?.startsWith("mela-explanation:")) keys.push(key);
+            }
+            if (keys.length >= 20) localStorage.removeItem(keys[0]);
+            localStorage.setItem(
+              "mela-explanation:" + artifactKey,
+              JSON.stringify(answer),
+            );
+            this.setStatus(
+              "Explanation saved on this device. Clear browser site data to remove it.",
+            );
+            save.textContent = "Saved offline";
+          } catch {
+            this.setStatus("Browser storage is unavailable.");
+          }
+        };
+        actions.append(save);
+      }
       node.append(actions);
     }
     this.messages.append(node);
@@ -491,10 +558,51 @@ class DBAssistant extends HTMLElement {
       this.videoCues,
       this.scope,
     );
-    if (this.scope !== "lesson" && !snapshot.sections.length) {
+    const allowVisual =
+      this.scope === "moment" &&
+      !!this.visual?.checked &&
+      this.cloud.checked &&
+      !!snapshot.video;
+    if (this.scope !== "lesson" && !snapshot.sections.length && !allowVisual) {
       this.setStatus(
         "Generate or restore this video's English transcript first.",
       );
+      return;
+    }
+    const mode = simple ? "simple" : this.explanationMode;
+    this.busy = true;
+    const version = this.version;
+    let artifactKey: string | undefined;
+    try {
+      if (window.crypto?.subtle) {
+        const bytes = new TextEncoder().encode(
+          JSON.stringify({
+            question,
+            mode,
+            scope: this.scope,
+            language: this.locale,
+            course: snapshot.courseId,
+            video: snapshot.video
+              ? {
+                  id: snapshot.video.videoId,
+                  time:
+                    this.scope === "moment"
+                      ? Math.floor(snapshot.video.currentTime / 5)
+                      : 0,
+                  revision: snapshot.video.transcriptRevision,
+                }
+              : undefined,
+            sections: snapshot.sections,
+          }),
+        );
+        const digest = await window.crypto.subtle.digest("SHA-256", bytes);
+        artifactKey = Array.from(new Uint8Array(digest))
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+      }
+    } catch {}
+    if (version !== this.version) {
+      this.busy = false;
       return;
     }
     this.input.value = "";
@@ -506,11 +614,12 @@ class DBAssistant extends HTMLElement {
         detail: { language: this.locale },
       }),
     );
-    this.busy = true;
-    const version = this.version;
     this.abort = new AbortController();
     this.setStatus(this.t.thinking);
-    const timeout = setTimeout(() => this.abort?.abort(), 30000);
+    const timeout = setTimeout(
+      () => this.abort?.abort(),
+      allowVisual ? 65000 : 30000,
+    );
     try {
       let answer: Answer;
       try {
@@ -525,6 +634,8 @@ class DBAssistant extends HTMLElement {
             scope: this.scope,
             cloudConsent: this.cloud.checked,
             simple,
+            explanationMode: mode,
+            includeVisualContext: allowVisual,
           }),
           signal: this.abort.signal,
         });
@@ -538,7 +649,14 @@ class DBAssistant extends HTMLElement {
         this.setStatus(this.t.offline);
       }
       if (version === this.version)
-        this.message("assistant", answer.answer, true, answer);
+        this.message(
+          "assistant",
+          answer.answer,
+          true,
+          answer,
+          question,
+          artifactKey,
+        );
     } catch {
       this.setStatus(this.t.failed, true);
     } finally {
