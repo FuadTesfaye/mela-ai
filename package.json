@@ -1,0 +1,42 @@
+{
+  "name": "mela-ai",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm run widget:build && next dev --hostname 0.0.0.0",
+    "build": "npm run widget:build && next build",
+    "start": "next start --hostname 0.0.0.0",
+    "widget:build": "node scripts/build-widget.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/unit/*.test.ts",
+    "test:integration": "tsx --test tests/integration/*.test.ts",
+    "test:e2e": "playwright test",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "db:seed": "tsx scripts/seed.ts",
+    "worker:telegram": "tsx workers/telegram.ts",
+    "worker:alerts": "tsx workers/alerts.ts"
+  },
+  "dependencies": {
+    "next": "^16.0.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "pg": "^8.16.3",
+    "zod": "^4.1.0",
+    "lucide-react": "^0.468.0",
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@types/pg": "^8.15.0",
+    "@types/three": "^0.180.0",
+    "esbuild": "^0.25.0",
+    "tsx": "^4.20.0",
+    "tailwindcss": "^4.1.0",
+    "@tailwindcss/postcss": "^4.1.0",
+    "@playwright/test": "^1.56.0",
+    "@axe-core/playwright": "^4.10.0"
+  }
+}

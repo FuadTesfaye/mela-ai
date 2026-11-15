@@ -1,0 +1,1 @@
+export default function Home(){return <main id="main"><h1>MELA AI</h1><p>Your learning companion, in your language.</p></main>}
