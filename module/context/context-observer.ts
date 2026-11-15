@@ -1,12 +1,15 @@
 import { detectContext } from "./savanna-adapter";
 import type { LearningContext } from "../../lib/types";
-export function observeContext(onChange: (context: LearningContext) => void) {
-  let previous = JSON.stringify(detectContext());
+export function observeContext(
+  onChange: (context: LearningContext) => void,
+  readContext: () => LearningContext = detectContext,
+) {
+  let previous = JSON.stringify(readContext());
   let timer: ReturnType<typeof setTimeout>;
   const check = () => {
     clearTimeout(timer);
     timer = setTimeout(() => {
-      const context = detectContext();
+      const context = readContext();
       const next = JSON.stringify(context);
       if (next !== previous) {
         previous = next;

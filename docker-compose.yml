@@ -5,6 +5,8 @@ x-app-env: &app-env
   ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env (12+ characters)}
   SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET in .env (32+ characters)}
   AI_PROVIDER: ${AI_PROVIDER:-none}
+  GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+  GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.8-flash}
   OLLAMA_URL: ${OLLAMA_URL:-http://host.docker.internal:11434}
   OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2}
   CLOUD_AI_URL: ${CLOUD_AI_URL:-}

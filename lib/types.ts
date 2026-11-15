@@ -25,7 +25,8 @@ export interface Citation {
 export interface Answer {
   answer: string;
   citations: Citation[];
-  provider: "none" | "local" | "cloud";
+  provider: "none" | "local" | "cloud" | "gemini";
+  notice?: string;
   matched: boolean;
   actions: string[];
 }

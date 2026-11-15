@@ -20,6 +20,7 @@ class DBAssistant extends HTMLElement {
   private opened = false;
   private busy = false;
   private version = 0;
+  private includePublicPage = false;
   private context: LearningContext = { pageType: "unknown", sections: [] };
   private knowledgeReady?: Promise<unknown>;
   private stopObserving?: () => void;
@@ -66,13 +67,16 @@ class DBAssistant extends HTMLElement {
     this.root = this.attachShadow({ mode: "open" });
     this.context = detectContext();
     this.render();
-    this.stopObserving = observeContext((context) => {
-      this.context = context;
-      this.version++;
-      this.abort?.abort();
-      this.updateContext();
-      this.setStatus(this.t.contextChanged);
-    });
+    this.stopObserving = observeContext(
+      (context) => {
+        this.context = context;
+        this.version++;
+        this.abort?.abort();
+        this.updateContext();
+        this.setStatus(this.t.contextChanged);
+      },
+      () => detectContext(this.includePublicPage),
+    );
     window.addEventListener("mela:open", this.openEvent);
     this.knowledgeReady = loadKnowledge(
       this.getAttribute("content") || "/content.json",
@@ -137,6 +141,32 @@ class DBAssistant extends HTMLElement {
       this.open();
     };
     toolbar.append(language, el("span", undefined, "context"));
+    const scope = el(
+      "button",
+      this.locale === "am" ? "የገጽ መረጃ" : "Page context",
+    );
+    scope.title =
+      "Use public text from this open page. Other tabs and private form fields are not read.";
+    scope.setAttribute("aria-pressed", String(this.includePublicPage));
+    scope.onclick = () => {
+      if (
+        !this.includePublicPage &&
+        !window.confirm(
+          this.locale === "am"
+            ? "የዚህን ገጽ ሕዝባዊ ጽሑፍ ለጥያቄዎ መረጃ ለመጠቀም ይፈቅዳሉ?"
+            : "Use the public text on this page as context for your questions? Private forms, account fields, and other tabs are excluded. Cloud AI still requires the separate sharing choice.",
+        )
+      )
+        return;
+      this.includePublicPage = !this.includePublicPage;
+      this.context = detectContext(this.includePublicPage);
+      this.version++;
+      this.abort?.abort();
+      scope.setAttribute("aria-pressed", String(this.includePublicPage));
+      this.updateContext();
+      this.setStatus(this.t.contextChanged);
+    };
+    toolbar.append(scope);
     this.messages = el("div", undefined, "messages");
     this.messages.setAttribute("role", "log");
     this.messages.setAttribute("aria-label", this.t.title);
@@ -347,7 +377,7 @@ class DBAssistant extends HTMLElement {
         });
         if (!response.ok) throw new Error("service");
         answer = await response.json();
-        this.setStatus(this.t.ready);
+        this.setStatus(answer.notice || this.t.ready);
       } catch {
         if (version !== this.version) return;
         await this.knowledgeReady;

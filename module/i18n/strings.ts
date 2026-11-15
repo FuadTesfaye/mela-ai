@@ -17,7 +17,7 @@ export const strings = {
     thinking: "Finding a source…",
     unknown: "General learning support",
     privacy:
-      "Allow cloud AI to receive your question and relevant lesson excerpts",
+      "Use Gemini / cloud AI (share this question and relevant lesson text)",
     helpIntro:
       "Choose what to share. A tutor can reply here after you create a ticket.",
     shareChat: "Share this conversation",
