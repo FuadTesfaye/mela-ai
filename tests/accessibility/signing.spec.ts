@@ -61,7 +61,7 @@ for (const width of [320, 1280]) {
     });
     const media = page.locator("mela-course-media");
     const toggle = media.getByRole("button", {
-      name: "Show signing panel",
+      name: "Show learning panel",
       exact: true,
     });
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
@@ -113,7 +113,7 @@ for (const width of [320, 1280]) {
       "yes",
     );
     await media
-      .getByRole("button", { name: "Hide signing panel", exact: true })
+      .getByRole("button", { name: "Hide learning panel", exact: true })
       .click();
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
   });

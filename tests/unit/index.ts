@@ -5,3 +5,4 @@ import "./media.test";
 import "./video-context.test";
 import "./explanations.test";
 import "./signing.test";
+import "./learning-preview.test";

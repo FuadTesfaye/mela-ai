@@ -1,5 +1,5 @@
 /* Offline shell for this MELA-hosted Savanna demo, never registered on unrelated hosts. */
-const CACHE = "mela-public-v3-programming";
+const CACHE = "mela-public-v4-caption-preview";
 const PAGES = [
   "/jobs",
   "/support",

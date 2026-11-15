@@ -345,11 +345,11 @@ test("course player presents English transcript and an honest sign-language squa
     assert.equal(media.shadowRoot.querySelector("iframe"), null);
     assert.match(
       media.shadowRoot.querySelector(".sign-box").textContent,
-      /EthSL interpretation is not available/,
+      /AI captions.*experimental avatar/,
     );
     assert.match(
       media.shadowRoot.querySelector(".card").textContent,
-      /Generate English transcript/,
+      /Generate AI captions/,
     );
     media.shadowRoot.querySelector(".primary").click();
     await wait(10);
@@ -621,7 +621,7 @@ test("diagram explanations render safe SVG and a complete text alternative", asy
 
 // The real bundled component runs against controllable YouTube/media shims.
 // Browser autoplay, decoding and interpreter quality still require a real-device review.
-async function signingFixture({ extraFetch, play } = {}) {
+async function signingFixture({ extraFetch, play, motion = false } = {}) {
   const id = "bJzb-RuUcMU";
   const track = {
     url: "/approved-ethsl.webm",
@@ -641,6 +641,15 @@ async function signingFixture({ extraFetch, play } = {}) {
         });
     },
   });
+  const frames = new Map();
+  let nextFrame = 0;
+  f.sandbox.matchMedia = () => ({ matches: !motion });
+  f.sandbox.requestAnimationFrame = (callback) => {
+    const id = ++nextFrame;
+    frames.set(id, callback);
+    return id;
+  };
+  f.sandbox.cancelAnimationFrame = (id) => frames.delete(id);
   const source = { time: 0, state: 2, rate: 1 };
   const videos = [];
   let events;
@@ -712,6 +721,7 @@ async function signingFixture({ extraFetch, play } = {}) {
     root,
     source,
     videos,
+    frames,
     async load(url = `https://youtu.be/${id}`) {
       root.querySelector(".url-form input").value = url;
       root
@@ -944,7 +954,7 @@ test("video changes clear enlarged media and ignore stale signing configuration 
     f.cleanup();
   }
 });
-test("signing exposes unavailable and configuration failure states without playing unrelated recordings", async () => {
+test("learning preview stays available when interpreter configuration is missing or fails", async () => {
   let fail = false;
   const f = await signingFixture({
     extraFetch: (url) =>
@@ -958,7 +968,7 @@ test("signing exposes unavailable and configuration failure states without playi
     f.toggle();
     assert.match(
       f.root.querySelector(".sign-status").textContent,
-      /not available/,
+      /AI captions.*experimental avatar/,
     );
     assert.equal(f.videos.length, 0);
     fail = true;
@@ -974,7 +984,7 @@ test("signing exposes unavailable and configuration failure states without playi
     await wait(10);
     assert.match(
       f.root.querySelector(".sign-status").textContent,
-      /not available/,
+      /AI captions.*experimental avatar/,
     );
     assert.equal(f.videos.length, 0);
   } finally {
@@ -1040,6 +1050,229 @@ test("source changes remove an enlarged panel synchronously before a queued nati
       nextDialog,
       "old close must not affect a new dialog",
     );
+  } finally {
+    f.cleanup();
+  }
+});
+test("MVP captions and experimental avatar follow the transcript without a signing recording", async () => {
+  const f = await signingFixture({
+    extraFetch: (url) =>
+      String(url).includes("/media")
+        ? Response.json({
+            defaultVideoUrl: "https://youtu.be/bJzb-RuUcMU",
+            signLanguage: null,
+          })
+        : String(url).endsWith("/transcriptions")
+          ? Response.json({
+              title: "Test",
+              language: "en",
+              generated: true,
+              videoUrl: "https://www.youtube.com/watch?v=bJzb-RuUcMU",
+              cues: [
+                { start: 0, end: 4, text: "Hello and welcome." },
+                { start: 4, end: 8, text: "Compare local and cloud." },
+                { start: 10, end: 14, text: "Look at this code." },
+              ],
+            })
+          : undefined,
+  });
+  try {
+    await f.load();
+    f.toggle();
+    assert.ok(f.root.querySelector(".gesture-viewport svg"));
+    assert.match(
+      f.root.querySelector(".gesture-note").textContent,
+      /not EthSL translation/,
+    );
+    f.root.querySelector(".preview-generate").click();
+    await wait(0);
+    assert.equal(
+      f.calls.some((c) => String(c.url).endsWith("/transcriptions")),
+      false,
+    );
+    assert.match(
+      f.root.querySelector(".caption-words").textContent,
+      /checkbox/,
+    );
+    f.root.querySelector("input[type=checkbox]").checked = true;
+    f.root.querySelector(".preview-generate").click();
+    await wait(30);
+    assert.equal(
+      f.calls.filter((c) => String(c.url).endsWith("/transcriptions")).length,
+      1,
+    );
+    assert.equal(
+      f.root.querySelector(".caption-words").textContent,
+      "Hello and welcome.",
+    );
+    assert.equal(
+      f.root
+        .querySelector(".gesture-viewport svg")
+        .getAttribute("data-gesture"),
+      "wave",
+    );
+    f.state(1, 5);
+    assert.equal(
+      f.root.querySelector(".caption-words").textContent,
+      "Compare local and cloud.",
+    );
+    assert.equal(f.root.querySelector(".caption-time").textContent, "00:05");
+    assert.equal(
+      f.root
+        .querySelector(".gesture-viewport svg")
+        .getAttribute("data-gesture"),
+      "compare",
+    );
+    f.state(2, 11);
+    assert.equal(
+      f.root.querySelector(".caption-words").textContent,
+      "Look at this code.",
+    );
+    assert.equal(
+      f.root
+        .querySelector(".gesture-viewport svg")
+        .getAttribute("data-gesture"),
+      "point",
+    );
+    f.state(1, 9);
+    assert.match(
+      f.root.querySelector(".caption-words").textContent,
+      /No speech/,
+    );
+    assert.equal(
+      f.root
+        .querySelector(".gesture-viewport svg")
+        .getAttribute("data-gesture"),
+      "rest",
+    );
+    const select = f.root.querySelector(".preview-mode select");
+    select.value = "captions";
+    select.onchange();
+    assert.equal(f.root.querySelector(".gesture-viewport").hidden, true);
+    assert.equal(f.root.querySelector(".live-caption").hidden, false);
+    select.value = "avatar";
+    select.onchange();
+    assert.equal(f.root.querySelector(".live-caption").hidden, true);
+    assert.equal(f.root.querySelector(".gesture-viewport").hidden, false);
+    select.value = "both";
+    select.onchange();
+    assert.equal(f.root.querySelector(".live-caption").hidden, false);
+    f.root.querySelector(".expand-sign").click();
+    assert.ok(f.root.querySelector("dialog .caption-words"));
+    f.root.querySelector("dialog button").click();
+    assert.equal(f.root.querySelector("dialog"), null);
+    await f.load("https://youtu.be/9hE5-98ZeCg");
+    assert.match(
+      f.root.querySelector(".caption-words").textContent,
+      /Generate captions/,
+    );
+  } finally {
+    f.cleanup();
+  }
+});
+test("reviewed interpreter takes priority and captions-only mode pauses its media", async () => {
+  const f = await signingFixture();
+  try {
+    await f.load();
+    f.toggle();
+    f.ready();
+    f.state(1, 10);
+    await wait(0);
+    const video = f.videos.at(-1);
+    assert.equal(f.root.querySelector(".gesture-viewport"), null);
+    assert.match(
+      f.root.querySelector(".sign-label").textContent,
+      /REVIEWED ETHSL/,
+    );
+    const select = f.root.querySelector(".preview-mode select");
+    select.value = "captions";
+    select.onchange();
+    assert.equal(video.paused, true);
+    f.state(1, 20);
+    assert.equal(video.paused, true);
+    select.value = "both";
+    select.onchange();
+    await wait(0);
+    assert.equal(video.paused, false);
+    assert.equal(video.currentTime, 19);
+  } finally {
+    f.cleanup();
+  }
+});
+test("caption generation failures stay visible in the panel and can be retried", async () => {
+  const f = await signingFixture({
+    extraFetch: (url) =>
+      String(url).includes("/media")
+        ? Response.json({ signLanguage: null })
+        : String(url).endsWith("/transcriptions")
+          ? Response.json({ error: "Gemini quota reached" }, { status: 502 })
+          : undefined,
+  });
+  try {
+    await f.load();
+    f.toggle();
+    f.root.querySelector("input[type=checkbox]").checked = true;
+    f.root.querySelector(".preview-generate").click();
+    await wait(25);
+    assert.match(
+      f.root.querySelector(".caption-words").textContent,
+      /Gemini quota reached/,
+    );
+    assert.equal(f.root.querySelector(".preview-generate").disabled, false);
+    assert.equal(f.root.querySelector(".preview-generate").hidden, false);
+    assert.ok(f.root.querySelector(".gesture-viewport svg"));
+  } finally {
+    f.cleanup();
+  }
+});
+test("avatar animation runs from source playback and stops on pause, captions-only mode and hiding", async () => {
+  const f = await signingFixture({
+    motion: true,
+    extraFetch: (url) =>
+      String(url).includes("/media")
+        ? Response.json({ signLanguage: null })
+        : String(url).endsWith("/transcriptions")
+          ? Response.json({
+              title: "Hello",
+              language: "en",
+              generated: true,
+              videoUrl: "https://www.youtube.com/watch?v=bJzb-RuUcMU",
+              cues: [{ start: 0, end: 20, text: "Hello and welcome" }],
+            })
+          : undefined,
+  });
+  try {
+    await f.load();
+    f.toggle();
+    f.root.querySelector("input[type=checkbox]").checked = true;
+    f.root.querySelector(".preview-generate").click();
+    await wait(25);
+    assert.equal(f.frames.size, 0);
+    f.state(1, 2);
+    assert.equal(f.frames.size, 1);
+    const hand = f.root.querySelector('[data-hand="1"]');
+    const before = hand.getAttribute("transform");
+    await wait(12);
+    const [id, draw] = f.frames.entries().next().value;
+    f.frames.delete(id);
+    draw();
+    assert.notEqual(hand.getAttribute("transform"), before);
+    assert.equal(f.frames.size, 1);
+    f.state(2);
+    assert.equal(f.frames.size, 0);
+    f.state(1);
+    f.root.querySelector(".preview-mode select").value = "captions";
+    f.root.querySelector(".preview-mode select").onchange();
+    assert.equal(f.frames.size, 0);
+    f.root.querySelector(".preview-mode select").value = "both";
+    f.root.querySelector(".preview-mode select").onchange();
+    assert.equal(f.frames.size, 1);
+    f.toggle();
+    assert.equal(f.frames.size, 0);
+    f.toggle();
+    assert.equal(f.frames.size, 1);
+    f.media.remove();
+    assert.equal(f.frames.size, 0);
   } finally {
     f.cleanup();
   }
