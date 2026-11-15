@@ -8,3 +8,4 @@ import "./signing.test";
 import "./learning-preview.test";
 import "./fingerspelling.test";
 import "./sdk-ssr.test";
+import "./teacher.test";

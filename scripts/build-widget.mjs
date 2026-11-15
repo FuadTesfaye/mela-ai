@@ -1,5 +1,6 @@
 import { build } from "esbuild";
-import { stat, mkdir, copyFile } from "node:fs/promises";
+import { stat, mkdir, copyFile, readFile } from "node:fs/promises";
+import { gzipSync } from "node:zlib";
 await mkdir("public", { recursive: true });
 await build({
   entryPoints: ["module/db-assistant.ts"],
@@ -91,3 +92,18 @@ for (const name of ["index", "react"]) {
   );
   await copyFile(`packages/sdk/dist/${name}.js`, `public/sdk/${name}.js`);
 }
+
+// Kept outside the SDK: fetched only after the visual panel is opened.
+await mkdir("public/avatar", { recursive: true });
+await build({
+  entryPoints: ["module/teacher/renderer-3d.ts"],
+  bundle: true,
+  minify: true,
+  target: "es2020",
+  format: "iife",
+  globalName: "MelaTeacher3D",
+  outfile: "public/avatar/teacher-3d.js",
+});
+const runtime = await readFile("public/avatar/teacher-3d.js");
+if (gzipSync(runtime).length > 250000)
+  throw new Error("3D runtime exceeds its 250 KB gzip budget.");

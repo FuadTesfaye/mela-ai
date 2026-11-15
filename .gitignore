@@ -19,3 +19,5 @@ public/mela-sdk.js
 public/sdk/
 public/transcripts/*.json
 .venv-video/
+
+public/avatar/teacher-3d.js
