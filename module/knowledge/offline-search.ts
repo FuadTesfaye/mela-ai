@@ -1,6 +1,20 @@
-import { groundedAnswer } from "../../lib/retrieval/search";
+import {
+  preparedTranslator,
+  type PreparedEntry,
+} from "../../lib/localization/shared";
+import {
+  groundedAnswer,
+  type RetrievalLocale,
+} from "../../lib/retrieval/search";
 import type { Language, LearningContext, Section } from "../../lib/types";
 let knowledge: Section[] = [];
+let locale: RetrievalLocale | undefined;
+export function setAmEvidence(
+  entries: PreparedEntry[],
+  glossary: Record<string, string[]>,
+) {
+  locale = { translate: preparedTranslator(entries), glossary };
+}
 function valid(data: unknown): data is Section[] {
   return (
     Array.isArray(data) &&
@@ -42,5 +56,5 @@ export async function offlineAnswer(
   context: LearningContext,
   simple = false,
 ) {
-  return groundedAnswer(question, knowledge, context, language, simple);
+  return groundedAnswer(question, knowledge, context, language, simple, locale);
 }

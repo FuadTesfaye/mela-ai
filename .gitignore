@@ -22,3 +22,7 @@ public/transcripts/*.json
 
 public/avatar/teacher-3d.js
 public/avatar/storyboard.json
+
+public/locale.js
+public/spelling.js
+public/i18n/

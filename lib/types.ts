@@ -51,6 +51,8 @@ export type ExplanationBlock =
       sourceIds: string[];
     };
 export interface Answer {
+  language?: Language;
+  translationStatus?: "prepared" | "ai-draft" | "source-only";
   answer: string;
   citations: Citation[];
   provider: "none" | "local" | "cloud" | "gemini";

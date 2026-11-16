@@ -13,6 +13,7 @@ export interface MelaHandle {
   media: HTMLElement;
   assistant?: HTMLElement;
   setVideo(url: string): void;
+  setLanguage(language: "en" | "am"): void;
   destroy(): void;
 }
 export declare function register(): Promise<void>;

@@ -1,4 +1,9 @@
 import { renderExplanationBlocks } from "./components-explanations";
+import {
+  initialLanguage,
+  setLanguage,
+  enhanceLanguage,
+} from "./localization/language";
 import { styles } from "./styles";
 import { strings } from "./i18n/strings";
 import { videoEvidence, type VideoCue } from "../lib/media/video-context";
@@ -11,7 +16,11 @@ import type {
 } from "../lib/types";
 import { detectContext } from "./context/savanna-adapter";
 import { observeContext } from "./context/context-observer";
-import { loadKnowledge, offlineAnswer } from "./knowledge/offline-search";
+import {
+  loadKnowledge,
+  offlineAnswer,
+  setAmEvidence,
+} from "./knowledge/offline-search";
 const el = <K extends keyof HTMLElementTagNameMap>(
   tag: K,
   text?: string,
@@ -26,13 +35,26 @@ class DBAssistant extends HTMLElement {
   private root!: ShadowRoot;
   contextRoot?: HTMLElement;
   private readContext() {
-    return detectContext(this.includePublicPage, this.contextRoot);
+    const context = detectContext(
+      this._melaIncludePublicPage,
+      this.contextRoot,
+    );
+    context.sections = context.sections.filter(
+      (s) => !s.id.startsWith("video-"),
+    );
+    return context;
   }
   private video?: VideoSnapshot;
   private explanationMode: ExplanationMode = "auto";
   private visual?: HTMLInputElement;
   private videoCues: VideoCue[] = [];
   private scope: "lesson" | "wholeVideo" | "moment" = "lesson";
+  private _melaScopeChosen = false;
+  useLessonContext() {
+    this.scope = "lesson";
+    this._melaScopeChosen = true;
+    this._melaUpdateVideoLabel();
+  }
   private mediaSource(event: Event) {
     if (
       !(event.target instanceof HTMLElement) ||
@@ -74,12 +96,14 @@ class DBAssistant extends HTMLElement {
     const changed = this.video?.videoId !== value.videoId;
     if (changed) {
       this.videoCues = [];
-      this.version++;
-      this.abort?.abort();
+      if (this.scope !== "lesson") {
+        this.version++;
+        this.abort?.abort();
+      }
       this.scope = "lesson";
     }
     this.video = value;
-    this.updateVideoLabel();
+    this._melaUpdateVideoLabel();
   };
   private transcriptEvent = (event: Event) => {
     if (!this.mediaSource(event)) return;
@@ -102,6 +126,8 @@ class DBAssistant extends HTMLElement {
       this.abort?.abort();
     }
     if (
+      !this._melaScopeChosen &&
+      this.context.sections.length < 2 &&
       detail.cues.length &&
       (!this.videoCues.length ||
         !this.video ||
@@ -111,7 +137,7 @@ class DBAssistant extends HTMLElement {
     this.video = value;
     this.videoCues = detail.cues;
     this.context = this.readContext();
-    this.updateVideoLabel();
+    this._melaUpdateVideoLabel();
   };
   private momentEvent = (event: Event) => {
     if (!this.mediaSource(event)) return;
@@ -126,12 +152,12 @@ class DBAssistant extends HTMLElement {
     if (!value) return;
     this.video = value;
     this.scope = "moment";
-    this.updateVideoLabel();
+    this._melaUpdateVideoLabel();
     this.open();
     this.input.value = "Explain this moment in the video.";
     void this.ask();
   };
-  private updateVideoLabel() {
+  private _melaUpdateVideoLabel() {
     const target = this.root?.querySelector(".video-time");
     if (target)
       target.textContent = this.video
@@ -144,10 +170,10 @@ class DBAssistant extends HTMLElement {
 
   private locale: Language = "en";
   private opened = false;
-  private readingMode = false;
+  private _melaReadingMode = false;
   private busy = false;
   private version = 0;
-  private includePublicPage = false;
+  private _melaIncludePublicPage = false;
   private context: LearningContext = { pageType: "unknown", sections: [] };
   private knowledgeReady?: Promise<unknown>;
   private stopObserving?: () => void;
@@ -161,6 +187,7 @@ class DBAssistant extends HTMLElement {
     answer?: Answer;
     question?: string;
     artifactKey?: string;
+    language?: Language;
   }[] = [];
   private messages!: HTMLDivElement;
   private panel!: HTMLDivElement;
@@ -190,14 +217,16 @@ class DBAssistant extends HTMLElement {
   }
   connectedCallback() {
     if (this.root) return;
-    this.locale = this.getAttribute("lang") === "am" ? "am" : "en";
+    this.locale = initialLanguage(this);
+    this.setAttribute("lang", this.locale);
     this.opened = this.hasAttribute("open");
     try {
-      this.readingMode = localStorage.getItem("mela-reading-mode") === "1";
+      this._melaReadingMode = localStorage.getItem("mela-reading-mode") === "1";
     } catch {}
     this.root = this.attachShadow({ mode: "open" });
     this.context = this.readContext();
     this.render();
+    if (this.locale === "am") void enhanceLanguage(this).catch(() => {});
     this.stopObserving = observeContext(
       (context) => {
         if (JSON.stringify(context) === JSON.stringify(this.context)) return;
@@ -216,6 +245,53 @@ class DBAssistant extends HTMLElement {
     this.knowledgeReady = loadKnowledge(
       this.getAttribute("content") || "/content.json",
     ).catch(() => {});
+  }
+  static get observedAttributes() {
+    return ["lang"];
+  }
+  attributeChangedCallback(
+    name: string,
+    old: string | null,
+    value: string | null,
+  ) {
+    if (!this.root || old === value) return;
+    const next = value === "am" ? "am" : "en";
+    if (next === this.locale) return;
+    const draft = this.input.value;
+    const optionsOpen = this.root
+      .querySelector(".options")
+      ?.hasAttribute("open");
+    const inside = this.root.activeElement;
+    const outside = document.activeElement as HTMLElement | null;
+    this.abort?.abort();
+    this.version++;
+    this.busy = false;
+    this.locale = next;
+    this.render();
+    this.input.value = draft;
+    if (optionsOpen)
+      this.root.querySelector(".options")?.setAttribute("open", "");
+    if (inside?.tagName === "SELECT")
+      this.root
+        .querySelector<HTMLSelectElement>('select[aria-label="Language / ቋንቋ"]')
+        ?.focus();
+    else if (!inside && outside !== this)
+      outside?.focus?.({ preventScroll: true });
+    if (next === "am")
+      void enhanceLanguage(this).catch(() => this.setStatus(this.t.failed));
+  }
+  getLearningContext() {
+    return this.readContext();
+  }
+  installEvidence(
+    entries: import("../lib/localization/shared").PreparedEntry[],
+    glossary: Record<string, string[]>,
+  ) {
+    setAmEvidence(entries, glossary);
+  }
+  installTranslations(values: Record<string, string>) {
+    for (const key of Object.keys(strings.en) as (keyof typeof strings.en)[])
+      if (values[strings.en[key]]) strings.am[key] = values[strings.en[key]];
   }
   disconnectedCallback() {
     this.stopObserving?.();
@@ -273,13 +349,8 @@ class DBAssistant extends HTMLElement {
       language.append(option);
     }
     language.value = this.locale;
-    language.onchange = () => {
-      this.abort?.abort();
-      this.version++;
-      this.locale = language.value as Language;
-      this.render();
-      this.open();
-    };
+    language.onchange = () =>
+      setLanguage(this, language.value as Language, true);
     toolbar.append(language, el("span", undefined, "context"));
     const scope = el(
       "button",
@@ -287,10 +358,10 @@ class DBAssistant extends HTMLElement {
     );
     scope.title =
       "Use public text from this open page. Other tabs and private form fields are not read.";
-    scope.setAttribute("aria-pressed", String(this.includePublicPage));
+    scope.setAttribute("aria-pressed", String(this._melaIncludePublicPage));
     scope.onclick = () => {
       if (
-        !this.includePublicPage &&
+        !this._melaIncludePublicPage &&
         !window.confirm(
           this.locale === "am"
             ? "የዚህን ገጽ ሕዝባዊ ጽሑፍ ለጥያቄዎ መረጃ ለመጠቀም ይፈቅዳሉ?"
@@ -298,25 +369,30 @@ class DBAssistant extends HTMLElement {
         )
       )
         return;
-      this.includePublicPage = !this.includePublicPage;
+      this._melaIncludePublicPage = !this._melaIncludePublicPage;
       this.context = this.readContext();
       this.version++;
       this.abort?.abort();
-      scope.setAttribute("aria-pressed", String(this.includePublicPage));
+      scope.setAttribute("aria-pressed", String(this._melaIncludePublicPage));
       this.updateContext();
       this.setStatus(this.t.contextChanged);
     };
     const reading = el("button", this.t.readingMode);
     reading.type = "button";
-    reading.setAttribute("aria-pressed", String(this.readingMode));
+    reading.setAttribute("aria-pressed", String(this._melaReadingMode));
     reading.onclick = () => {
-      this.readingMode = !this.readingMode;
-      reading.setAttribute("aria-pressed", String(this.readingMode));
+      this._melaReadingMode = !this._melaReadingMode;
+      reading.setAttribute("aria-pressed", String(this._melaReadingMode));
       try {
-        localStorage.setItem("mela-reading-mode", this.readingMode ? "1" : "0");
+        localStorage.setItem(
+          "mela-reading-mode",
+          this._melaReadingMode ? "1" : "0",
+        );
       } catch {}
       this.applyReadingMode();
-      this.setStatus(this.readingMode ? this.t.readingOn : this.t.readingOff);
+      this.setStatus(
+        this._melaReadingMode ? this.t.readingOn : this.t.readingOff,
+      );
     };
     toolbar.append(reading);
     const options = el("details", undefined, "options");
@@ -381,6 +457,7 @@ class DBAssistant extends HTMLElement {
     select.value = this.scope;
     select.onchange = () => {
       this.scope = select.value as typeof this.scope;
+      this._melaScopeChosen = true;
     };
     learning.append(select, el("span", undefined, "video-time"));
     const mode = el("select");
@@ -482,7 +559,16 @@ class DBAssistant extends HTMLElement {
         if (!this.cloud.checked) this.visual.checked = false;
       }
     };
-    options.append(learning);
+    const reader = el(
+      "button",
+      this.locale === "am" ? "ትምህርቱን በአማርኛ ያንብቡ" : "Read lesson in Amharic",
+    );
+    reader.type = "button";
+    reader.onclick = () =>
+      void enhanceLanguage(this)
+        .then(() => this.dispatchEvent(new CustomEvent("mela:read-lesson")))
+        .catch(() => this.setStatus(this.t.failed));
+    options.append(reader, learning);
     this.panel.append(
       header,
       toolbar,
@@ -501,9 +587,10 @@ class DBAssistant extends HTMLElement {
         message.answer,
         message.question,
         message.artifactKey,
+        message.language,
       );
     this.updateContext();
-    this.updateVideoLabel();
+    this._melaUpdateVideoLabel();
     this.applyReadingMode();
     if (this.opened) this.open();
     if (this.ticket) this.showTicket();
@@ -544,6 +631,7 @@ class DBAssistant extends HTMLElement {
     answer?: Answer,
     question = this.lastQuestion,
     artifactKey?: string,
+    messageLanguage = answer?.language || this.locale,
   ) {
     if (save) {
       this.history.push({
@@ -552,6 +640,7 @@ class DBAssistant extends HTMLElement {
         answer,
         question,
         artifactKey,
+        language: messageLanguage,
       });
       this.history = this.history.slice(-100);
     }
@@ -561,6 +650,7 @@ class DBAssistant extends HTMLElement {
       "message" + (role === "user" ? " user" : ""),
     );
     node.dir = "auto";
+    node.lang = messageLanguage;
     node.append(
       el(
         "span",
@@ -598,7 +688,7 @@ class DBAssistant extends HTMLElement {
     if (role !== "user") {
       const actions = el("div", undefined, "message-actions");
       const listen = el("button", this.t.listen);
-      listen.onclick = () => this.listen(text);
+      listen.onclick = () => this.listen(text, messageLanguage);
       const stop = el("button", this.t.stop);
       stop.onclick = () => window.speechSynthesis?.cancel();
       actions.append(listen, stop);
@@ -645,6 +735,11 @@ class DBAssistant extends HTMLElement {
   private async ask(simple = false) {
     const question = this.input.value.trim();
     if (!question || this.busy) return;
+    if (this.locale === "am")
+      try {
+        await enhanceLanguage(this);
+      } catch {}
+    if (this.busy) return;
     this.lastQuestion = question;
     if (
       /^(i.d like to talk to a person|human help|የሰው እርዳታ)$/i.test(question)
@@ -652,17 +747,28 @@ class DBAssistant extends HTMLElement {
       this.help();
       return;
     }
+    const questionScope =
+      this.scope === "lesson" &&
+      !this._melaScopeChosen &&
+      this.videoCues.length &&
+      /\b(video|transcript)\b|ቪዲዮ/i.test(question)
+        ? "wholeVideo"
+        : this.scope;
     const snapshot = videoEvidence(
       { ...this.context, video: this.video ? { ...this.video } : undefined },
       this.videoCues,
-      this.scope,
+      questionScope,
     );
     const allowVisual =
-      this.scope === "moment" &&
+      questionScope === "moment" &&
       !!this.visual?.checked &&
       this.cloud.checked &&
       !!snapshot.video;
-    if (this.scope !== "lesson" && !snapshot.sections.length && !allowVisual) {
+    if (
+      questionScope !== "lesson" &&
+      !snapshot.sections.length &&
+      !allowVisual
+    ) {
       this.setStatus(
         "Generate or restore this video's English transcript first.",
       );
@@ -679,7 +785,7 @@ class DBAssistant extends HTMLElement {
           JSON.stringify({
             question,
             mode,
-            scope: this.scope,
+            scope: questionScope,
             language: this.locale,
             visual: allowVisual,
             course: snapshot.courseId,
@@ -687,7 +793,7 @@ class DBAssistant extends HTMLElement {
               ? {
                   id: snapshot.video.videoId,
                   time:
-                    this.scope === "moment"
+                    questionScope === "moment"
                       ? Math.floor(snapshot.video.currentTime / 5)
                       : 0,
                   revision: snapshot.video.transcriptRevision,
@@ -733,7 +839,7 @@ class DBAssistant extends HTMLElement {
             question,
             language: this.locale,
             context: snapshot,
-            scope: this.scope,
+            scope: questionScope,
             cloudConsent: this.cloud.checked,
             simple,
             explanationMode: mode,
@@ -767,21 +873,21 @@ class DBAssistant extends HTMLElement {
       this.messages.setAttribute("aria-busy", "false");
     }
   }
-  private listen(text: string) {
+  private listen(text: string, language = this.locale) {
     if (!window.speechSynthesis) {
       this.setStatus(this.t.noVoice);
       return;
     }
     const voice = speechSynthesis
       .getVoices()
-      .find((v) => v.lang.toLowerCase().startsWith(this.locale));
+      .find((v) => v.lang.toLowerCase().startsWith(language));
     if (!voice) {
       this.setStatus(this.t.noVoice);
       return;
     }
     speechSynthesis.cancel();
     const speech = new SpeechSynthesisUtterance(text);
-    speech.lang = this.locale === "am" ? "am-ET" : "en-US";
+    speech.lang = language === "am" ? "am-ET" : "en-US";
     speech.voice = voice;
     speech.rate = 0.9;
     speechSynthesis.speak(speech);
@@ -992,8 +1098,8 @@ class DBAssistant extends HTMLElement {
     this.ticketTimer = setInterval(() => void poll(), 5000);
   }
   private applyReadingMode() {
-    this.panel.classList.toggle("reading-mode", this.readingMode);
-    if (this.readingMode)
+    this.panel.classList.toggle("reading-mode", this._melaReadingMode);
+    if (this._melaReadingMode)
       for (const details of this.messages.querySelectorAll(
         ".explanation-block details",
       ))

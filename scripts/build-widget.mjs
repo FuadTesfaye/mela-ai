@@ -1,10 +1,12 @@
 import { build } from "esbuild";
 import { stat, mkdir, copyFile, readFile } from "node:fs/promises";
+// Only explicitly namespaced private fields are mangled; host APIs stay stable.
 import { gzipSync } from "node:zlib";
 await mkdir("public", { recursive: true });
 await build({
   entryPoints: ["module/db-assistant.ts"],
   bundle: true,
+  mangleProps: /^_mela/,
   minify: true,
   target: "es2020",
   format: "iife",
@@ -17,6 +19,7 @@ console.log(`Widget: ${(size / 1024).toFixed(1)} KB (uncompressed)`);
 await build({
   entryPoints: ["module/avatar/avatar-view.ts"],
   bundle: true,
+  mangleProps: /^_mela/,
   minify: true,
   target: "es2020",
   format: "esm",
@@ -29,6 +32,7 @@ await copyFile("data/content.json", "public/content.json");
 await build({
   entryPoints: ["module/savanna/integration.ts"],
   bundle: true,
+  mangleProps: /^_mela/,
   minify: true,
   target: "es2020",
   format: "iife",
@@ -39,6 +43,7 @@ await import("./integrate-savanna.mjs");
 await build({
   entryPoints: ["module/media/course-media.ts"],
   bundle: true,
+  mangleProps: /^_mela/,
   minify: true,
   target: "es2020",
   format: "iife",
@@ -51,6 +56,7 @@ await mkdir("public/sdk", { recursive: true });
 await build({
   entryPoints: ["packages/sdk/src/index.ts"],
   bundle: true,
+  mangleProps: /^_mela/,
   minify: true,
   target: "es2020",
   format: "esm",
@@ -59,6 +65,7 @@ await build({
 await build({
   entryPoints: ["packages/sdk/src/react.tsx"],
   bundle: true,
+  mangleProps: /^_mela/,
   minify: true,
   target: "es2020",
   format: "esm",
@@ -79,6 +86,7 @@ await build({
 await build({
   entryPoints: ["packages/sdk/src/browser.ts"],
   bundle: true,
+  mangleProps: /^_mela/,
   minify: true,
   target: "es2020",
   format: "iife",
@@ -98,6 +106,7 @@ await mkdir("public/avatar", { recursive: true });
 await build({
   entryPoints: ["module/teacher/renderer-3d.ts"],
   bundle: true,
+  mangleProps: /^_mela/,
   minify: true,
   target: "es2020",
   format: "iife",
@@ -109,5 +118,28 @@ if (gzipSync(runtime).length > 250000)
   throw new Error("3D runtime exceeds its 250 KB gzip budget.");
 
 await copyFile("data/visual-teacher.json", "public/avatar/storyboard.json");
+// Optional language/reader and fingerspelling features are independent classic scripts.
+await build({
+  entryPoints: ["module/localization/entry.ts"],
+  bundle: true,
+  mangleProps: /^_mela/,
+  minify: true,
+  target: "es2020",
+  format: "iife",
+  globalName: "MelaLocale",
+  outfile: "public/locale.js",
+});
+await build({
+  entryPoints: ["module/media/fingerspelling.ts"],
+  bundle: true,
+  mangleProps: /^_mela/,
+  minify: true,
+  target: "es2020",
+  format: "iife",
+  globalName: "MelaSpelling",
+  outfile: "public/spelling.js",
+});
+await mkdir("public/i18n", { recursive: true });
+await copyFile("data/localization/am-prepared.json", "public/i18n/am.json");
 const sdkSize = (await stat("public/mela-sdk.js")).size;
 if (sdkSize > 100000) throw new Error(`Initial SDK exceeds 100 KB: ${sdkSize}`);

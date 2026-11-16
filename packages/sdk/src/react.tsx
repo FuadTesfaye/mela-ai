@@ -21,6 +21,9 @@ export function MelaCompanion({
   onError,
 }: MelaCompanionProps) {
   const target = useRef<HTMLDivElement>(null);
+  const mounted = useRef<MelaHandle | undefined>(undefined);
+  const latestLanguage = useRef(language);
+  latestLanguage.current = language;
   const callbacks = useRef({ onReady, onError });
   callbacks.current = { onReady, onError };
   useEffect(() => {
@@ -42,6 +45,8 @@ export function MelaCompanion({
           return;
         }
         handle = result;
+        mounted.current = result;
+        if (latestLanguage.current) result.setLanguage(latestLanguage.current);
         callbacks.current.onReady?.(result);
       })
       .catch((error) => {
@@ -55,7 +60,11 @@ export function MelaCompanion({
     return () => {
       active = false;
       handle?.destroy();
+      mounted.current = undefined;
     };
-  }, [api, videoUrl, lessonId, language, assistant, renderer, contextRoot]);
+  }, [api, videoUrl, lessonId, assistant, renderer, contextRoot]);
+  useEffect(() => {
+    if (language) mounted.current?.setLanguage(language);
+  }, [language]);
   return <div ref={target} className={className} style={style} />;
 }

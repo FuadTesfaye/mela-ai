@@ -2,7 +2,8 @@
  * not a signed-language vocabulary or an English-to-EthSL translation model. */
 import { mountTeacherPresentation } from "../teacher/presentation";
 import type { RendererPreference } from "../teacher/types";
-import { handshapeFor, spellingAt } from "./fingerspelling";
+import { loadFeature } from "../localization/runtime";
+import type * as Spelling from "./fingerspelling";
 import { cueAt, gestureFor, type Cue } from "./caption-motion";
 export { cueAt, gestureFor, type Cue, type Gesture } from "./caption-motion";
 const ns = "http://www.w3.org/2000/svg";
@@ -27,6 +28,8 @@ function el<K extends keyof HTMLElementTagNameMap>(
 }
 export type PreviewState = {
   cues: readonly Cue[];
+  displayCues?: readonly Cue[];
+  language?: "en" | "am";
   seconds: number;
   playing: boolean;
   rate: number;
@@ -47,6 +50,7 @@ export function mountLearningPreview(
     onResume?: (seconds: number) => boolean | void;
   },
 ) {
+  let spellingModule: typeof Spelling | undefined;
   const approved = !!options.visual;
   const wrapper = el("div", undefined, "learning-preview");
   const controls = el("label", "View ", "preview-mode");
@@ -286,9 +290,11 @@ export function mountLearningPreview(
       : gestureFor(cue?.text || "");
     root.setAttribute("data-gesture", gesture);
     const spelling =
-      animationMode.value === "spelling" ? spellingAt(cue, seconds) : undefined;
+      animationMode.value === "spelling"
+        ? spellingModule?.spellingAt(cue, seconds)
+        : undefined;
     const shape = spelling
-      ? handshapeFor(spelling.letter, spelling.phase)
+      ? spellingModule?.handshapeFor(spelling.letter, spelling.phase)
       : undefined;
     root.setAttribute("data-letter", spelling?.letter || "");
     letterLabel.textContent = spelling
@@ -465,8 +471,9 @@ export function mountLearningPreview(
       teaching?.isExplaining() ? teaching.sourceTime() : state.seconds,
     );
     sourceLabel.textContent = state.sourceLabel || "AI CAPTIONS";
-    hint.textContent =
-      state.sourceLabel === "COURSE CAPTIONS"
+    hint.textContent = state.displayCues
+      ? "Amharic translation · fluent review pending."
+      : state.sourceLabel === "COURSE CAPTIONS"
         ? "English source captions."
         : "Generated from the video's audio. Review for accuracy.";
     note.textContent =
@@ -495,12 +502,18 @@ export function mountLearningPreview(
     const text = generating
       ? "Transcribing the video…"
       : failure ||
-        cue?.text ||
+        (state.displayCues
+          ? cueAt(
+              state.displayCues,
+              teaching?.isExplaining() ? teaching.sourceTime() : state.seconds,
+            )?.text
+          : cue?.text) ||
         (state.cues.length
           ? "No speech at this moment."
           : "Generate captions to follow this lesson.");
     if (text !== lastText) {
       words.textContent = text;
+      words.lang = state.displayCues ? state.language || "en" : "en";
       lastText = text;
     }
     stamp.textContent = `${String(Math.floor(state.seconds / 60)).padStart(2, "0")}:${String(Math.floor(state.seconds % 60)).padStart(2, "0")}`;
@@ -523,7 +536,23 @@ export function mountLearningPreview(
       frame = requestAnimationFrame(animate);
   }
   select.onchange = refresh;
-  animationMode.onchange = refresh;
+  animationMode.onchange = () => {
+    refresh();
+    if (animationMode.value === "spelling" && !spellingModule)
+      void loadFeature<typeof Spelling>(
+        new URL("/spelling.js", options.runtimeUrl || location.href).href,
+        "MelaSpelling",
+      )
+        .then((value) => {
+          spellingModule = value;
+          if (!disposed) refresh();
+        })
+        .catch(() => {
+          if (!disposed)
+            description.textContent =
+              "English fingerspelling is unavailable. Choose Visual teacher or retry.";
+        });
+  };
   motion.onclick = () => {
     motionOverride = !motionEnabled();
     refresh();

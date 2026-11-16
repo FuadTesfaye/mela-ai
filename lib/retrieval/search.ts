@@ -54,19 +54,24 @@ const bilingual: Record<string, string[]> = {
   email: ["ኢሜይል"],
   learning: ["ትምህርት", "ተማር"],
 };
+export interface RetrievalLocale {
+  translate: (text: string) => string | undefined;
+  glossary?: Record<string, string[]>;
+}
 export function retrieve(
   question: string,
   sections: Section[],
   context: LearningContext,
   language: Language,
+  locale?: RetrievalLocale,
 ): Section[] {
   const q = tokenize(question);
-  for (const [en, am] of Object.entries(bilingual))
+  for (const [en, am] of Object.entries({ ...bilingual, ...locale?.glossary }))
     if (q.some((t) => t === en || am.some((a) => t.includes(a))))
       q.push(en, ...am);
-  const videoScope = /\b(video|transcript)\b/i.test(question);
+  const videoScope = /\b(video|transcript)\b|ቪዲዮ/i.test(question);
   const contextual =
-    /current lesson|this lesson|this page|current page|summari[sz]e|transcript|this video|the video|የአሁኑ|ትምህርት|በአማርኛ/.test(
+    /current lesson|this lesson|this page|current page|summari[sz]e|transcript|this video|the video|የአሁኑ|ትምህርት|በአማርኛ|ይህን|ይህ|አብራራ|አጠቃልል/.test(
       question.toLowerCase(),
     );
   const unique = new Map<string, Section>();
@@ -76,16 +81,34 @@ export function retrieve(
         !context.courseId ||
         s.courseId === context.courseId ||
         context.pageType === "jobs") &&
-      (!s.language || s.language === language)
+      (!s.language || s.language === language || language === "am")
     )
       unique.set(s.id, s);
   const active = new Set(context.sections.map((s) => s.id));
   const hasVideo = context.sections.some((s) => s.id.startsWith("video-"));
   return [...unique.values()]
+    .filter(
+      (s) =>
+        language !== "am" ||
+        (!(
+          s.id.endsWith("-en") &&
+          unique.has(s.id.slice(0, -3) + "-am") &&
+          !active.has(s.id)
+        ) &&
+          !(s.id.endsWith("-am") && active.has(s.id.slice(0, -3) + "-en"))),
+    )
     .filter((s) => !videoScope || !hasVideo || s.id.startsWith("video-"))
     .map((s) => {
-      const title = tokenize(s.title + " " + (s.keywords || []).join(" "));
-      const body = tokenize(s.content);
+      const title = tokenize(
+        s.title +
+          " " +
+          (s.keywords || []).join(" ") +
+          " " +
+          (locale?.translate(s.title) || ""),
+      );
+      const body = tokenize(
+        s.content + " " + (locale?.translate(s.content) || ""),
+      );
       const overlap = q.reduce(
         (n, t) => n + (title.includes(t) ? 3 : body.includes(t) ? 1 : 0),
         0,
@@ -113,8 +136,28 @@ export function groundedAnswer(
   context: LearningContext,
   language: Language,
   simple = false,
+  locale?: RetrievalLocale,
 ): Answer {
-  const found = retrieve(question, sections, context, language);
+  const found = retrieve(question, sections, context, language, locale);
+  const localized = found.map((s) => {
+    const translated =
+      language === "am" && s.language !== "am"
+        ? locale?.translate(s.content)
+        : undefined;
+    return translated
+      ? {
+          ...s,
+          content: translated,
+          title: locale?.translate(s.title) || s.title,
+          language: "am" as const,
+        }
+      : s;
+  });
+  const sourceOnly =
+    language === "am" && localized.some((s) => s.language !== "am");
+  const shown = sourceOnly
+    ? found.filter((s) => s.language !== "am")
+    : localized;
   const sentences = (text: string) =>
     simple
       ? text
@@ -124,12 +167,19 @@ export function groundedAnswer(
           .join(" ")
       : text;
   return {
+    language: sourceOnly ? "en" : language,
+    translationStatus: sourceOnly
+      ? "source-only"
+      : language === "am"
+        ? "prepared"
+        : undefined,
+    notice: sourceOnly ? "የአማርኛ ትርጉም አይገኝም። የእንግሊዝኛ ምንጩን እያሳየሁ ነው።" : undefined,
     answer: found.length
-      ? found.map((s) => sentences(s.content)).join("\n\n")
+      ? shown.map((s) => sentences(s.content)).join("\n\n")
       : language === "am"
         ? "ይህን መረጃ በትምህርቱ ውስጥ ማግኘት አልቻልኩም። ጥያቄዎን በሌላ መንገድ ይጠይቁ ወይም የሰው እርዳታ ይጠይቁ።"
-        : "I couldn’t find that information in the available learning materials. Try another question or ask a person for help.",
-    citations: found.map((s) => ({
+        : "I couldn’t find this in the lesson sources. Try another question or ask a person.",
+    citations: shown.map((s) => ({
       id: s.id,
       title: s.title,
       url: s.url,

@@ -1,0 +1,730 @@
+{
+  "version": 1,
+  "glossaryVersion": "am-1",
+  "status": "ai-draft",
+  "entries": [
+    {
+      "sourceText": "Using a web browser",
+      "targetText": "የድር አሳሽን መጠቀም"
+    },
+    {
+      "sourceText": "A browser is an application for opening websites. Type a website address into the address bar and press Enter. Use the Back button to return to the previous page. A tab lets you keep more than one page open.",
+      "targetText": "አሳሽ ድረ ገጾችን ለመክፈት የሚጠቅም መተግበሪያ ነው። የድረ ገጹን አድራሻ በአድራሻ መጻፊያው ላይ ያስገቡና Enter ይጫኑ። ወደ ቀድሞው ገጽ ለመመለስ Back የሚለውን ቁልፍ ይጠቀሙ። ትር (tab) ከአንድ በላይ ገጾችን በአንድ ጊዜ ክፍት ለማድረግ ያስችላል።"
+    },
+    {
+      "sourceText": "Keeping your password safe",
+      "targetText": "የይለፍ ቃልዎን በደህንነት መጠበቅ"
+    },
+    {
+      "sourceText": "Use a long, unique password for each account. Do not share passwords or verification codes with anyone. A password manager can help you remember unique passwords. Turn on two-factor authentication when available.",
+      "targetText": "ለእያንዳንዱ መለያ ረጅምና ልዩ የሆነ የይለፍ ቃል ይጠቀሙ። የይለፍ ቃሎችን ወይም የማረጋገጫ ኮዶችን ለማንም አያጋሩ። የይለፍ ቃል አስተዳዳሪ ልዩ የይለፍ ቃሎችን እንዲያስታውሱ ይረዳዎታል። ሲገኝ ባለሁለት ደረጃ ማረጋገጫን ያብሩ።"
+    },
+    {
+      "sourceText": "Sending your first email",
+      "targetText": "የመጀመሪያ ኢሜይልዎን መላክ"
+    },
+    {
+      "sourceText": "Open your email application and choose Compose. Enter the recipient’s email address, add a clear subject, and write your message. Review the recipient and message before selecting Send. Never open an attachment from an unknown sender.",
+      "targetText": "የኢሜይል መተግበሪያዎን ይክፈቱና Compose ይምረጡ። የተቀባዩን የኢሜይል አድራሻ ያስገቡ፣ ግልጽ ርዕስ ይጻፉና መልዕክትዎን ያዘጋጁ። Send ከመምረጥዎ በፊት ተቀባዩንና መልዕክቱን ይገምግሙ። ከማያውቁት ላኪ የመጣ አባሪ ፋይል ፈጽሞ አይክፈቱ።"
+    },
+    {
+      "sourceText": "Learning with a limited connection",
+      "targetText": "ውስን የኢንተርኔት ግንኙነት ሲኖር መማር"
+    },
+    {
+      "sourceText": "Open a lesson while connected to save its text in this browser. When the connection drops, MELA can search saved public lesson content. The host page must already be open; first-time offline visits are not supported. Tutor messages, cloud AI, voice services, and screen sharing may require a connection.",
+      "targetText": "የትምህርቱን ጽሑፍ በዚህ አሳሽ ለማስቀመጥ ኢንተርኔት እያለ ትምህርቱን ይክፈቱ። ግንኙነቱ ሲቋረጥ MELA የተቀመጡ ይፋዊ የትምህርት ጽሑፎችን መፈለግ ይችላል። አስተናጋጁ ገጽ ቀድሞ ክፍት መሆን አለበት፤ ለመጀመሪያ ጊዜ ከመስመር ውጭ መጎብኘት አይደገፍም። የአስተማሪ መልዕክቶች፣ የደመና AI፣ የድምፅ አገልግሎቶችና ማያ ማጋራት ግንኙነት ሊፈልጉ ይችላሉ።"
+    },
+    {
+      "sourceText": "Offline-First & Localized AI",
+      "targetText": "ከመስመር ውጭ የሚሠራና ከአካባቢው ጋር የሚስማማ AI"
+    },
+    {
+      "sourceText": "TRAINING SESSION · AI ENGINEERING How to build AI that works anywhere, in any language. No internet. No problem. Kidus Yohannes · Senior ML Engineer Our languages?",
+      "targetText": "የሥልጠና ክፍለ ጊዜ · የAI ምህንድስና። በማንኛውም ቦታና ቋንቋ የሚሠራ AI እንዴት እንገነባለን? ኢንተርኔት የለም? ችግር የለም። Kidus Yohannes · ከፍተኛ የማሽን ትምህርት መሐንዲስ። የእኛ ቋንቋዎችስ?"
+    },
+    {
+      "sourceText": "When the internet says no",
+      "targetText": "ኢንተርኔቱ እምቢ ሲል"
+    },
+    {
+      "sourceText": "Raise your hand if you have ever wanted to use AI, but the internet said no. Too slow. Too expensive. No signal at all.",
+      "targetText": "AI ለመጠቀም ፈልጋችሁ ኢንተርኔቱ ያልፈቀደላችሁ ከሆነ እጃችሁን አንሱ። በጣም ዝግተኛ፣ በጣም ውድ ወይም ጭራሽ ምልክት የሌለው ሊሆን ይችላል።"
+    },
+    {
+      "sourceText": "4 reasons AI must work offline",
+      "targetText": "AI ከመስመር ውጭ መሥራት ያለበት 4 ምክንያቶች"
+    },
+    {
+      "sourceText": "Connectivity: slow, costly or missing internet outside big cities. Privacy: health and student data never has to leave the device. Cost: every cloud AI request costs money and mobile data. Speed: no trip to a far-away server; instant answers.",
+      "targetText": "ግንኙነት፦ ከትልልቅ ከተሞች ውጭ ኢንተርኔት ዝግተኛ፣ ውድ ወይም የማይገኝ ሊሆን ይችላል። ግላዊነት፦ የጤናና የተማሪ መረጃ ከመሣሪያው መውጣት አያስፈልገውም። ወጪ፦ እያንዳንዱ የደመና AI ጥያቄ ገንዘብና የሞባይል ዳታ ያስወጣል። ፍጥነት፦ ወደ ሩቅ አገልጋይ መሄድ ስለማያስፈልግ ምላሽ ወዲያው ይገኛል።"
+    },
+    {
+      "sourceText": "Offline-first = a generator for your app",
+      "targetText": "ከመስመር ውጭ መሥራት ለመተግበሪያዎ እንደ ጀነሬተር ነው"
+    },
+    {
+      "sourceText": "The power cuts. The generator starts. The lights stay on. Offline: everything important still works. Core features work. For AI this means the model runs locally. Online: sync, updates, bigger models. Connection adds bonus features and extras.",
+      "targetText": "ኤሌክትሪክ ይቋረጣል። ጀነሬተሩ ይነሳል። መብራቱ አይጠፋም። ከመስመር ውጭ፦ አስፈላጊው ሁሉ መሥራቱን ይቀጥላል። ዋና ተግባራት ይሠራሉ። ለAI ይህ ሞዴሉ በአካባቢው መሣሪያ ላይ ይሠራል ማለት ነው። መስመር ላይ፦ ማመሳሰል፣ ዝማኔዎችና ትልልቅ ሞዴሎች ይጨመራሉ። ግንኙነት ተጨማሪ አገልግሎቶችን ያስችላል።"
+    },
+    {
+      "sourceText": "Where should the AI run?",
+      "targetText": "AI የት መሥራት አለበት?"
+    },
+    {
+      "sourceText": "A — Cloud: a huge remote server. Most powerful, but needs internet, charges per use, and data leaves the device. B — Local: on the user’s device. Works offline, private and free per use, but models are smaller and limited by the device. C — Hybrid: local first, cloud when online. Best of both, with more to design and test. Our pick for most projects: C, Hybrid, with local as the default.",
+      "targetText": "A — Cloud፦ ከፍተኛ አቅም ያለው ትልቅ የርቀት አገልጋይ ነው። ነገር ግን ኢንተርኔት ይፈልጋል፣ በአጠቃቀም ያስከፍላል፣ መረጃም ከመሣሪያው ይወጣል። B — Local፦ በተጠቃሚው መሣሪያ ላይ ይሠራል። ከመስመር ውጭ ይሠራል፣ ግላዊነትን ይጠብቃል፣ በአጠቃቀም ክፍያ የለውም። ነገር ግን ሞዴሎቹ ያነሱና በመሣሪያው አቅም የተገደቡ ናቸው። C — Hybrid፦ በመጀመሪያ Local፣ ኢንተርኔት ሲኖር Cloud። የሁለቱን ጥቅም ያገናኛል፣ ግን ተጨማሪ ንድፍና ሙከራ ይፈልጋል። ለአብዛኞቹ ፕሮጀክቶች ምርጫችን C፣ Hybrid ነው፤ Local ነባሪ ይሆናል።"
+    },
+    {
+      "sourceText": "Small models, big possibilities",
+      "targetText": "ትንንሽ ሞዴሎች፣ ትልልቅ ዕድሎች"
+    },
+    {
+      "sourceText": "Model size is measured in parameters: the numbers inside a model. Big cloud models: hundreds of billions. Laptop-size models: about 8 billion. Phone-size models: about 1–3 billion. Text and chat: Gemma, Llama, Phi, Qwen. Speech: Whisper for speech-to-text. Translation: NLLB, about 200 languages. Images: small vision models. Always check each model’s licence before building a product on it.",
+      "targetText": "የሞዴል መጠን በውስጡ ባሉ ቁጥሮች፣ ማለትም በመለኪያዎች (parameters) ይለካል። ትልልቅ የደመና ሞዴሎች፦ በመቶዎች የሚቆጠሩ ቢሊዮኖች። የላፕቶፕ ሞዴሎች፦ ወደ 8 ቢሊዮን። የስልክ ሞዴሎች፦ ወደ 1–3 ቢሊዮን። ለጽሑፍና ውይይት፦ Gemma፣ Llama፣ Phi፣ Qwen። ለድምፅ፦ Whisper ድምፅን ወደ ጽሑፍ ይቀይራል። ለትርጉም፦ NLLB፣ ወደ 200 ቋንቋዎች። ለምስሎች፦ ትንንሽ የእይታ ሞዴሎች። ምርት ከመገንባትዎ በፊት የእያንዳንዱን ሞዴል ፈቃድ ያረጋግጡ።"
+    },
+    {
+      "sourceText": "Quantization = compressing a photo",
+      "targetText": "Quantization ፎቶን እንደ ማመቅ ነው"
+    },
+    {
+      "sourceText": "Same picture. Much smaller file. Original full-precision numbers are the 100% baseline. Quantize to 4-bit: look for Q4 or 4-bit labels; up to about 8× smaller. Pick the smallest model that does the job. Distil: a big teacher trains a small student. Focus on one job: focused beats general.",
+      "targetText": "ተመሳሳይ ምስል፣ በጣም ያነሰ ፋይል። የመጀመሪያዎቹ ሙሉ ትክክለኛነት ያላቸው ቁጥሮች የ100% መነሻ ናቸው። ወደ 4-bit ለማመቅ Q4 ወይም 4-bit ምልክቶችን ይፈልጉ፤ እስከ 8× ያህል ሊያንስ ይችላል። ሥራውን የሚሠራውን እጅግ ትንሹን ሞዴል ይምረጡ። Distillation፦ ትልቅ አስተማሪ ትንሽ ተማሪን ያሠለጥናል። በአንድ ተግባር ላይ ያተኩሩ፤ ለአንድ ሥራ የተዘጋጀ ሞዴል ከአጠቃላይ ሞዴል ሊሻል ይችላል።"
+    },
+    {
+      "sourceText": "Pick your stage",
+      "targetText": "የሚሠራበትን መድረክ ይምረጡ"
+    },
+    {
+      "sourceText": "Phone: LiteRT, Core ML, ONNX Runtime, MediaPipe. Great fit for field apps. Laptop: Ollama, llama.cpp, LM Studio. Great fit for staff tools and demos. Browser: WebGPU, Transformers.js, WebLLM. Nothing to install. Local server: one machine on local Wi-Fi can serve a whole school or clinic. Optional live demo: AI running with Wi-Fi off.",
+      "targetText": "ስልክ፦ LiteRT፣ Core ML፣ ONNX Runtime፣ MediaPipe፤ ለመስክ መተግበሪያዎች ተስማሚ ናቸው። ላፕቶፕ፦ Ollama፣ llama.cpp፣ LM Studio፤ ለሠራተኞች መሣሪያዎችና ማሳያዎች ተስማሚ ናቸው። አሳሽ፦ WebGPU፣ Transformers.js፣ WebLLM፤ መጫን አያስፈልግም። የአካባቢ አገልጋይ፦ በአካባቢው Wi-Fi ላይ አንድ ማሽን ሙሉ ትምህርት ቤትን ወይም ክሊኒክን ማገልገል ይችላል። አማራጭ ማሳያ፦ Wi-Fi ተዘግቶ AI ሲሠራ ማየት።"
+    },
+    {
+      "sourceText": "Myth vs fact",
+      "targetText": "የተሳሳተ እምነትና እውነታ"
+    },
+    {
+      "sourceText": "Myth: AI always needs the internet. Fact: small models run fully offline on laptops and phones. Myth: local AI is useless. Fact: for one focused task, a small model is often good enough. Myth: fine-tuning needs millions of examples. Fact: with LoRA, hundreds to a few thousand good examples can help.",
+      "targetText": "የተሳሳተ እምነት፦ AI ሁልጊዜ ኢንተርኔት ይፈልጋል። እውነታ፦ ትንንሽ ሞዴሎች በላፕቶፕና በስልክ ላይ ሙሉ በሙሉ ከመስመር ውጭ ይሠራሉ። የተሳሳተ እምነት፦ Local AI ጥቅም የለውም። እውነታ፦ ለአንድ የተወሰነ ሥራ ትንሽ ሞዴል ብዙ ጊዜ በቂ ነው። የተሳሳተ እምነት፦ fine-tuning ሚሊዮኖች ምሳሌዎችን ይፈልጋል። እውነታ፦ LoRA ከመቶዎች እስከ ጥቂት ሺዎች ጥሩ ምሳሌዎች ሊረዳ ይችላል።"
+    },
+    {
+      "sourceText": "Integrating an AI model in 5 steps",
+      "targetText": "የAI ሞዴልን ለማቀናጀት 5 ደረጃዎች"
+    },
+    {
+      "sourceText": "1. Define the task. 2. Pick a model. 3. Test with real data. 4. Shrink and package. 5. One interface. The secret is step 5: your app asks “summarise this” and never cares which model answers. Like a phone charging socket: plug in any charger.",
+      "targetText": "1. ተግባሩን ይወስኑ። 2. ሞዴል ይምረጡ። 3. በእውነተኛ መረጃ ይፈትሹ። 4. መጠኑን ያሳንሱና ያሽጉ። 5. አንድ በይነገጽ ይጠቀሙ። ሚስጥሩ 5ኛው ደረጃ ነው፤ መተግበሪያዎ “ይህን አጠቃልል” ይላል፣ መልስ የሚሰጠው የትኛው ሞዴል እንደሆነ ማወቅ አያስፈልገውም። ልክ እንደ ስልክ ቻርጅ መሰኪያ፣ ማንኛውንም ቻርጅ መሰካት ይቻላል።"
+    },
+    {
+      "sourceText": "One socket, swappable engines",
+      "targetText": "አንድ መሰኪያ፣ የሚቀያየሩ ሞተሮች"
+    },
+    {
+      "sourceText": "Your app connects to an AI layer or router. Online and allowed? Use cloud. Otherwise, use local. The local model is always available; the cloud model is optional when online. Sync queue: save on the device first, upload when the connection returns.",
+      "targetText": "መተግበሪያዎ ከAI ንብርብር ወይም ከመምሪያ (router) ጋር ይገናኛል። መስመር ላይ ነዎት እና ፈቃድ አለ? Cloud ይጠቀሙ። ካልሆነ Local ይጠቀሙ። የLocal ሞዴሉ ሁልጊዜ ይገኛል፤ የCloud ሞዴሉ ኢንተርኔት ሲኖር አማራጭ ነው። የማመሳሰያ ወረፋ፦ በመጀመሪያ በመሣሪያው ያስቀምጡ፣ ግንኙነት ሲመለስ ይላኩ።"
+    },
+    {
+      "sourceText": "Does AI speak our language?",
+      "targetText": "AI ቋንቋችንን ይናገራል?"
+    },
+    {
+      "sourceText": "Most AI learned mostly from English. Amharic, Afaan Oromo and Tigrinya have far less training data. Illustrative tokenization: “hello” can be one piece; “ሰላም” can be split into more pieces. Ge’ez script may require more tokens, making processing slower, less accurate or costlier. More pieces mean more work for the model. Localization is not just translation. “Buying apples at Walmart for $3” in perfect Amharic is still strange. Use local names, places, money and examples.",
+      "targetText": "አብዛኞቹ AI ሞዴሎች በዋናነት ከእንግሊዝኛ ተምረዋል። አማርኛ፣ Afaan Oromo እና ትግርኛ በጣም ያነሰ የሥልጠና መረጃ አላቸው። ለማብራሪያ የቀረበ የtoken ክፍፍል፦ “hello” አንድ ክፍል ሊሆን ይችላል፤ “ሰላም” ግን በብዙ ክፍሎች ሊከፈል ይችላል። የግዕዝ ፊደል ተጨማሪ token ሊፈልግ ይችላል፤ ይህም ሂደቱን ዝግተኛ፣ ያነሰ ትክክለኛ ወይም ውድ ያደርገዋል። ብዙ ክፍሎች ለሞዴሉ ብዙ ሥራ ማለት ነው። ከአካባቢ ጋር ማስማማት ትርጉም ብቻ አይደለም። “Buying apples at Walmart for $3” በፍጹም አማርኛ ቢተረጎምም እንግዳ ሊሆን ይችላል። የአካባቢ ስሞችን፣ ቦታዎችን፣ ገንዘብንና ምሳሌዎችን ይጠቀሙ።"
+    },
+    {
+      "sourceText": "3 ways to make AI local",
+      "targetText": "AIን ከአካባቢ ጋር የማስማማት 3 መንገዶች"
+    },
+    {
+      "sourceText": "Easy — Go multilingual: start from models trained on many languages and test several. Medium — Open-book exam (RAG): the model looks up your documents, such as a curriculum or health guides, before answering. This can work offline. Advanced — Fine-tune (LoRA): teach a small model with local examples using a cheap add-on instead of a full retrain. Golden rule: test with native speakers. No score replaces a real human.",
+      "targetText": "ቀላል — ብዙ ቋንቋዎችን ይደግፉ፦ በብዙ ቋንቋዎች የተሠለጠኑ ሞዴሎችን መነሻ ያድርጉና ብዙዎቹን ይፈትሹ። መካከለኛ — ክፍት መጽሐፍ ፈተና (RAG)፦ ሞዴሉ ከመመለሱ በፊት እንደ ሥርዓተ ትምህርትና የጤና መመሪያ ያሉ የእርስዎን ሰነዶች ይመለከታል። ይህ ከመስመር ውጭ ሊሠራ ይችላል። የላቀ — fine-tune (LoRA)፦ ሙሉ ዳግም ሥልጠና ከማድረግ ይልቅ በአነስተኛ ተጨማሪ ክፍል አካባቢያዊ ምሳሌዎችን ለትንሽ ሞዴል ያስተምሩ። ዋናው መርህ፦ ከቋንቋው ተወላጅ ተናጋሪዎች ጋር ይፈትሹ። ማንኛውም ውጤት እውነተኛ ሰውን አይተካም።"
+    },
+    {
+      "sourceText": "Reality check",
+      "targetText": "እውነታውን ያረጋግጡ"
+    },
+    {
+      "sourceText": "Device limits: test on the cheapest phone your users own, not yours. Quality: keep a test set of real local examples; native speakers review. Model updates: download big models on Wi-Fi only and version every model. Licences and safety: check licences and tell users AI can be wrong.",
+      "targetText": "የመሣሪያ ገደብ፦ በእርስዎ ስልክ ሳይሆን ተጠቃሚዎችዎ ባላቸው እጅግ ርካሹ ስልክ ላይ ይፈትሹ። ጥራት፦ የእውነተኛ አካባቢያዊ ምሳሌዎችን የሙከራ ስብስብ ያቆዩ፤ የቋንቋው ተወላጅ ተናጋሪዎች ይገምግሙት። የሞዴል ዝማኔ፦ ትልልቅ ሞዴሎችን በWi-Fi ብቻ ያውርዱ፣ ለእያንዳንዱም ስሪት ይስጡ። ፈቃድና ደህንነት፦ ፈቃዶችን ያረጋግጡ፣ AI ሊሳሳት እንደሚችልም ያሳውቁ።"
+    },
+    {
+      "sourceText": "Quiz time!",
+      "targetText": "የፈተና ጊዜ!"
+    },
+    {
+      "sourceText": "1. What makes a model up to about 8× smaller, like compressing a photo? 2. What is the “open-book exam” technique called? 3. In a hybrid app, which model is the default?",
+      "targetText": "1. ፎቶን እንደ ማመቅ የሞዴልን መጠን እስከ 8× ያህል የሚቀንሰው ምንድን ነው? 2. “ክፍት መጽሐፍ ፈተና” የሚለው ዘዴ ምን ይባላል? 3. በHybrid መተግበሪያ ውስጥ ነባሪው ሞዴል የትኛው ነው?"
+    },
+    {
+      "sourceText": "And the answers are…",
+      "targetText": "መልሶቹ እነሆ…"
+    },
+    {
+      "sourceText": "1. Quantization. 2. RAG: Retrieval-Augmented Generation. 3. The local model.",
+      "targetText": "1. Quantization። 2. RAG: Retrieval-Augmented Generation። 3. የLocal ሞዴሉ።"
+    },
+    {
+      "sourceText": "What would you build first?",
+      "targetText": "መጀመሪያ ምን ይገነባሉ?"
+    },
+    {
+      "sourceText": "Offline tutor: answers students’ questions in their own language, with no internet. Clinic assistant: speak notes in the local language and turn them into an organised record. Farmer helper: a photo of a sick plant leads to a likely disease and advice. Voice access: speech-to-text for people who prefer speaking. Shout out your idea!",
+      "targetText": "ከመስመር ውጭ የሚሠራ አስተማሪ፦ ያለ ኢንተርኔት የተማሪዎችን ጥያቄ በራሳቸው ቋንቋ ይመልሳል። የክሊኒክ ረዳት፦ ማስታወሻዎችን በአካባቢው ቋንቋ ተናግረው ወደ ተደራጀ መዝገብ ይቀይሩ። የገበሬ ረዳት፦ የታመመ ተክል ፎቶ የሚታሰበውን በሽታና ምክር ያሳያል። የድምፅ ተደራሽነት፦ መናገርን ለሚመርጡ ሰዎች ድምፅን ወደ ጽሑፍ መቀየር። ሐሳብዎን ያካፍሉ!"
+    },
+    {
+      "sourceText": "4 things to remember",
+      "targetText": "ማስታወስ ያለብዎት 4 ነገሮች"
+    },
+    {
+      "sourceText": "1. Design for no internet; connection is a bonus. 2. Small, quantized models run on phones, laptops and local servers. 3. One interface: swap local and cloud models freely. 4. Localize: multilingual models, local knowledge and native speakers. Questions? Kidus Yohannes · Senior ML Engineer.",
+      "targetText": "1. ኢንተርኔት ሳይኖር እንዲሠራ ይንደፉ፤ ግንኙነት ተጨማሪ ጥቅም ነው። 2. ትንንሽና በQuantization የታመቁ ሞዴሎች በስልክ፣ በላፕቶፕና በLocal አገልጋይ ላይ ይሠራሉ። 3. አንድ በይነገጽ፦ የLocal እና የCloud ሞዴሎችን በቀላሉ ይቀያይሩ። 4. ከአካባቢ ጋር ያስማሙ፦ ብዙ ቋንቋዎች፣ አካባቢያዊ ዕውቀትና ተወላጅ ተናጋሪዎች። ጥያቄዎች? Kidus Yohannes · ከፍተኛ የማሽን ትምህርት መሐንዲስ።"
+    },
+    {
+      "sourceText": "Offline-First & Localized AI",
+      "targetText": "ከመስመር ውጭ የሚሠራና ከአካባቢው ጋር የሚስማማ AI"
+    },
+    {
+      "sourceText": "TRAINING SESSION · AI ENGINEERINGHow to build AI that works anywhere, in any language.No internet. No problem.Kidus Yohannes · Senior ML EngineerOur languages?",
+      "targetText": "የሥልጠና ክፍለ ጊዜ · የAI ምህንድስና። በማንኛውም ቦታና ቋንቋ የሚሠራ AI እንዴት እንገነባለን? ኢንተርኔት የለም? ችግር የለም። Kidus Yohannes · ከፍተኛ የማሽን ትምህርት መሐንዲስ። የእኛ ቋንቋዎችስ?"
+    },
+    {
+      "sourceText": "When the internet says no",
+      "targetText": "ኢንተርኔቱ እምቢ ሲል"
+    },
+    {
+      "sourceText": "Raise your hand if you have ever wanted to use AI, but the internet said no.Too slow. Too expensive. No signal at all.",
+      "targetText": "AI ለመጠቀም ፈልጋችሁ ኢንተርኔቱ ያልፈቀደላችሁ ከሆነ እጃችሁን አንሱ። በጣም ዝግተኛ፣ በጣም ውድ ወይም ጭራሽ ምልክት የሌለው ሊሆን ይችላል።"
+    },
+    {
+      "sourceText": "4 reasons AI must work offline",
+      "targetText": "AI ከመስመር ውጭ መሥራት ያለበት 4 ምክንያቶች"
+    },
+    {
+      "sourceText": "Connectivity: slow, costly or missing internet outside big cities.Privacy: health and student data never has to leave the device.Cost: every cloud AI request costs money and mobile data.Speed: no trip to a far-away server; instant answers.",
+      "targetText": "ግንኙነት፦ ከትልልቅ ከተሞች ውጭ ኢንተርኔት ዝግተኛ፣ ውድ ወይም የማይገኝ ሊሆን ይችላል። ግላዊነት፦ የጤናና የተማሪ መረጃ ከመሣሪያው መውጣት አያስፈልገውም። ወጪ፦ እያንዳንዱ የደመና AI ጥያቄ ገንዘብና የሞባይል ዳታ ያስወጣል። ፍጥነት፦ ወደ ሩቅ አገልጋይ መሄድ ስለማያስፈልግ ምላሽ ወዲያው ይገኛል።"
+    },
+    {
+      "sourceText": "Offline-first = a generator for your app",
+      "targetText": "ከመስመር ውጭ መሥራት ለመተግበሪያዎ እንደ ጀነሬተር ነው"
+    },
+    {
+      "sourceText": "The power cuts. The generator starts. The lights stay on.Offline: everything important still works. Core features work. For AI this means the model runs locally.Online: sync, updates, bigger models. Connection adds bonus features and extras.",
+      "targetText": "ኤሌክትሪክ ይቋረጣል። ጀነሬተሩ ይነሳል። መብራቱ አይጠፋም። ከመስመር ውጭ፦ አስፈላጊው ሁሉ መሥራቱን ይቀጥላል። ዋና ተግባራት ይሠራሉ። ለAI ይህ ሞዴሉ በአካባቢው መሣሪያ ላይ ይሠራል ማለት ነው። መስመር ላይ፦ ማመሳሰል፣ ዝማኔዎችና ትልልቅ ሞዴሎች ይጨመራሉ። ግንኙነት ተጨማሪ አገልግሎቶችን ያስችላል።"
+    },
+    {
+      "sourceText": "Where should the AI run?",
+      "targetText": "AI የት መሥራት አለበት?"
+    },
+    {
+      "sourceText": "A — Cloud: a huge remote server. Most powerful, but needs internet, charges per use, and data leaves the device.B — Local: on the user’s device. Works offline, private and free per use, but models are smaller and limited by the device.C — Hybrid: local first, cloud when online. Best of both, with more to design and test.Our pick for most projects: C, Hybrid, with local as the default.",
+      "targetText": "A — Cloud፦ ከፍተኛ አቅም ያለው ትልቅ የርቀት አገልጋይ ነው። ነገር ግን ኢንተርኔት ይፈልጋል፣ በአጠቃቀም ያስከፍላል፣ መረጃም ከመሣሪያው ይወጣል። B — Local፦ በተጠቃሚው መሣሪያ ላይ ይሠራል። ከመስመር ውጭ ይሠራል፣ ግላዊነትን ይጠብቃል፣ በአጠቃቀም ክፍያ የለውም። ነገር ግን ሞዴሎቹ ያነሱና በመሣሪያው አቅም የተገደቡ ናቸው። C — Hybrid፦ በመጀመሪያ Local፣ ኢንተርኔት ሲኖር Cloud። የሁለቱን ጥቅም ያገናኛል፣ ግን ተጨማሪ ንድፍና ሙከራ ይፈልጋል። ለአብዛኞቹ ፕሮጀክቶች ምርጫችን C፣ Hybrid ነው፤ Local ነባሪ ይሆናል።"
+    },
+    {
+      "sourceText": "Small models, big possibilities",
+      "targetText": "ትንንሽ ሞዴሎች፣ ትልልቅ ዕድሎች"
+    },
+    {
+      "sourceText": "Model size is measured in parameters: the numbers inside a model.Big cloud models: hundreds of billions. Laptop-size models: about 8 billion. Phone-size models: about 1–3 billion.Text and chat: Gemma, Llama, Phi, Qwen. Speech: Whisper for speech-to-text. Translation: NLLB, about 200 languages. Images: small vision models.Always check each model’s licence before building a product on it.",
+      "targetText": "የሞዴል መጠን በውስጡ ባሉ ቁጥሮች፣ ማለትም በመለኪያዎች (parameters) ይለካል። ትልልቅ የደመና ሞዴሎች፦ በመቶዎች የሚቆጠሩ ቢሊዮኖች። የላፕቶፕ ሞዴሎች፦ ወደ 8 ቢሊዮን። የስልክ ሞዴሎች፦ ወደ 1–3 ቢሊዮን። ለጽሑፍና ውይይት፦ Gemma፣ Llama፣ Phi፣ Qwen። ለድምፅ፦ Whisper ድምፅን ወደ ጽሑፍ ይቀይራል። ለትርጉም፦ NLLB፣ ወደ 200 ቋንቋዎች። ለምስሎች፦ ትንንሽ የእይታ ሞዴሎች። ምርት ከመገንባትዎ በፊት የእያንዳንዱን ሞዴል ፈቃድ ያረጋግጡ።"
+    },
+    {
+      "sourceText": "Quantization = compressing a photo",
+      "targetText": "Quantization ፎቶን እንደ ማመቅ ነው"
+    },
+    {
+      "sourceText": "Same picture. Much smaller file. Original full-precision numbers are the 100% baseline.Quantize to 4-bit: look for Q4 or 4-bit labels; up to about 8× smaller.Pick the smallest model that does the job. Distil: a big teacher trains a small student. Focus on one job: focused beats general.",
+      "targetText": "ተመሳሳይ ምስል፣ በጣም ያነሰ ፋይል። የመጀመሪያዎቹ ሙሉ ትክክለኛነት ያላቸው ቁጥሮች የ100% መነሻ ናቸው። ወደ 4-bit ለማመቅ Q4 ወይም 4-bit ምልክቶችን ይፈልጉ፤ እስከ 8× ያህል ሊያንስ ይችላል። ሥራውን የሚሠራውን እጅግ ትንሹን ሞዴል ይምረጡ። Distillation፦ ትልቅ አስተማሪ ትንሽ ተማሪን ያሠለጥናል። በአንድ ተግባር ላይ ያተኩሩ፤ ለአንድ ሥራ የተዘጋጀ ሞዴል ከአጠቃላይ ሞዴል ሊሻል ይችላል።"
+    },
+    {
+      "sourceText": "Pick your stage",
+      "targetText": "የሚሠራበትን መድረክ ይምረጡ"
+    },
+    {
+      "sourceText": "Phone: LiteRT, Core ML, ONNX Runtime, MediaPipe. Great fit for field apps.Laptop: Ollama, llama.cpp, LM Studio. Great fit for staff tools and demos.Browser: WebGPU, Transformers.js, WebLLM. Nothing to install.Local server: one machine on local Wi-Fi can serve a whole school or clinic.Optional live demo: AI running with Wi-Fi off.",
+      "targetText": "ስልክ፦ LiteRT፣ Core ML፣ ONNX Runtime፣ MediaPipe፤ ለመስክ መተግበሪያዎች ተስማሚ ናቸው። ላፕቶፕ፦ Ollama፣ llama.cpp፣ LM Studio፤ ለሠራተኞች መሣሪያዎችና ማሳያዎች ተስማሚ ናቸው። አሳሽ፦ WebGPU፣ Transformers.js፣ WebLLM፤ መጫን አያስፈልግም። የአካባቢ አገልጋይ፦ በአካባቢው Wi-Fi ላይ አንድ ማሽን ሙሉ ትምህርት ቤትን ወይም ክሊኒክን ማገልገል ይችላል። አማራጭ ማሳያ፦ Wi-Fi ተዘግቶ AI ሲሠራ ማየት።"
+    },
+    {
+      "sourceText": "Myth vs fact",
+      "targetText": "የተሳሳተ እምነትና እውነታ"
+    },
+    {
+      "sourceText": "Myth: AI always needs the internet. Fact: small models run fully offline on laptops and phones.Myth: local AI is useless. Fact: for one focused task, a small model is often good enough.Myth: fine-tuning needs millions of examples. Fact: with LoRA, hundreds to a few thousand good examples can help.",
+      "targetText": "የተሳሳተ እምነት፦ AI ሁልጊዜ ኢንተርኔት ይፈልጋል። እውነታ፦ ትንንሽ ሞዴሎች በላፕቶፕና በስልክ ላይ ሙሉ በሙሉ ከመስመር ውጭ ይሠራሉ። የተሳሳተ እምነት፦ Local AI ጥቅም የለውም። እውነታ፦ ለአንድ የተወሰነ ሥራ ትንሽ ሞዴል ብዙ ጊዜ በቂ ነው። የተሳሳተ እምነት፦ fine-tuning ሚሊዮኖች ምሳሌዎችን ይፈልጋል። እውነታ፦ LoRA ከመቶዎች እስከ ጥቂት ሺዎች ጥሩ ምሳሌዎች ሊረዳ ይችላል።"
+    },
+    {
+      "sourceText": "Integrating an AI model in 5 steps",
+      "targetText": "የAI ሞዴልን ለማቀናጀት 5 ደረጃዎች"
+    },
+    {
+      "sourceText": "1. Define the task.2. Pick a model.3. Test with real data.4. Shrink and package.5. One interface.The secret is step 5: your app asks “summarise this” and never cares which model answers. Like a phone charging socket: plug in any charger.",
+      "targetText": "1. ተግባሩን ይወስኑ። 2. ሞዴል ይምረጡ። 3. በእውነተኛ መረጃ ይፈትሹ። 4. መጠኑን ያሳንሱና ያሽጉ። 5. አንድ በይነገጽ ይጠቀሙ። ሚስጥሩ 5ኛው ደረጃ ነው፤ መተግበሪያዎ “ይህን አጠቃልል” ይላል፣ መልስ የሚሰጠው የትኛው ሞዴል እንደሆነ ማወቅ አያስፈልገውም። ልክ እንደ ስልክ ቻርጅ መሰኪያ፣ ማንኛውንም ቻርጅ መሰካት ይቻላል።"
+    },
+    {
+      "sourceText": "One socket, swappable engines",
+      "targetText": "አንድ መሰኪያ፣ የሚቀያየሩ ሞተሮች"
+    },
+    {
+      "sourceText": "Your app connects to an AI layer or router.Online and allowed? Use cloud. Otherwise, use local.The local model is always available; the cloud model is optional when online.Sync queue: save on the device first, upload when the connection returns.",
+      "targetText": "መተግበሪያዎ ከAI ንብርብር ወይም ከመምሪያ (router) ጋር ይገናኛል። መስመር ላይ ነዎት እና ፈቃድ አለ? Cloud ይጠቀሙ። ካልሆነ Local ይጠቀሙ። የLocal ሞዴሉ ሁልጊዜ ይገኛል፤ የCloud ሞዴሉ ኢንተርኔት ሲኖር አማራጭ ነው። የማመሳሰያ ወረፋ፦ በመጀመሪያ በመሣሪያው ያስቀምጡ፣ ግንኙነት ሲመለስ ይላኩ።"
+    },
+    {
+      "sourceText": "Does AI speak our language?",
+      "targetText": "AI ቋንቋችንን ይናገራል?"
+    },
+    {
+      "sourceText": "Most AI learned mostly from English. Amharic, Afaan Oromo and Tigrinya have far less training data.Illustrative tokenization: “hello” can be one piece; “ሰላም” can be split into more pieces. Ge’ez script may require more tokens, making processing slower, less accurate or costlier.More pieces mean more work for the model.Localization is not just translation. “Buying apples at Walmart for $3” in perfect Amharic is still strange. Use local names, places, money and examples.",
+      "targetText": "አብዛኞቹ AI ሞዴሎች በዋናነት ከእንግሊዝኛ ተምረዋል። አማርኛ፣ Afaan Oromo እና ትግርኛ በጣም ያነሰ የሥልጠና መረጃ አላቸው። ለማብራሪያ የቀረበ የtoken ክፍፍል፦ “hello” አንድ ክፍል ሊሆን ይችላል፤ “ሰላም” ግን በብዙ ክፍሎች ሊከፈል ይችላል። የግዕዝ ፊደል ተጨማሪ token ሊፈልግ ይችላል፤ ይህም ሂደቱን ዝግተኛ፣ ያነሰ ትክክለኛ ወይም ውድ ያደርገዋል። ብዙ ክፍሎች ለሞዴሉ ብዙ ሥራ ማለት ነው። ከአካባቢ ጋር ማስማማት ትርጉም ብቻ አይደለም። “Buying apples at Walmart for $3” በፍጹም አማርኛ ቢተረጎምም እንግዳ ሊሆን ይችላል። የአካባቢ ስሞችን፣ ቦታዎችን፣ ገንዘብንና ምሳሌዎችን ይጠቀሙ።"
+    },
+    {
+      "sourceText": "3 ways to make AI local",
+      "targetText": "AIን ከአካባቢ ጋር የማስማማት 3 መንገዶች"
+    },
+    {
+      "sourceText": "Easy — Go multilingual: start from models trained on many languages and test several.Medium — Open-book exam (RAG): the model looks up your documents, such as a curriculum or health guides, before answering. This can work offline.Advanced — Fine-tune (LoRA): teach a small model with local examples using a cheap add-on instead of a full retrain.Golden rule: test with native speakers. No score replaces a real human.",
+      "targetText": "ቀላል — ብዙ ቋንቋዎችን ይደግፉ፦ በብዙ ቋንቋዎች የተሠለጠኑ ሞዴሎችን መነሻ ያድርጉና ብዙዎቹን ይፈትሹ። መካከለኛ — ክፍት መጽሐፍ ፈተና (RAG)፦ ሞዴሉ ከመመለሱ በፊት እንደ ሥርዓተ ትምህርትና የጤና መመሪያ ያሉ የእርስዎን ሰነዶች ይመለከታል። ይህ ከመስመር ውጭ ሊሠራ ይችላል። የላቀ — fine-tune (LoRA)፦ ሙሉ ዳግም ሥልጠና ከማድረግ ይልቅ በአነስተኛ ተጨማሪ ክፍል አካባቢያዊ ምሳሌዎችን ለትንሽ ሞዴል ያስተምሩ። ዋናው መርህ፦ ከቋንቋው ተወላጅ ተናጋሪዎች ጋር ይፈትሹ። ማንኛውም ውጤት እውነተኛ ሰውን አይተካም።"
+    },
+    {
+      "sourceText": "Reality check",
+      "targetText": "እውነታውን ያረጋግጡ"
+    },
+    {
+      "sourceText": "Device limits: test on the cheapest phone your users own, not yours.Quality: keep a test set of real local examples; native speakers review.Model updates: download big models on Wi-Fi only and version every model.Licences and safety: check licences and tell users AI can be wrong.",
+      "targetText": "የመሣሪያ ገደብ፦ በእርስዎ ስልክ ሳይሆን ተጠቃሚዎችዎ ባላቸው እጅግ ርካሹ ስልክ ላይ ይፈትሹ። ጥራት፦ የእውነተኛ አካባቢያዊ ምሳሌዎችን የሙከራ ስብስብ ያቆዩ፤ የቋንቋው ተወላጅ ተናጋሪዎች ይገምግሙት። የሞዴል ዝማኔ፦ ትልልቅ ሞዴሎችን በWi-Fi ብቻ ያውርዱ፣ ለእያንዳንዱም ስሪት ይስጡ። ፈቃድና ደህንነት፦ ፈቃዶችን ያረጋግጡ፣ AI ሊሳሳት እንደሚችልም ያሳውቁ።"
+    },
+    {
+      "sourceText": "Quiz time!",
+      "targetText": "የፈተና ጊዜ!"
+    },
+    {
+      "sourceText": "1. What makes a model up to about 8× smaller, like compressing a photo?2. What is the “open-book exam” technique called?3. In a hybrid app, which model is the default?",
+      "targetText": "1. ፎቶን እንደ ማመቅ የሞዴልን መጠን እስከ 8× ያህል የሚቀንሰው ምንድን ነው? 2. “ክፍት መጽሐፍ ፈተና” የሚለው ዘዴ ምን ይባላል? 3. በHybrid መተግበሪያ ውስጥ ነባሪው ሞዴል የትኛው ነው?"
+    },
+    {
+      "sourceText": "And the answers are…",
+      "targetText": "መልሶቹ እነሆ…"
+    },
+    {
+      "sourceText": "Reveal the quiz answers1. Quantization.2. RAG: Retrieval-Augmented Generation.3. The local model.",
+      "targetText": "1. Quantization። 2. RAG: Retrieval-Augmented Generation። 3. የLocal ሞዴሉ።"
+    },
+    {
+      "sourceText": "What would you build first?",
+      "targetText": "መጀመሪያ ምን ይገነባሉ?"
+    },
+    {
+      "sourceText": "Offline tutor: answers students’ questions in their own language, with no internet.Clinic assistant: speak notes in the local language and turn them into an organised record.Farmer helper: a photo of a sick plant leads to a likely disease and advice.Voice access: speech-to-text for people who prefer speaking.Shout out your idea!",
+      "targetText": "ከመስመር ውጭ የሚሠራ አስተማሪ፦ ያለ ኢንተርኔት የተማሪዎችን ጥያቄ በራሳቸው ቋንቋ ይመልሳል። የክሊኒክ ረዳት፦ ማስታወሻዎችን በአካባቢው ቋንቋ ተናግረው ወደ ተደራጀ መዝገብ ይቀይሩ። የገበሬ ረዳት፦ የታመመ ተክል ፎቶ የሚታሰበውን በሽታና ምክር ያሳያል። የድምፅ ተደራሽነት፦ መናገርን ለሚመርጡ ሰዎች ድምፅን ወደ ጽሑፍ መቀየር። ሐሳብዎን ያካፍሉ!"
+    },
+    {
+      "sourceText": "4 things to remember",
+      "targetText": "ማስታወስ ያለብዎት 4 ነገሮች"
+    },
+    {
+      "sourceText": "1. Design for no internet; connection is a bonus.2. Small, quantized models run on phones, laptops and local servers.3. One interface: swap local and cloud models freely.4. Localize: multilingual models, local knowledge and native speakers.Questions? Kidus Yohannes · Senior ML Engineer.",
+      "targetText": "1. ኢንተርኔት ሳይኖር እንዲሠራ ይንደፉ፤ ግንኙነት ተጨማሪ ጥቅም ነው። 2. ትንንሽና በQuantization የታመቁ ሞዴሎች በስልክ፣ በላፕቶፕና በLocal አገልጋይ ላይ ይሠራሉ። 3. አንድ በይነገጽ፦ የLocal እና የCloud ሞዴሎችን በቀላሉ ይቀያይሩ። 4. ከአካባቢ ጋር ያስማሙ፦ ብዙ ቋንቋዎች፣ አካባቢያዊ ዕውቀትና ተወላጅ ተናጋሪዎች። ጥያቄዎች? Kidus Yohannes · ከፍተኛ የማሽን ትምህርት መሐንዲስ።"
+    },
+    {
+      "sourceText": "Programming for Beginners",
+      "targetText": "ለጀማሪዎች ፕሮግራሚንግ"
+    },
+    {
+      "sourceText": "Watch the video selected by your learning team, prepare its English transcript, and ask MELA to explain the lesson. The transcript is AI-generated and should be reviewed. No lesson contents are assumed before the video is processed.\nOpen the selected video on YouTube",
+      "targetText": "የትምህርት ቡድንዎ የመረጠውን ቪዲዮ ይመልከቱ፣ የእንግሊዝኛ የድምፅ ጽሑፉን ያዘጋጁና MELAን ትምህርቱን እንዲያብራራ ይጠይቁ። ጽሑፉ በAI የተዘጋጀ ስለሆነ መገምገም አለበት። ቪዲዮው ከመሠራቱ በፊት የትምህርቱ ይዘት አይገመትም።\nየተመረጠውን ቪዲዮ በYouTube ይክፈቱ።"
+    },
+    {
+      "sourceText": "A live conversation",
+      "targetText": "ቀጥታ ውይይት"
+    },
+    {
+      "sourceText": "The demo sends live input into Gemini and receives a response during the interaction. Follow the direction from input to response.",
+      "targetText": "ማሳያው ቀጥታ ግቤትን ወደ Gemini ይልካል፣ በውይይቱም ጊዜ ምላሽ ያገኛል። ከግቤት ወደ ምላሽ የሚሄደውን አቅጣጫ ይከተሉ።"
+    },
+    {
+      "sourceText": "Live input",
+      "targetText": "ቀጥታ ግቤት"
+    },
+    {
+      "sourceText": "Gemini",
+      "targetText": "Gemini"
+    },
+    {
+      "sourceText": "Live response",
+      "targetText": "ቀጥታ ምላሽ"
+    },
+    {
+      "sourceText": "The shared tab becomes input",
+      "targetText": "የተጋራው ትር ግቤት ይሆናል"
+    },
+    {
+      "sourceText": "The learner shares a tab. The model describes visible content in that tab. Pointing links the visible document to the response.",
+      "targetText": "ተማሪው አንድ የአሳሽ ትር ያጋራል። ሞዴሉ በትሩ የሚታየውን ይዘት ይገልጻል። ማመልከት የሚታየውን ሰነድ ከምላሹ ጋር ያገናኛል።"
+    },
+    {
+      "sourceText": "Shared tab",
+      "targetText": "የተጋራ ትር"
+    },
+    {
+      "sourceText": "Visible document",
+      "targetText": "የሚታይ ሰነድ"
+    },
+    {
+      "sourceText": "Model response",
+      "targetText": "የሞዴሉ ምላሽ"
+    },
+    {
+      "sourceText": "Focus on selected text",
+      "targetText": "በተመረጠው ጽሑፍ ላይ ማተኮር"
+    },
+    {
+      "sourceText": "The learner asks the model to read highlighted text. The selection narrows what the model should pay attention to.",
+      "targetText": "ተማሪው ያደመቀውን ጽሑፍ ሞዴሉ እንዲያነብ ይጠይቃል። ምርጫው ሞዴሉ ትኩረት የሚሰጠውን ክፍል ይወስናል።"
+    },
+    {
+      "sourceText": "Highlight text",
+      "targetText": "ጽሑፍን ምረጥ"
+    },
+    {
+      "sourceText": "Ask a question",
+      "targetText": "ጥያቄ ጠይቅ"
+    },
+    {
+      "sourceText": "Read the selection",
+      "targetText": "የተመረጠውን አንብብ"
+    },
+    {
+      "sourceText": "Different tools, different jobs",
+      "targetText": "የተለያዩ መሣሪያዎች፣ የተለያዩ ተግባራት"
+    },
+    {
+      "sourceText": "The highlighted description names search, code execution and function calling. This part reads those capabilities; it does not demonstrate executing code.",
+      "targetText": "የተመረጠው ገለጻ ፍለጋን፣ ኮድ ማስኬድንና function callingን ይጠቅሳል። ይህ ክፍል እነዚህን ችሎታዎች ያነባል እንጂ ኮድ ሲኬድ አያሳይም።"
+    },
+    {
+      "sourceText": "Search",
+      "targetText": "ፍለጋ"
+    },
+    {
+      "sourceText": "Code execution",
+      "targetText": "ኮድ ማስኬድ"
+    },
+    {
+      "sourceText": "Function calls",
+      "targetText": "ፋንክሽን መጥራት"
+    },
+    {
+      "sourceText": "More than one kind of input",
+      "targetText": "ከአንድ በላይ የግቤት ዓይነት"
+    },
+    {
+      "sourceText": "Multimodal means working with different input types. The two hands present text on one side and images or audio on the other; the diagram brings them together.",
+      "targetText": "Multimodal ማለት ከተለያዩ የግቤት ዓይነቶች ጋር መሥራት ማለት ነው። ሁለቱ እጆች በአንድ ወገን ጽሑፍን፣ በሌላው ደግሞ ምስልን ወይም ድምፅን ይወክላሉ፤ ሥዕሉ አንድ ላይ ያገናኛቸዋል።"
+    },
+    {
+      "sourceText": "Text",
+      "targetText": "ጽሑፍ"
+    },
+    {
+      "sourceText": "Images / audio",
+      "targetText": "ምስል / ድምፅ"
+    },
+    {
+      "sourceText": "Combined understanding",
+      "targetText": "የተቀናጀ ግንዛቤ"
+    },
+    {
+      "sourceText": "An interruption changes the turn",
+      "targetText": "ማቋረጥ የውይይቱን ተራ ይቀይራል"
+    },
+    {
+      "sourceText": "The model begins a story, then the learner interrupts. The current reply gives way to the learner's new turn. Watch the transition, not just the moving hands.",
+      "targetText": "ሞዴሉ ታሪክ መናገር ይጀምራል፣ ከዚያም ተማሪው ያቋርጠዋል። አሁን ያለው ምላሽ ለተማሪው አዲስ ተራ ቦታ ይለቃል። የሚንቀሳቀሱትን እጆች ብቻ ሳይሆን ሽግግሩን ይመልከቱ።"
+    },
+    {
+      "sourceText": "Model speaks",
+      "targetText": "ሞዴሉ ይናገራል"
+    },
+    {
+      "sourceText": "Learner interrupts",
+      "targetText": "ተማሪው ያቋርጣል"
+    },
+    {
+      "sourceText": "Reply changes",
+      "targetText": "ምላሹ ይቀየራል"
+    },
+    {
+      "sourceText": "Earlier context helps a later answer",
+      "targetText": "የቀድሞ አውድ ለቀጣይ መልስ ይረዳል"
+    },
+    {
+      "sourceText": "The learner asks about previous parts of the conversation. The model refers back to earlier topics. This illustrates context within the demonstrated conversation, not unlimited permanent memory.",
+      "targetText": "ተማሪው ስለ ቀደሙ የውይይቱ ክፍሎች ይጠይቃል። ሞዴሉ ቀደም ብለው የተነሱ ርዕሶችን ይመለከታል። ይህ በማሳያው ውይይት ውስጥ ያለ አውድን ያሳያል እንጂ ገደብ የሌለው ቋሚ ማስታወስን አያሳይም።"
+    },
+    {
+      "sourceText": "Earlier exchange",
+      "targetText": "ያለፈ ውይይት"
+    },
+    {
+      "sourceText": "Conversation context",
+      "targetText": "የውይይት አውድ"
+    },
+    {
+      "sourceText": "Later question",
+      "targetText": "ቀጣይ ጥያቄ"
+    },
+    {
+      "sourceText": "Review the main ideas",
+      "targetText": "ዋና ሐሳቦችን ይገምግሙ"
+    },
+    {
+      "sourceText": "The demo closes. Replay a section to compare shared input, interruptions and conversation context. These three ideas are the focus of the visual illustrations.",
+      "targetText": "ማሳያው ይጠናቀቃል። የተጋራ ግቤትን፣ ማቋረጥንና የውይይት አውድን ለማነጻጸር አንድ ክፍል ደግመው ይመልከቱ። እነዚህ ሦስት ሐሳቦች የሥዕላዊ ማብራሪያው ዋና ትኩረት ናቸው።"
+    },
+    {
+      "sourceText": "Shared input",
+      "targetText": "የተጋራ ግቤት"
+    },
+    {
+      "sourceText": "Interruptions",
+      "targetText": "ማቋረጥ"
+    },
+    {
+      "sourceText": "Conversation context",
+      "targetText": "የውይይት አውድ"
+    }
+  ],
+  "ui": {
+    "Ask MELA": "መላን ይጠይቁ",
+    "Your learning companion": "የትምህርት አጋርዎ",
+    "What would you like to understand?": "ምን ማወቅ ይፈልጋሉ?",
+    "Send question": "ጥያቄ ይላኩ",
+    "Close chat": "ውይይቱን ዝጋ",
+    "Hi, I’m Mela. Ask about your current lesson — no question is too small.": "ሰላም፣ እኔ መላ ነኝ። ስለ ትምህርትዎ ይጠይቁኝ።",
+    "Talk to a person": "የሰው እርዳታ",
+    "Listen": "ያዳምጡ",
+    "Stop audio": "ድምፅ ያቁሙ",
+    "Use microphone": "ማይክሮፎን ይጠቀሙ",
+    "Simplify": "በቀላሉ አብራራ",
+    "Offline · searching saved lessons": "ከመስመር ውጭ · የተቀመጡ ትምህርቶች",
+    "Ready to help": "ለመርዳት ዝግጁ",
+    "Finding a source…": "ምንጭ በመፈለግ ላይ…",
+    "General learning support": "አጠቃላይ የትምህርት ድጋፍ",
+    "Use Gemini / cloud AI (share this question and relevant lesson text)": "ጥያቄዎን እና ተዛማጅ የትምህርት ክፍሎችን ለደመና AI ለመላክ ይፈቅዱ",
+    "Choose what to share. A tutor can reply here after you create a ticket.": "ለአስተማሪው ምን ማጋራት እንደሚፈልጉ ይምረጡ። ምላሹን እዚህ ያገኛሉ።",
+    "Share this conversation": "ይህን ውይይት አጋራ",
+    "Share current page context": "የአሁኑን ገጽ መረጃ አጋራ",
+    "Create support ticket": "የእርዳታ ጥያቄ ይፍጠሩ",
+    "Cancel": "ይቅር",
+    "Your request is queued. Keep this chat open to receive replies.": "ጥያቄዎ ተመዝግቧል። ምላሹን ለመቀበል ውይይቱን ክፍት ያድርጉ።",
+    "No voice for this language is available on this device. Text is always available.": "በዚህ መሣሪያ ለዚህ ቋንቋ ድምፅ አልተገኘም። ጽሑፍ መጠቀም ይችላሉ።",
+    "Your browser may send audio to its speech service. Start microphone?": "አሳሽዎ ድምፅዎን ወደ ድምፅ አገልግሎት ሊልክ ይችላል። ይጀምሩ?",
+    "Speech recognition is unavailable. Please type your question.": "የድምፅ ግቤት አይገኝም። እባክዎ ጥያቄዎን ይጻፉ።",
+    "The service is unavailable. Try again or use saved lesson search.": "አገልግሎቱ አይገኝም። እንደገና ይሞክሩ።",
+    "I agree to share the selected information with a tutor": "የተመረጠውን መረጃ ለአስተማሪ ለማጋራት እስማማለሁ",
+    "Lesson changed. Your next question will use the new lesson.": "ትምህርቱ ተቀይሯል። ቀጣዩ ጥያቄ አዲሱን ትምህርት ይጠቀማል።",
+    "Reading mode": "የንባብ ሁነታ",
+    "Reading mode on. Text descriptions are expanded. No audio plays automatically.": "የንባብ ሁነታ በርቷል። የጽሑፍ ማብራሪያዎች ተከፍተዋል።",
+    "Reading mode off.": "የንባብ ሁነታ ጠፍቷል።",
+    "Learning options": "የትምህርት አማራጮች",
+    "Attach screenshot (optional, max 2 MB)": "ምስል አያይዝ (እስከ 2 MB)",
+    "Share screen with tutor": "ማያ ገጹን ለአስተማሪ አጋራ",
+    "Stop sharing": "ማጋራት አቁም",
+    "Screen sharing is ready. Waiting for a tutor to connect.": "ማጋራት ዝግጁ ነው። አስተማሪውን በመጠበቅ ላይ።",
+    "Screen sharing is unavailable here. Share page context or attach a screenshot instead.": "ማያ ገጽ ማጋራት አይገኝም። የገጹን መረጃ ወይም ምስል ያጋሩ።",
+    "Page context": "የገጽ መረጃ",
+    "Question context": "የጥያቄው አውድ",
+    "Explanation format": "የማብራሪያ ቅርጽ",
+    "Lesson": "ትምህርት",
+    "Whole video": "ሙሉ ቪዲዮ",
+    "This moment": "ይህ ቅጽበት",
+    "Lesson context": "የትምህርቱ አውድ",
+    "Explain clearly": "በግልጽ አብራራ",
+    "Example": "ምሳሌ",
+    "Step by step": "ደረጃ በደረጃ",
+    "Diagram": "ሥዕላዊ ማብራሪያ",
+    "Include on-screen visuals (Gemini)": "በማያው ያለውን ምስል ለGemini አጋራ",
+    "Saved explanations": "የተቀመጡ ማብራሪያዎች",
+    "Close saved explanations": "የተቀመጡ ማብራሪያዎችን ዝጋ",
+    "Saved on this device": "በዚህ መሣሪያ የተቀመጠ",
+    "Save an answer to read it here offline.": "ከመስመር ውጭ ለማንበብ መልሱን ያስቀምጡ።",
+    "Remove saved explanations": "የተቀመጡ ማብራሪያዎችን አስወግድ",
+    "Save explanation offline": "ማብራሪያውን ከመስመር ውጭ አስቀምጥ",
+    "Saved offline": "ከመስመር ውጭ ተቀምጧል",
+    "Diagram as text": "ሥዕሉ በጽሑፍ",
+    "Expand diagram": "ሥዕሉን አስፋ",
+    "Close diagram": "ሥዕሉን ዝጋ",
+    "Illustrative example": "ለማብራሪያ የቀረበ ምሳሌ",
+    "Read lesson in Amharic": "ትምህርቱን በአማርኛ ያንብቡ",
+    "Course video & transcript": "የትምህርት ቪዲዮና የድምፅ ጽሑፍ",
+    "Public YouTube course video URL": "ይፋዊ የYouTube ትምህርት ቪዲዮ አድራሻ",
+    "Load YouTube video": "የYouTube ቪዲዮን ጫን",
+    "Watch. Read. Ask about it.": "ይመልከቱ። ያንብቡ። ይጠይቁ።",
+    "Load this example or paste a public YouTube lesson. YouTube connects only when you load the video.": "ይህን ምሳሌ ይጫኑ ወይም ይፋዊ የYouTube ትምህርት አድራሻ ያስገቡ። ቪዲዮውን ሲጫኑ ብቻ YouTube ይገናኛል።",
+    "Show learning panel": "የመማሪያ ፓነሉን አሳይ",
+    "Hide learning panel": "የመማሪያ ፓነሉን ደብቅ",
+    "Explain this moment": "ይህን ቅጽበት አብራራ",
+    "Generate AI captions": "በAI የድምፅ ጽሑፍ አዘጋጅ",
+    "Share this public video with Gemini for an English transcript": "የእንግሊዝኛ ጽሑፍ ለማዘጋጀት ይህን ይፋዊ ቪዲዮ ለGemini አጋራ",
+    "Play lesson": "ትምህርቱን አጫውት",
+    "Pause lesson": "ትምህርቱን ለአፍታ አቁም",
+    "Playback speed": "የቪዲዮ ፍጥነት",
+    "CAPTIONS + VISUAL SUPPORT": "የድምፅ ጽሑፍና ሥዕላዊ ድጋፍ",
+    "Captions and visual support": "የድምፅ ጽሑፍና ሥዕላዊ ድጋፍ",
+    "Captions and visual support are ready.": "የድምፅ ጽሑፍና ሥዕላዊ ድጋፍ ዝግጁ ናቸው።",
+    "Close enlarged panel": "የተስፋፋውን ፓነል ዝጋ",
+    "Enlarge panel": "ፓነሉን አስፋ",
+    "Retry signing": "የተረጎሚ ቪዲዮን ደግመህ ሞክር",
+    "Learning panel view": "የመማሪያ ፓነል እይታ",
+    "View": "እይታ",
+    "Captions + teacher": "ጽሑፍና ሥዕላዊ አስተማሪ",
+    "Captions only": "ጽሑፍ ብቻ",
+    "Teacher only": "ሥዕላዊ አስተማሪ ብቻ",
+    "Captions + interpreter": "ጽሑፍና ተረጎሚ",
+    "Interpreter only": "ተረጎሚ ብቻ",
+    "Visual teacher": "ሥዕላዊ አስተማሪ",
+    "Animation style": "የእንቅስቃሴ ዓይነት",
+    "English fingerspelling (preview)": "የእንግሊዝኛ ፊደል በእጅ (ሙከራ)",
+    "Illustrative gestures": "ለማብራሪያ የሚደረጉ እንቅስቃሴዎች",
+    "Pause animation": "እንቅስቃሴውን አቁም",
+    "Enable animation": "እንቅስቃሴውን አብራ",
+    "Paused with video": "ከቪዲዮው ጋር ቆሟል",
+    "Following video": "ቪዲዮውን እየተከተለ ነው",
+    "Animation paused": "እንቅስቃሴው ቆሟል",
+    "reduced motion or your preference": "የተቀነሰ እንቅስቃሴ ወይም የእርስዎ ምርጫ",
+    "Waiting for captions": "የድምፅ ጽሑፍ እየጠበቀ ነው",
+    "Waiting for video controls": "የቪዲዮ መቆጣጠሪያዎችን እየጠበቀ ነው",
+    "Load the video to begin": "ለመጀመር ቪዲዮውን ይጫኑ",
+    "Caption-timed visual gestures · not sign-language translation.": "ከጽሑፍ ጊዜ ጋር የተቀናጁ ሥዕላዊ እንቅስቃሴዎች፤ የምልክት ቋንቋ ትርጉም አይደሉም።",
+    "Teacher graphics": "የሥዕላዊ አስተማሪው እይታ",
+    "Adaptive 3D": "ከመሣሪያው ጋር የሚስማማ 3D",
+    "2D illustration": "ባለሁለት ልኬት ሥዕል",
+    "Try 3D": "3D ሞክር",
+    "Front": "የፊት እይታ",
+    "Hands focus": "እጆችን አቅርብ",
+    "Reset view": "እይታውን መልስ",
+    "3D visual teacher ready.": "የ3D ሥዕላዊ አስተማሪ ዝግጁ ነው።",
+    "Loading the 3D teacher…": "የ3D ሥዕላዊ አስተማሪው እየተጫነ ነው…",
+    "3D loads when this panel opens.": "ይህ ፓነል ሲከፈት 3D ይጫናል።",
+    "2D illustration selected.": "የ2D ሥዕል ተመርጧል።",
+    "COURSE CAPTIONS": "የትምህርቱ ጽሑፍ",
+    "AI CAPTIONS": "በAI የተዘጋጀ ጽሑፍ",
+    "English source captions.": "የመጀመሪያው የእንግሊዝኛ ጽሑፍ።",
+    "Generated from the video's audio. Review for accuracy.": "ከቪዲዮው ድምፅ የተዘጋጀ ነው። ትክክለኛነቱን ይገምግሙ።",
+    "No speech at this moment.": "በዚህ ቅጽበት ንግግር የለም።",
+    "Generate captions to follow this lesson.": "ትምህርቱን ለመከታተል የድምፅ ጽሑፍ ያዘጋጁ።",
+    "English transcript": "የእንግሊዝኛ የድምፅ ጽሑፍ",
+    "Download transcript": "የድምፅ ጽሑፉን አውርድ",
+    "Replay demonstration": "ማሳያውን ድገም",
+    "Resume lesson": "ትምህርቱን ቀጥል",
+    "Demonstration speed": "የማሳያው ፍጥነት",
+    "Video paused. Replay the demonstration to explore this concept.": "ቪዲዮው ቆሟል። ይህን ጽንሰ ሐሳብ ለማየት ማሳያውን ይድገሙ።",
+    "Demonstration playing · video paused.": "ማሳያው እየተጫወተ ነው፤ ቪዲዮው ቆሟል።",
+    "Demonstration finished. The video remains paused.": "ማሳያው ተጠናቋል። ቪዲዮው አሁንም ቆሟል።",
+    "Source": "ምንጭ",
+    "View source": "ምንጩን ክፈት",
+    "From the current caption": "ከአሁኑ ጽሑፍ",
+    "English source captions · review against the audio": "የእንግሊዝኛ ምንጭ ጽሑፍ፤ ከድምፁ ጋር ያረጋግጡ",
+    "AI-generated from this video’s audio · review before relying on it": "ከዚህ ቪዲዮ ድምፅ በAI የተዘጋጀ፤ ከመጠቀምዎ በፊት ይገምግሙ",
+    "0.5× demo": "0.5× ማሳያ",
+    "0.75× demo": "0.75× ማሳያ",
+    "1× demo": "1× ማሳያ",
+    "Show English original": "የእንግሊዝኛ ምንጩን አሳይ",
+    "Prepared translation · fluent review pending.": "የተዘጋጀ ትርጉም፤ የቋንቋ ባለሙያ ግምገማ ይጠበቃል።",
+    "Amharic translation · fluent review pending.": "የአማርኛ ትርጉም፤ የቋንቋ ባለሙያ ግምገማ ይጠበቃል።",
+    "AMHARIC TRANSLATION": "የአማርኛ ትርጉም",
+    "Choose what to share with a tutor. Replies appear here.": "ለአስተማሪው ምን ማጋራት እንደሚፈልጉ ይምረጡ። ምላሹን እዚህ ያገኛሉ።",
+    "Request queued. Keep this chat open for replies.": "ጥያቄዎ ተመዝግቧል። ምላሹን ለመቀበል ውይይቱን ክፍት ያድርጉ።",
+    "No voice for this language is available. Please read the text.": "በዚህ መሣሪያ ለዚህ ቋንቋ ድምፅ አልተገኘም። ጽሑፍ መጠቀም ይችላሉ።",
+    "Service unavailable. Retry or search saved lessons.": "አገልግሎቱ አይገኝም። እንደገና ይሞክሩ።",
+    "Lesson changed. Your next question uses this lesson.": "ትምህርቱ ተቀይሯል። ቀጣዩ ጥያቄ አዲሱን ትምህርት ይጠቀማል።",
+    "Waiting for a tutor to join screen sharing.": "ማጋራት ዝግጁ ነው። አስተማሪውን በመጠበቅ ላይ።",
+    "Screen sharing is unavailable. Share context or a screenshot.": "ማያ ገጽ ማጋራት አይገኝም። የገጹን መረጃ ወይም ምስል ያጋሩ።"
+  },
+  "glossary": {
+    "programming": [
+      "ፕሮግራሚንግ",
+      "ፕሮግራም"
+    ],
+    "model": [
+      "ሞዴል",
+      "ሞዴሎች"
+    ],
+    "quantization": [
+      "ኳንታይዜሽን",
+      "ማመቅ",
+      "ታመቁ"
+    ],
+    "rag": [
+      "ሰነድ",
+      "ሰነዶች",
+      "ምንጭ",
+      "ምንጮች",
+      "ሪትሪቫል"
+    ],
+    "multimodal": [
+      "መልቲሞዳል",
+      "ብዙአይነት",
+      "የግቤት",
+      "ዓይነት"
+    ],
+    "memory": [
+      "ማስታወስ",
+      "ማህደረ",
+      "አውድ",
+      "ያለፈው"
+    ],
+    "interruptions": [
+      "ማቋረጥ",
+      "መቋረጥ",
+      "ጣልቃ"
+    ],
+    "offline": [
+      "ከመስመር",
+      "ውጭ",
+      "ኢንተርኔት"
+    ],
+    "cloud": [
+      "ደመና"
+    ],
+    "local": [
+      "አካባቢ",
+      "መሣሪያ"
+    ],
+    "privacy": [
+      "ግላዊነት"
+    ],
+    "language": [
+      "ቋንቋ",
+      "አማርኛ",
+      "እንግሊዝኛ"
+    ],
+    "screen": [
+      "ማያ",
+      "ስክሪን"
+    ],
+    "text": [
+      "ጽሑፍ"
+    ],
+    "audio": [
+      "ድምፅ"
+    ],
+    "image": [
+      "ምስል"
+    ],
+    "code": [
+      "ኮድ"
+    ],
+    "function": [
+      "ፋንክሽን"
+    ],
+    "search": [
+      "ፍለጋ"
+    ],
+    "translation": [
+      "ትርጉም"
+    ],
+    "hybrid": [
+      "ድብልቅ",
+      "ሃይብሪድ"
+    ]
+  }
+}

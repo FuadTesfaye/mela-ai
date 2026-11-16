@@ -22,6 +22,10 @@ const config: NextConfig = {
         "/content.json",
         "/openapi.yaml",
         "/mela-sdk.js",
+        "/locale.js",
+        "/spelling.js",
+        "/i18n/:path*",
+        "/fonts/:path*",
         "/sdk/:path*",
         "/transcripts/:path*",
       ].map((source) => ({

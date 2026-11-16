@@ -30,7 +30,7 @@ function mount() {
   const strip = document.createElement("div");
   strip.className = "mela-support-strip";
   strip.innerHTML =
-    '<span class="mela-support-symbol" aria-hidden="true">✦</span><div><strong>MELA learning support</strong><span>Ask about this page · English course support · Human help</span></div><button type="button">Ask MELA ↗</button>';
+    '<span class="mela-support-symbol" aria-hidden="true">✦</span><div><strong>MELA learning support</strong><span>English / አማርኛ · Lesson-aware answers · Human help</span></div><button type="button">Ask MELA ↗</button>';
   strip.querySelector("button")!.onclick = () =>
     window.dispatchEvent(new CustomEvent("mela:open"));
   const body =
@@ -154,7 +154,6 @@ function mount() {
   programming.append(programmingLink);
   document.querySelector("#sidebar ul")?.append(programming);
   const assistant = document.createElement("db-assistant");
-  assistant.setAttribute("lang", "en");
   assistant.setAttribute("api", "/api");
   assistant.setAttribute("content", "/content.json");
   assistant.setAttribute("mode", "docked");

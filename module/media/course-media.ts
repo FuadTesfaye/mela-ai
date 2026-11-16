@@ -1,3 +1,8 @@
+import {
+  initialLanguage,
+  setLanguage,
+  enhanceLanguage,
+} from "../localization/language";
 import { youtubeId, youtubeUrl } from "../../lib/media/youtube";
 import { youtubeAPI, type YouTubePlayer } from "./youtube-player";
 import { transcriptRevision } from "../../lib/media/video-context";
@@ -30,8 +35,8 @@ class CourseMedia extends HTMLElement {
   private controller?: AbortController;
   private sign?: Sign;
   private signVideo?: HTMLVideoElement;
-  private configurationVersion = 0;
-  private configurationController?: AbortController;
+  private _melaConfigurationVersion = 0;
+  private _melaConfigurationController?: AbortController;
   private signingDialog?: HTMLDialogElement;
   private closeSigningDialog?: (focus?: boolean) => void;
   private signingReady = false;
@@ -45,10 +50,11 @@ class CourseMedia extends HTMLElement {
   private frame?: HTMLIFrameElement;
   private status!: HTMLParagraphElement;
   private transcript?: Transcript;
+  private displayCues?: Transcript["cues"];
   private requestVersion = 0;
   private learningPreview?: ReturnType<typeof mountLearningPreview>;
   private transcribing = false;
-  private transcriptionError = "";
+  private _melaTranscriptionError = "";
   connectedCallback() {
     if (this.root) return;
     const source = this.getAttribute("video-src");
@@ -59,25 +65,42 @@ class CourseMedia extends HTMLElement {
     }
     this.root = this.attachShadow({ mode: "open" });
     this.render();
+    this.setAttribute("lang", initialLanguage(this));
+    if (this.getAttribute("lang") === "am")
+      void enhanceLanguage(this).catch(() => {});
     void this.configuration();
   }
   disconnectedCallback() {
     this.controller?.abort();
-    this.configurationVersion++;
-    this.configurationController?.abort();
+    this._melaConfigurationVersion++;
+    this._melaConfigurationController?.abort();
     this.clearSigning();
     clearInterval(this.timer);
     this.player?.destroy();
     this.signVideo?.pause();
   }
   static get observedAttributes() {
-    return ["video-src", "renderer"];
+    return ["video-src", "renderer", "lang"];
   }
   attributeChangedCallback(
     name: string,
     oldValue: string | null,
     value: string | null,
   ) {
+    if (name === "lang" && this.root && value !== oldValue) {
+      this.displayCues = undefined;
+      const select =
+        this.root.querySelector<HTMLSelectElement>(".course-language");
+      if (select) select.value = value === "am" ? "am" : "en";
+      if (this.transcript) this.drawTranscript(this.transcript);
+      this._melaUpdateLearningPreview();
+      if (value === "am")
+        void enhanceLanguage(this).catch(() => {
+          this.status.textContent =
+            "Amharic unavailable. English remains available.";
+        });
+      return;
+    }
     if (name === "renderer" && this.root && value !== oldValue) {
       this.learningPreview?.setRenderer(
         value === "2d" || value === "3d" ? value : "auto",
@@ -98,7 +121,7 @@ class CourseMedia extends HTMLElement {
   }
   private render() {
     const style = make("style");
-    style.textContent = `:host{display:block;font:14px/1.6 Arial,sans-serif;color:#17394e}*{box-sizing:border-box}[hidden]{display:none!important}button,input{font:inherit}button{cursor:pointer;padding:10px 13px;border:1px solid #b5cbd8;border-radius:5px;background:#fff;color:#16445e}button:hover{background:#edf8fc}button:disabled{opacity:.6;cursor:wait}button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #cc940c;outline-offset:3px}.card{border:1px solid #cfdee7;border-radius:9px;overflow:hidden;background:white}.bar{display:flex;align-items:center;gap:12px;background:#eef7fb;padding:16px 18px}.bar strong{font-size:16px}.badge{font-size:11px;margin-left:auto;background:white;border:1px solid #c7dce7;border-radius:20px;padding:4px 9px}.body{padding:18px;container-type:inline-size}.url-form{display:flex;gap:8px;margin-bottom:12px}.url-form input{padding:10px;border:1px solid #adc2cf;border-radius:5px;flex:1;min-width:0}.stage{width:100%;min-width:0;background:#062c40;aspect-ratio:16/9;min-height:220px;position:relative;display:grid;place-items:center;overflow:hidden;border-radius:6px}.stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0}.placeholder{text-align:center;color:#fff;padding:20px}.placeholder strong{display:block;font-size:19px}.placeholder p{font-size:13px;color:#cfdfeb;max-width:330px}.player-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:start}.player-layout.with-signing{grid-template-columns:minmax(0,1fr) 300px}.sign-box{width:300px;background:#f7fafc;border:1px solid #b8d2df;border-radius:7px;overflow:hidden;color:#355a70;animation:sign-open 150ms ease-out}.sign-label{font-size:11px;font-weight:bold;letter-spacing:.5px;background:#003c54;color:white;padding:8px}.sign-placeholder,.sign-status{margin:0;padding:10px;font-size:12px;line-height:1.5}.sign-viewport{aspect-ratio:1;background:#182e3e;display:grid;place-items:center}.sign-viewport video{width:100%;height:100%;min-height:0;object-fit:contain;aspect-ratio:1}.sign-action,.expand-sign{margin:0 8px 9px;font-size:12px;padding:7px}.sign-dialog{width:min(860px,95vw);max-height:90vh;overflow:auto;padding:20px;border:2px solid #006b89;border-radius:8px;color:#17394e}.sign-dialog::backdrop{background:#00192799}.sign-dialog h3{margin:0 0 12px;font-size:17px}.sign-dialog .sign-viewport{margin-top:12px;aspect-ratio:auto}.sign-dialog video{max-height:65vh;aspect-ratio:auto}.sign-dialog .sign-status{font-size:14px}.preview-mode{display:flex;gap:6px;align-items:center;padding:8px;font-size:11px}.preview-mode select{min-width:0;flex:1;padding:7px;border:1px solid #b6cbd6;border-radius:5px;background:white;color:#17394e;font:inherit}.teacher-surface{position:relative;aspect-ratio:1;background:radial-gradient(ellipse at 50% 35%,#fff,#dceaf2)}.teacher-canvas{position:absolute;inset:0}.teacher-tools{display:grid;gap:7px;padding:10px}.teacher-tools select{width:100%;font:inherit;font-size:12px;padding:6px}.teacher-cameras{display:flex;flex-wrap:wrap;gap:5px}.teacher-cameras button{font-size:12px;padding:8px}.teacher-renderer-status{margin:0;font-size:11px;line-height:1.5}.concept-card{margin-top:12px;padding:12px;border:1px solid #c8dce7;border-radius:8px;background:#f1f7fa}.concept-card h4{font-size:15px;line-height:1.4;margin:0}.concept-diagram{list-style:none;padding:0;margin:12px 0;display:flex;gap:14px;flex-wrap:wrap}.concept-diagram li{position:relative;flex:1 1 60px;border:1px solid #adcad8;border-radius:6px;padding:8px 5px;background:white;font-size:11px;text-align:center;overflow-wrap:anywhere}.concept-diagram li.active{background:#006b80;color:white;border-color:#006b80}.concept-diagram[data-kind=flow] li:not(:last-child)::after{content:"→";position:absolute;right:-12px;color:#17627b}.concept-diagram[data-kind=merge]{display:grid;grid-template-columns:1fr 1fr}.concept-diagram[data-kind=merge] li:last-child{grid-column:1/-1}.concept-explanation{font-size:13px;line-height:1.65}.concept-source{display:inline-block;font-size:12px;color:#006783}.demonstration-controls{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.demonstration-controls button,.demonstration-controls select{font-size:12px;padding:7px}.demonstration-controls p{width:100%;margin:4px 0;font-size:12px}.gesture-viewport{background:#eaf3f6}.gesture-viewport svg{display:block;width:100%;height:auto;max-height:400px}.gesture-note{font-size:10px;line-height:1.5;padding:8px 10px;margin:0;color:#6c512c;background:#fff7e7}.spelling-label{margin:0;padding:8px;text-align:center;font-size:18px;font-weight:bold;color:#006783}.animation-controls{display:grid;gap:7px;padding:8px}.animation-controls select{width:100%;padding:6px;font:inherit;font-size:11px}.motion-toggle{font-size:11px;padding:7px}.motion-state{margin:0;font-size:11px;color:#4d6b7b}.alphabet-reference{display:block;padding:0 10px 8px;font-size:10px;color:#006783}.gesture-description{font-size:10px;color:#4f6b7b;padding:5px 10px;margin:0}.live-caption{padding:12px;border-top:1px solid #d6e5eb;background:white}.caption-heading{display:flex;justify-content:space-between;gap:8px;font-size:10px;letter-spacing:.5px;color:#006783}.caption-time{font-variant-numeric:tabular-nums}.caption-words{font-size:15px;line-height:1.65;margin:10px 0;max-height:210px;overflow:auto;overflow-wrap:anywhere;color:#153b50}.live-caption small{display:block;font-size:10px;color:#637985}.preview-generate{font-size:12px;background:#006b89;border-color:#006b89;color:white;margin:0 0 8px}.sign-dialog .caption-words{font-size:19px;max-height:300px}.sign-dialog .gesture-viewport svg{max-height:45vh}.sign-dialog .preview-mode{font-size:14px}@keyframes sign-open{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}@media(prefers-reduced-motion:reduce){.sign-box{animation:none}}.controls{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:13px}.primary{background:#006b89;color:white;border-color:#006b89}.playback-controls{margin:0 0 12px}.caption-options{margin-top:12px}.caption-options summary{cursor:pointer;color:#006783;font-size:12px}.playback-speed{padding:8px;font:inherit;border:1px solid #b5cbd8;border-radius:5px}.controls label{display:flex;align-items:center;gap:7px;font-size:12px}.controls input{width:17px;height:17px}.status{font-size:12px;color:#3b5f75;margin:12px 0 0;min-height:20px}.transcript{margin-top:18px;border-top:1px solid #dce6ed;padding-top:15px}.transcript h3{font-size:16px;margin:0 0 7px}.transcript small{display:block;font-size:12px;color:#5b6f7c}.cues{max-height:300px;overflow:auto;margin-top:12px}.cue{width:100%;text-align:left;display:flex;align-items:baseline;gap:12px;border:0;border-top:1px solid #e8eff4;border-radius:0;padding:11px 5px;background:white;font-size:13px}.cue.active{background:#eaf7fc}.time{font-weight:bold;white-space:nowrap;color:#006580;font-size:11px}.download{font-size:12px;color:#005d7b;text-decoration:underline;margin-left:auto}@container(max-width:700px){.player-layout.with-signing{grid-template-columns:minmax(0,1fr)}.sign-box{width:100%}.learning-preview[data-mode=both]{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.preview-mode{grid-column:1/-1}.gesture-viewport,.sign-viewport,.spelling-label,.gesture-note,.gesture-description,.animation-controls,.alphabet-reference,.teacher-tools{grid-column:1}.live-caption{grid-column:2;grid-row:2/span 8;border-left:1px solid #d6e5eb}.gesture-viewport svg{max-height:260px}}@container(max-width:400px){.learning-preview[data-mode=both]{display:block}.sign-box{width:100%}.caption-words{font-size:16px}}@media(min-width:700px){.sign-dialog .learning-preview{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}.sign-dialog .preview-mode{grid-column:1/-1}.sign-dialog .gesture-viewport,.sign-dialog .spelling-label,.sign-dialog .gesture-note,.sign-dialog .gesture-description,.sign-dialog .animation-controls,.sign-dialog .teacher-tools,.sign-dialog .alphabet-reference{grid-column:1}.sign-dialog .live-caption{grid-column:2;grid-row:2/span 10}.sign-dialog .teacher-surface{max-height:360px}}.learning-preview[data-explaining=true] .animation-controls>select,.learning-preview[data-explaining=true] .gesture-description,.learning-preview[data-explaining=true] .spelling-label{display:none}.sign-dialog .learning-preview[data-explaining=true] .teacher-surface{position:sticky;top:0;z-index:1;max-height:340px}.sign-dialog .learning-preview[data-explaining=true] .teacher-tools>select{display:none}@media(max-width:650px){.player-layout.with-signing{grid-template-columns:minmax(0,1fr)}.sign-box{width:100%}.url-form{flex-wrap:wrap}.url-form input{flex-basis:100%}.bar{padding:12px}.body{padding:12px}.bar strong{font-size:14px}.badge{font-size:10px}.placeholder strong{font-size:15px}.placeholder p{font-size:11px;max-width:190px}.stage{min-height:230px}.controls label{font-size:11px}}`;
+    style.textContent = `:host{display:block;font:14px/1.6 Arial,sans-serif;color:#17394e}*{box-sizing:border-box}[hidden]{display:none!important}button,input{font:inherit}button{cursor:pointer;padding:10px 13px;border:1px solid #b5cbd8;border-radius:5px;background:#fff;color:#16445e}button:hover{background:#edf8fc}button:disabled{opacity:.6;cursor:wait}button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #cc940c;outline-offset:3px}.card{border:1px solid #cfdee7;border-radius:9px;overflow:hidden;background:white}.bar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;background:#eef7fb;padding:16px 18px}.bar strong{font-size:16px}.badge{font-size:11px;margin-left:auto;background:white;border:1px solid #c7dce7;border-radius:20px;padding:4px 9px}.body{padding:18px;container-type:inline-size}.url-form{display:flex;gap:8px;margin-bottom:12px}.url-form input{padding:10px;border:1px solid #adc2cf;border-radius:5px;flex:1;min-width:0}.stage{width:100%;min-width:0;background:#062c40;aspect-ratio:16/9;min-height:220px;position:relative;display:grid;place-items:center;overflow:hidden;border-radius:6px}.stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0}.placeholder{text-align:center;color:#fff;padding:20px}.placeholder strong{display:block;font-size:19px}.placeholder p{font-size:13px;color:#cfdfeb;max-width:330px}.player-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:start}.player-layout.with-signing{grid-template-columns:minmax(0,1fr) 300px}.sign-box{width:300px;background:#f7fafc;border:1px solid #b8d2df;border-radius:7px;overflow:hidden;color:#355a70;animation:sign-open 150ms ease-out}.sign-label{font-size:11px;font-weight:bold;letter-spacing:.5px;background:#003c54;color:white;padding:8px}.sign-placeholder,.sign-status{margin:0;padding:10px;font-size:12px;line-height:1.5}.sign-viewport{aspect-ratio:1;background:#182e3e;display:grid;place-items:center}.sign-viewport video{width:100%;height:100%;min-height:0;object-fit:contain;aspect-ratio:1}.sign-action,.expand-sign{margin:0 8px 9px;font-size:12px;padding:7px}.sign-dialog{width:min(860px,95vw);max-height:90vh;overflow:auto;padding:20px;border:2px solid #006b89;border-radius:8px;color:#17394e}.sign-dialog::backdrop{background:#00192799}.sign-dialog h3{margin:0 0 12px;font-size:17px}.sign-dialog .sign-viewport{margin-top:12px;aspect-ratio:auto}.sign-dialog video{max-height:65vh;aspect-ratio:auto}.sign-dialog .sign-status{font-size:14px}.preview-mode{display:flex;gap:6px;align-items:center;padding:8px;font-size:11px}.preview-mode select{min-width:0;flex:1;padding:7px;border:1px solid #b6cbd6;border-radius:5px;background:white;color:#17394e;font:inherit}.teacher-surface{position:relative;aspect-ratio:1;background:radial-gradient(ellipse at 50% 35%,#fff,#dceaf2)}.teacher-canvas{position:absolute;inset:0}.teacher-tools{display:grid;gap:7px;padding:10px}.teacher-tools select{width:100%;font:inherit;font-size:12px;padding:6px}.teacher-cameras{display:flex;flex-wrap:wrap;gap:5px}.teacher-cameras button{font-size:12px;padding:8px}.teacher-renderer-status{margin:0;font-size:11px;line-height:1.5}.concept-card{margin-top:12px;padding:12px;border:1px solid #c8dce7;border-radius:8px;background:#f1f7fa}.concept-card h4{font-size:15px;line-height:1.4;margin:0}.concept-diagram{list-style:none;padding:0;margin:12px 0;display:flex;gap:14px;flex-wrap:wrap}.concept-diagram li{position:relative;flex:1 1 60px;border:1px solid #adcad8;border-radius:6px;padding:8px 5px;background:white;font-size:11px;text-align:center;overflow-wrap:anywhere}.concept-diagram li.active{background:#006b80;color:white;border-color:#006b80}.concept-diagram[data-kind=flow] li:not(:last-child)::after{content:"→";position:absolute;right:-12px;color:#17627b}.concept-diagram[data-kind=merge]{display:grid;grid-template-columns:1fr 1fr}.concept-diagram[data-kind=merge] li:last-child{grid-column:1/-1}.concept-explanation{font-size:13px;line-height:1.65}.concept-source{display:inline-block;font-size:12px;color:#006783}.demonstration-controls{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.demonstration-controls button,.demonstration-controls select{font-size:12px;padding:7px}.demonstration-controls p{width:100%;margin:4px 0;font-size:12px}.gesture-viewport{background:#eaf3f6}.gesture-viewport svg{display:block;width:100%;height:auto;max-height:400px}.gesture-note{font-size:10px;line-height:1.5;padding:8px 10px;margin:0;color:#6c512c;background:#fff7e7}.spelling-label{margin:0;padding:8px;text-align:center;font-size:18px;font-weight:bold;color:#006783}.animation-controls{display:grid;gap:7px;padding:8px}.animation-controls select{width:100%;padding:6px;font:inherit;font-size:11px}.motion-toggle{font-size:11px;padding:7px}.motion-state{margin:0;font-size:11px;color:#4d6b7b}.alphabet-reference{display:block;padding:0 10px 8px;font-size:10px;color:#006783}.gesture-description{font-size:10px;color:#4f6b7b;padding:5px 10px;margin:0}.live-caption{padding:12px;border-top:1px solid #d6e5eb;background:white}.caption-heading{display:flex;justify-content:space-between;gap:8px;font-size:10px;letter-spacing:.5px;color:#006783}.caption-time{font-variant-numeric:tabular-nums}.caption-words{font-size:15px;line-height:1.65;margin:10px 0;max-height:210px;overflow:auto;overflow-wrap:anywhere;color:#153b50}.live-caption small{display:block;font-size:10px;color:#637985}.preview-generate{font-size:12px;background:#006b89;border-color:#006b89;color:white;margin:0 0 8px}.sign-dialog .caption-words{font-size:19px;max-height:300px}.sign-dialog .gesture-viewport svg{max-height:45vh}.sign-dialog .preview-mode{font-size:14px}@keyframes sign-open{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}@media(prefers-reduced-motion:reduce){.sign-box{animation:none}}.controls{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:13px}.primary{background:#006b89;color:white;border-color:#006b89}.playback-controls{margin:0 0 12px}.caption-options{margin-top:12px}.caption-options summary{cursor:pointer;color:#006783;font-size:12px}.playback-speed{padding:8px;font:inherit;border:1px solid #b5cbd8;border-radius:5px}.controls label{display:flex;align-items:center;gap:7px;font-size:12px}.controls input{width:17px;height:17px}.status{font-size:12px;color:#3b5f75;margin:12px 0 0;min-height:20px}.transcript{margin-top:18px;border-top:1px solid #dce6ed;padding-top:15px}.transcript h3{font-size:16px;margin:0 0 7px}.transcript small{display:block;font-size:12px;color:#5b6f7c}.cues{max-height:300px;overflow:auto;margin-top:12px}.cue{width:100%;text-align:left;display:flex;align-items:baseline;gap:12px;border:0;border-top:1px solid #e8eff4;border-radius:0;padding:11px 5px;background:white;font-size:13px}.cue.active{background:#eaf7fc}.time{font-weight:bold;white-space:nowrap;color:#006580;font-size:11px}.download{font-size:12px;color:#005d7b;text-decoration:underline;margin-left:auto}@container(max-width:700px){.player-layout.with-signing{grid-template-columns:minmax(0,1fr)}.sign-box{width:100%}.learning-preview[data-mode=both]{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.preview-mode{grid-column:1/-1}.gesture-viewport,.sign-viewport,.spelling-label,.gesture-note,.gesture-description,.animation-controls,.alphabet-reference,.teacher-tools{grid-column:1}.live-caption{grid-column:2;grid-row:2/span 8;border-left:1px solid #d6e5eb}.gesture-viewport svg{max-height:260px}}@container(max-width:400px){.learning-preview[data-mode=both]{display:block}.sign-box{width:100%}.caption-words{font-size:16px}}@media(min-width:700px){.sign-dialog .learning-preview{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}.sign-dialog .preview-mode{grid-column:1/-1}.sign-dialog .gesture-viewport,.sign-dialog .spelling-label,.sign-dialog .gesture-note,.sign-dialog .gesture-description,.sign-dialog .animation-controls,.sign-dialog .teacher-tools,.sign-dialog .alphabet-reference{grid-column:1}.sign-dialog .live-caption{grid-column:2;grid-row:2/span 10}.sign-dialog .teacher-surface{max-height:360px}}.learning-preview[data-explaining=true] .animation-controls>select,.learning-preview[data-explaining=true] .gesture-description,.learning-preview[data-explaining=true] .spelling-label{display:none}.sign-dialog .learning-preview[data-explaining=true] .teacher-surface{position:sticky;top:0;z-index:1;max-height:340px}.sign-dialog .learning-preview[data-explaining=true] .teacher-tools>select{display:none}@media(max-width:650px){.player-layout.with-signing{grid-template-columns:minmax(0,1fr)}.sign-box{width:100%}.url-form{flex-wrap:wrap}.url-form input{flex-basis:100%}.bar{padding:12px}.body{padding:12px}.bar strong{font-size:14px}.badge{font-size:10px}.placeholder strong{font-size:15px}.placeholder p{font-size:11px;max-width:190px}.stage{min-height:230px}.controls label{font-size:11px}}`;
     const card = make("section", undefined, "card");
     card.setAttribute(
       "aria-label",
@@ -109,6 +132,33 @@ class CourseMedia extends HTMLElement {
       make("strong", "Course video & transcript"),
       make("span", "ENGLISH", "badge"),
     );
+    const language = make(
+      "select",
+      undefined,
+      "course-language playback-speed",
+    );
+    language.setAttribute("aria-label", "Language / ቋንቋ");
+    for (const [value, label] of [
+      ["en", "English"],
+      ["am", "አማርኛ"],
+    ]) {
+      const option = make("option", label);
+      option.value = value;
+      language.append(option);
+    }
+    language.style.minHeight = "44px";
+    language.value = initialLanguage(this);
+    language.onchange = () =>
+      setLanguage(this, language.value === "am" ? "am" : "en", true);
+    const reader = make("button", "Read lesson in Amharic");
+    reader.type = "button";
+    reader.onclick = () =>
+      void enhanceLanguage(this)
+        .then(() => this.dispatchEvent(new CustomEvent("mela:read-lesson")))
+        .catch(() => {
+          this.status.textContent = "Reader unavailable. Retry.";
+        });
+    bar.append(language, reader);
     const body = make("div", undefined, "body");
     const form = make("form", undefined, "url-form");
     const input = make("input");
@@ -161,16 +211,16 @@ class CourseMedia extends HTMLElement {
       if (!check.checked) {
         this.status.textContent =
           "Select the sharing choice before sending the video to Gemini.";
-        this.transcriptionError =
+        this._melaTranscriptionError =
           "Select the video-sharing checkbox below, then generate captions.";
-        this.learningPreview?.error(this.transcriptionError);
+        this.learningPreview?.error(this._melaTranscriptionError);
         this.root.querySelector<HTMLDetailsElement>(".caption-options")!.open =
           true;
         check.focus();
         return;
       }
       this.transcribing = true;
-      this.transcriptionError = "";
+      this._melaTranscriptionError = "";
       try {
         const requested = youtubeUrl(input.value);
         if (!this.frame || requested !== this.videoUrl) {
@@ -192,9 +242,9 @@ class CourseMedia extends HTMLElement {
           error instanceof Error
             ? error.message
             : "Could not transcribe this video.";
-        this.transcriptionError =
+        this._melaTranscriptionError =
           this.status.textContent || "Transcription failed. Try again.";
-        this.learningPreview?.error(this.transcriptionError);
+        this.learningPreview?.error(this._melaTranscriptionError);
       } finally {
         this.transcribing = false;
         this.learningPreview?.generating(false);
@@ -215,7 +265,7 @@ class CourseMedia extends HTMLElement {
       if (sign.hidden) {
         this.closeSigningDialog?.(false);
         this.signVideo?.pause();
-        this.updateLearningPreview();
+        this._melaUpdateLearningPreview();
       } else {
         if (!this.signVideo && this.sign) this.showSigning();
         this.synchronize();
@@ -277,23 +327,24 @@ class CourseMedia extends HTMLElement {
     this.root.append(style, card);
   }
   private async configuration() {
-    const version = ++this.configurationVersion;
-    this.configurationController?.abort();
-    this.configurationController = new AbortController();
+    const version = ++this._melaConfigurationVersion;
+    this._melaConfigurationController?.abort();
+    this._melaConfigurationController = new AbortController();
     const source = this.videoUrl;
     try {
       const response = await fetch(
         this.apiUrl(
           `/v1/lessons/${encodeURIComponent(this.getAttribute("lesson-id") || "va-future")}/media?videoId=${youtubeId(source)}`,
         ),
-        { signal: this.configurationController.signal },
+        { signal: this._melaConfigurationController.signal },
       );
-      if (version !== this.configurationVersion || !this.isConnected) return;
+      if (version !== this._melaConfigurationVersion || !this.isConnected)
+        return;
       if (!response.ok)
         throw new Error("Signing availability could not be checked.");
       const config = await response.json();
       if (
-        version !== this.configurationVersion ||
+        version !== this._melaConfigurationVersion ||
         source !== this.videoUrl ||
         !this.isConnected
       )
@@ -320,7 +371,8 @@ class CourseMedia extends HTMLElement {
       if (!this.transcript)
         await this.loadPreparedTranscript(config.transcriptUrl, version);
     } catch {
-      if (version !== this.configurationVersion || !this.isConnected) return;
+      if (version !== this._melaConfigurationVersion || !this.isConnected)
+        return;
       this.sign = undefined;
       this.showSigning(
         "Signing availability could not be checked. Try again.",
@@ -343,12 +395,12 @@ class CourseMedia extends HTMLElement {
     const source = this.videoUrl;
     try {
       const response = await fetch(this.remoteUrl(path), {
-        signal: this.configurationController?.signal,
+        signal: this._melaConfigurationController?.signal,
       });
       if (!response.ok) return;
       const data = await response.json();
       if (
-        version !== this.configurationVersion ||
+        version !== this._melaConfigurationVersion ||
         source !== this.videoUrl ||
         !this.isConnected ||
         !validTranscript(data, source)
@@ -362,7 +414,7 @@ class CourseMedia extends HTMLElement {
         );
       } catch {}
       this.drawTranscript(data);
-      this.updateLearningPreview();
+      this._melaUpdateLearningPreview();
       this.dispatchTranscript(data.cues);
       this.status.textContent =
         "English course captions ready. Open the learning panel and play the video.";
@@ -378,7 +430,7 @@ class CourseMedia extends HTMLElement {
       if (!validTranscript(data, this.videoUrl)) return;
       this.transcript = data;
       this.drawTranscript(data);
-      this.updateLearningPreview();
+      this._melaUpdateLearningPreview();
       this.dispatchTranscript(data.cues);
       this.status.textContent =
         "Saved English transcript restored. You can read it and ask MELA about it offline.";
@@ -395,7 +447,8 @@ class CourseMedia extends HTMLElement {
     this.controller?.abort();
     this.requestVersion++;
     this.transcript = undefined;
-    this.transcriptionError = "";
+    this.displayCues = undefined;
+    this._melaTranscriptionError = "";
     this.root.querySelector(".transcript")?.remove();
     this.dispatchTranscript([]);
     clearInterval(this.timer);
@@ -600,17 +653,20 @@ class CourseMedia extends HTMLElement {
       },
     });
     this.learningPreview.generating(this.transcribing);
-    if (this.transcriptionError)
-      this.learningPreview.error(this.transcriptionError);
-    this.updateLearningPreview();
+    if (this._melaTranscriptionError)
+      this.learningPreview.error(this._melaTranscriptionError);
+    this._melaUpdateLearningPreview();
   }
-  private updateLearningPreview() {
+  private _melaUpdateLearningPreview() {
     const visible = !this.root.querySelector<HTMLElement>(".sign-box")?.hidden;
     this.learningPreview?.update({
       cues: this.transcript?.cues || [],
+      displayCues: this.displayCues,
+      language: this.displayCues ? "am" : "en",
       videoId: youtubeId(this.videoUrl),
-      sourceLabel:
-        this.transcript?.generated === false
+      sourceLabel: this.displayCues
+        ? "AMHARIC TRANSLATION"
+        : this.transcript?.generated === false
           ? "COURSE CAPTIONS"
           : "AI CAPTIONS",
       seconds: Math.max(0, this.player?.getCurrentTime?.() || 0),
@@ -673,7 +729,7 @@ class CourseMedia extends HTMLElement {
     box.append(expand);
   }
   private synchronize() {
-    this.updateLearningPreview();
+    this._melaUpdateLearningPreview();
     if (!this.player || typeof this.player.getCurrentTime !== "function")
       return;
     const seconds = this.player.getCurrentTime() || 0;
@@ -821,27 +877,57 @@ class CourseMedia extends HTMLElement {
       );
     } catch {}
     this.drawTranscript(data);
-    this.updateLearningPreview();
+    this._melaUpdateLearningPreview();
     this.dispatchTranscript(data.cues);
     this.status.textContent =
       "English transcript ready. It is AI-generated; review it for accuracy. MELA can now use it as lesson context.";
   }
+  getTranscript() {
+    return this.transcript;
+  }
+  setTranslatedCues(value?: { revision: string; cues: Transcript["cues"] }) {
+    if (
+      value &&
+      (!this.transcript ||
+        value.revision !==
+          transcriptRevision(this.videoUrl, this.transcript.cues) ||
+        value.cues.length !== this.transcript.cues.length ||
+        value.cues.some(
+          (cue, i) =>
+            cue.start !== this.transcript!.cues[i].start ||
+            cue.end !== this.transcript!.cues[i].end ||
+            !cue.text ||
+            cue.text.length > 1500,
+        ))
+    )
+      return;
+    this.displayCues = value?.cues;
+    if (this.transcript) this.drawTranscript(this.transcript);
+    this._melaUpdateLearningPreview();
+  }
   private drawTranscript(data: Transcript) {
+    const display = this.displayCues || data.cues;
     this.root.querySelector(".transcript")?.remove();
     const section = make("div", undefined, "transcript");
+    section.lang = this.displayCues ? "am" : "en";
     section.append(
-      make("h3", "English transcript"),
+      make(
+        "h3",
+        this.displayCues ? "የአማርኛ ትርጉም · ያልተገመገመ" : "English transcript",
+      ),
       make(
         "small",
-        data.generated === false
-          ? "English source captions · review against the audio"
-          : "AI-generated from this video’s audio · review before relying on it",
+        this.displayCues
+          ? "Amharic translation · fluent review pending."
+          : data.generated === false
+            ? "English source captions · review against the audio"
+            : "AI-generated from this video’s audio · review before relying on it",
       ),
     );
     const download = make("button", "Download transcript", "download");
     download.type = "button";
     download.onclick = () => {
-      const text = data.cues
+      const text = display
         .map((c) => `${this.time(c.start)} ${c.text}`)
         .join("\n");
       const url = URL.createObjectURL(
@@ -849,13 +935,15 @@ class CourseMedia extends HTMLElement {
       );
       const link = make("a");
       link.href = url;
-      link.download = "course-transcript-en.txt";
+      link.download = this.displayCues
+        ? "course-transcript-am.txt"
+        : "course-transcript-en.txt";
       link.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     };
     section.append(download);
     const cues = make("div", undefined, "cues");
-    for (const cue of data.cues) {
+    for (const cue of display) {
       const button = make("button", undefined, "cue");
       button.type = "button";
       button.dataset.start = String(cue.start);

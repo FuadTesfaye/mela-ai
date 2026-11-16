@@ -1,3 +1,7 @@
+import {
+  initialLanguage,
+  setLanguage,
+} from "../../../module/localization/language";
 import { DEFAULT_LESSON_VIDEO } from "../../../lib/media/lesson-catalog";
 import { youtubeUrl } from "../../../lib/media/youtube";
 export interface MelaOptions {
@@ -15,6 +19,7 @@ export interface MelaHandle {
   media: HTMLElement;
   assistant?: HTMLElement;
   setVideo(url: string): void;
+  setLanguage(language: "en" | "am"): void;
   destroy(): void;
 }
 export async function register() {
@@ -45,10 +50,12 @@ export async function mount(options: MelaOptions): Promise<MelaHandle> {
     throw new Error("MELA api must be an HTTP(S) URL.");
   const root = document.createElement("section");
   root.dataset.melaContext = "";
+  root.dataset.melaLanguage = options.language || initialLanguage(root);
   root.dataset.melaSdkRoot = "";
   root.setAttribute("aria-label", "MELA learning companion");
   root.style.cssText = "display:block;width:100%;min-width:0";
   const media = document.createElement("mela-course-media");
+  media.setAttribute("lang", root.dataset.melaLanguage);
   media.setAttribute("api", api.href.replace(/\/$/, ""));
   media.setAttribute("lesson-id", options.lessonId || "va-future");
   media.setAttribute(
@@ -65,10 +72,11 @@ export async function mount(options: MelaOptions): Promise<MelaHandle> {
       "content",
       new URL("/content.json", api.origin).href,
     );
-    assistant.setAttribute("lang", options.language || "en");
+    assistant.setAttribute("lang", root.dataset.melaLanguage);
     root.append(assistant);
   }
   const context = options.contextRoot ? find(options.contextRoot) : undefined;
+  (media as HTMLElement & { contextRoot?: HTMLElement }).contextRoot = context;
   if (context) {
     const entry = contextOwners.get(context);
     contextOwners.set(context, {
@@ -88,6 +96,12 @@ export async function mount(options: MelaOptions): Promise<MelaHandle> {
     element: root,
     media,
     assistant,
+    setLanguage(language) {
+      if (destroyed) throw new Error("This MELA instance has been destroyed.");
+      if (language !== "en" && language !== "am")
+        throw new Error("Unsupported language.");
+      setLanguage(root, language);
+    },
     setVideo(url) {
       if (destroyed) throw new Error("This MELA instance has been destroyed.");
       media.setAttribute("video-src", youtubeUrl(url));

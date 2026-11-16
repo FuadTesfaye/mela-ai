@@ -1,5 +1,5 @@
 /* Offline shell for this MELA-hosted Savanna demo, never registered on unrelated hosts. */
-const CACHE = "mela-public-v6-visual-teacher";
+const CACHE = "mela-public-v8-amharic";
 const PAGES = [
   "/jobs",
   "/support",
@@ -105,6 +105,9 @@ self.addEventListener("fetch", (event) => {
   const publicPage = PAGES.includes(url.pathname);
   const asset =
     ASSETS.includes(url.pathname) ||
+    ["/locale.js", "/spelling.js"].includes(url.pathname) ||
+    url.pathname.startsWith("/i18n/") ||
+    url.pathname.startsWith("/fonts/") ||
     url.pathname === "/avatar/teacher-3d.js" ||
     url.pathname === "/avatar/storyboard.json" ||
     url.pathname.startsWith("/_next/static/") ||
@@ -121,6 +124,26 @@ self.addEventListener("fetch", (event) => {
       } catch {
         return (await cache.match(key)) || Response.error();
       }
+    })(),
+  );
+});
+
+// Warm optional language assets only after a learner opens the language feature.
+self.addEventListener("message", (event) => {
+  if (event.data?.type !== "mela:cache-language") return;
+  event.waitUntil(
+    (async () => {
+      const cache = await caches.open(CACHE);
+      for (const path of [
+        "/locale.js",
+        "/i18n/am.json",
+        "/fonts/noto-sans-ethiopic.woff2",
+      ])
+        try {
+          const response = await fetch(path);
+          if (response.ok) await cache.put(path, response);
+        } catch {}
+      event.ports?.[0]?.postMessage({ ready: true });
     })(),
   );
 });
