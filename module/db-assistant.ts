@@ -1,3 +1,4 @@
+import { loadFeature } from "./localization/runtime";
 import { renderExplanationBlocks } from "./components-explanations";
 import {
   initialLanguage,
@@ -34,7 +35,7 @@ const el = <K extends keyof HTMLElementTagNameMap>(
 class DBAssistant extends HTMLElement {
   private root!: ShadowRoot;
   contextRoot?: HTMLElement;
-  private readContext() {
+  private _melaReadContext() {
     const context = detectContext(
       this._melaIncludePublicPage,
       this.contextRoot,
@@ -45,7 +46,7 @@ class DBAssistant extends HTMLElement {
     return context;
   }
   private video?: VideoSnapshot;
-  private explanationMode: ExplanationMode = "auto";
+  private _melaExplanationMode: ExplanationMode = "auto";
   private visual?: HTMLInputElement;
   private videoCues: VideoCue[] = [];
   private scope: "lesson" | "wholeVideo" | "moment" = "lesson";
@@ -136,13 +137,13 @@ class DBAssistant extends HTMLElement {
       this.scope = "wholeVideo";
     this.video = value;
     this.videoCues = detail.cues;
-    this.context = this.readContext();
+    this.context = this._melaReadContext();
     this._melaUpdateVideoLabel();
   };
   private momentEvent = (event: Event) => {
     if (!this.mediaSource(event)) return;
     if (this.busy) {
-      this.setStatus(
+      this._melaSetStatus(
         "Please wait for the current explanation, then try this moment again.",
       );
       return;
@@ -175,12 +176,12 @@ class DBAssistant extends HTMLElement {
   private version = 0;
   private _melaIncludePublicPage = false;
   private context: LearningContext = { pageType: "unknown", sections: [] };
-  private knowledgeReady?: Promise<unknown>;
-  private stopObserving?: () => void;
+  private _melaKnowledgeReady?: Promise<unknown>;
+  private _melaStopObserving?: () => void;
   private abort?: AbortController;
-  private ticketTimer?: ReturnType<typeof setInterval>;
+  private _melaTicketTimer?: ReturnType<typeof setInterval>;
   private ticket?: { id: string; token: string };
-  private lastReply = 0;
+  private _melaLastReply = 0;
   private history: {
     role: string;
     content: string;
@@ -189,15 +190,15 @@ class DBAssistant extends HTMLElement {
     artifactKey?: string;
     language?: Language;
   }[] = [];
-  private messages!: HTMLDivElement;
+  private _melaMessages!: HTMLDivElement;
   private panel!: HTMLDivElement;
   private launcher!: HTMLButtonElement;
   private input!: HTMLTextAreaElement;
   private status!: HTMLDivElement;
   private cloud!: HTMLInputElement;
-  private lastQuestion = "";
-  private recognition?: { stop: () => void };
-  private screenStop?: () => void;
+  private _melaLastQuestion = "";
+  private _melaRecognition?: { stop: () => void; toggle: () => void };
+  private _melaScreenStop?: () => void;
   private openEvent = (e: Event) => {
     this.open();
     const q = (e as CustomEvent).detail?.question;
@@ -224,25 +225,25 @@ class DBAssistant extends HTMLElement {
       this._melaReadingMode = localStorage.getItem("mela-reading-mode") === "1";
     } catch {}
     this.root = this.attachShadow({ mode: "open" });
-    this.context = this.readContext();
+    this.context = this._melaReadContext();
     this.render();
     if (this.locale === "am") void enhanceLanguage(this).catch(() => {});
-    this.stopObserving = observeContext(
+    this._melaStopObserving = observeContext(
       (context) => {
         if (JSON.stringify(context) === JSON.stringify(this.context)) return;
         this.context = context;
         this.version++;
         this.abort?.abort();
         this.updateContext();
-        this.setStatus(this.t.contextChanged);
+        this._melaSetStatus(this.t.contextChanged);
       },
-      () => this.readContext(),
+      () => this._melaReadContext(),
     );
     window.addEventListener("mela:open", this.openEvent);
     document.addEventListener("mela:video-state", this.videoEvent);
     document.addEventListener("mela:transcript-ready", this.transcriptEvent);
     document.addEventListener("mela:explain-moment", this.momentEvent);
-    this.knowledgeReady = loadKnowledge(
+    this._melaKnowledgeReady = loadKnowledge(
       this.getAttribute("content") || "/content.json",
     ).catch(() => {});
   }
@@ -266,6 +267,8 @@ class DBAssistant extends HTMLElement {
     this.abort?.abort();
     this.version++;
     this.busy = false;
+    this._melaRecognition?.stop();
+    this._melaRecognition = undefined;
     this.locale = next;
     this.render();
     this.input.value = draft;
@@ -278,10 +281,12 @@ class DBAssistant extends HTMLElement {
     else if (!inside && outside !== this)
       outside?.focus?.({ preventScroll: true });
     if (next === "am")
-      void enhanceLanguage(this).catch(() => this.setStatus(this.t.failed));
+      void enhanceLanguage(this).catch(() =>
+        this._melaSetStatus(this.t.failed),
+      );
   }
   getLearningContext() {
-    return this.readContext();
+    return this._melaReadContext();
   }
   installEvidence(
     entries: import("../lib/localization/shared").PreparedEntry[],
@@ -294,15 +299,15 @@ class DBAssistant extends HTMLElement {
       if (values[strings.en[key]]) strings.am[key] = values[strings.en[key]];
   }
   disconnectedCallback() {
-    this.stopObserving?.();
+    this._melaStopObserving?.();
     window.removeEventListener("mela:open", this.openEvent);
     document.removeEventListener("mela:video-state", this.videoEvent);
     document.removeEventListener("mela:transcript-ready", this.transcriptEvent);
     document.removeEventListener("mela:explain-moment", this.momentEvent);
     this.abort?.abort();
-    clearInterval(this.ticketTimer);
-    this.recognition?.stop();
-    this.screenStop?.();
+    clearInterval(this._melaTicketTimer);
+    this._melaRecognition?.stop();
+    this._melaScreenStop?.();
     window.speechSynthesis?.cancel();
   }
   private render() {
@@ -370,12 +375,12 @@ class DBAssistant extends HTMLElement {
       )
         return;
       this._melaIncludePublicPage = !this._melaIncludePublicPage;
-      this.context = this.readContext();
+      this.context = this._melaReadContext();
       this.version++;
       this.abort?.abort();
       scope.setAttribute("aria-pressed", String(this._melaIncludePublicPage));
       this.updateContext();
-      this.setStatus(this.t.contextChanged);
+      this._melaSetStatus(this.t.contextChanged);
     };
     const reading = el("button", this.t.readingMode);
     reading.type = "button";
@@ -390,20 +395,20 @@ class DBAssistant extends HTMLElement {
         );
       } catch {}
       this.applyReadingMode();
-      this.setStatus(
+      this._melaSetStatus(
         this._melaReadingMode ? this.t.readingOn : this.t.readingOff,
       );
     };
     toolbar.append(reading);
     const options = el("details", undefined, "options");
     options.append(el("summary", this.t.options), scope);
-    this.messages = el("div", undefined, "messages");
-    this.messages.setAttribute("role", "log");
-    this.messages.setAttribute("aria-label", this.t.title);
-    this.messages.setAttribute("aria-live", "polite");
-    this.messages.setAttribute("aria-relevant", "additions");
-    this.messages.setAttribute("aria-atomic", "false");
-    this.messages.setAttribute("tabindex", "0");
+    this._melaMessages = el("div", undefined, "messages");
+    this._melaMessages.setAttribute("role", "log");
+    this._melaMessages.setAttribute("aria-label", this.t.title);
+    this._melaMessages.setAttribute("aria-live", "polite");
+    this._melaMessages.setAttribute("aria-relevant", "additions");
+    this._melaMessages.setAttribute("aria-atomic", "false");
+    this._melaMessages.setAttribute("tabindex", "0");
     this.status = el("div", undefined, "status");
     this.status.setAttribute("role", "status");
     const composer = el("form", undefined, "composer");
@@ -432,7 +437,7 @@ class DBAssistant extends HTMLElement {
     const help = el("button", this.t.help);
     help.type = "button";
     help.onclick = () => this.help();
-    const mic = el("button", "◉ " + this.t.mic);
+    const mic = el("button", this.t.mic);
     mic.type = "button";
     mic.setAttribute("aria-label", this.t.mic);
     mic.onclick = () => this.microphone(mic);
@@ -473,9 +478,9 @@ class DBAssistant extends HTMLElement {
       option.value = value;
       mode.append(option);
     }
-    mode.value = this.explanationMode;
+    mode.value = this._melaExplanationMode;
     mode.onchange = () => {
-      this.explanationMode = mode.value as ExplanationMode;
+      this._melaExplanationMode = mode.value as ExplanationMode;
     };
     learning.append(mode);
     const visualLabel = el("label");
@@ -516,7 +521,7 @@ class DBAssistant extends HTMLElement {
           );
           show.type = "button";
           show.onclick = () => {
-            this.message("assistant", answer.answer, false, answer);
+            this._melaMessage("assistant", answer.answer, false, answer);
             dialog.close();
           };
           dialog.append(show);
@@ -567,20 +572,20 @@ class DBAssistant extends HTMLElement {
     reader.onclick = () =>
       void enhanceLanguage(this)
         .then(() => this.dispatchEvent(new CustomEvent("mela:read-lesson")))
-        .catch(() => this.setStatus(this.t.failed));
+        .catch(() => this._melaSetStatus(this.t.failed));
     options.append(reader, learning);
     this.panel.append(
       header,
       toolbar,
       options,
-      this.messages,
+      this._melaMessages,
       this.status,
       composer,
     );
     this.root.append(this.launcher, this.panel);
-    this.message("assistant", this.t.welcome, false);
+    this._melaMessage("assistant", this.t.welcome, false);
     for (const message of this.history)
-      this.message(
+      this._melaMessage(
         message.role,
         message.content,
         false,
@@ -593,7 +598,7 @@ class DBAssistant extends HTMLElement {
     this._melaUpdateVideoLabel();
     this.applyReadingMode();
     if (this.opened) this.open();
-    if (this.ticket) this.showTicket();
+    if (this.ticket) this._melaShowTicket();
   }
   private open() {
     this.opened = true;
@@ -603,6 +608,8 @@ class DBAssistant extends HTMLElement {
     this.input.focus();
   }
   private close() {
+    this._melaRecognition?.stop();
+    this._melaRecognition = undefined;
     this.opened = false;
     this.panel.classList.add("hidden");
     this.launcher.classList.remove("hidden");
@@ -620,16 +627,16 @@ class DBAssistant extends HTMLElement {
       target.setAttribute("title", target.textContent);
     }
   }
-  private setStatus(text: string, error = false) {
+  private _melaSetStatus(text: string, error = false) {
     this.status.textContent = text;
     this.status.classList.toggle("error", error);
   }
-  private message(
+  private _melaMessage(
     role: string,
     text: string,
     save = true,
     answer?: Answer,
-    question = this.lastQuestion,
+    question = this._melaLastQuestion,
     artifactKey?: string,
     messageLanguage = answer?.language || this.locale,
   ) {
@@ -688,7 +695,7 @@ class DBAssistant extends HTMLElement {
     if (role !== "user") {
       const actions = el("div", undefined, "message-actions");
       const listen = el("button", this.t.listen);
-      listen.onclick = () => this.listen(text, messageLanguage);
+      listen.onclick = () => this._melaListen(text, messageLanguage);
       const stop = el("button", this.t.stop);
       stop.onclick = () => window.speechSynthesis?.cancel();
       actions.append(listen, stop);
@@ -716,21 +723,21 @@ class DBAssistant extends HTMLElement {
               "mela-explanation:" + artifactKey,
               JSON.stringify(answer),
             );
-            this.setStatus(
+            this._melaSetStatus(
               "Explanation saved on this device. Clear browser site data to remove it.",
             );
             save.textContent = "Saved offline";
           } catch {
-            this.setStatus("Browser storage is unavailable.");
+            this._melaSetStatus("Browser storage is unavailable.");
           }
         };
         actions.append(save);
       }
       node.append(actions);
     }
-    this.messages.append(node);
+    this._melaMessages.append(node);
     this.applyReadingMode();
-    this.messages.scrollTop = this.messages.scrollHeight;
+    this._melaMessages.scrollTop = this._melaMessages.scrollHeight;
   }
   private async ask(simple = false) {
     const question = this.input.value.trim();
@@ -740,7 +747,7 @@ class DBAssistant extends HTMLElement {
         await enhanceLanguage(this);
       } catch {}
     if (this.busy) return;
-    this.lastQuestion = question;
+    this._melaLastQuestion = question;
     if (
       /^(i.d like to talk to a person|human help|የሰው እርዳታ)$/i.test(question)
     ) {
@@ -769,14 +776,14 @@ class DBAssistant extends HTMLElement {
       !snapshot.sections.length &&
       !allowVisual
     ) {
-      this.setStatus(
+      this._melaSetStatus(
         "Generate or restore this video's English transcript first.",
       );
       return;
     }
-    const mode = simple ? "simple" : this.explanationMode;
+    const mode = simple ? "simple" : this._melaExplanationMode;
     this.busy = true;
-    this.messages.setAttribute("aria-busy", "true");
+    this._melaMessages.setAttribute("aria-busy", "true");
     const version = this.version;
     let artifactKey: string | undefined;
     try {
@@ -810,11 +817,11 @@ class DBAssistant extends HTMLElement {
     } catch {}
     if (version !== this.version) {
       this.busy = false;
-      this.messages.setAttribute("aria-busy", "false");
+      this._melaMessages.setAttribute("aria-busy", "false");
       return;
     }
     this.input.value = "";
-    this.message("user", question);
+    this._melaMessage("user", question);
     this.dispatchEvent(
       new CustomEvent("db-assistant:question", {
         bubbles: true,
@@ -823,7 +830,7 @@ class DBAssistant extends HTMLElement {
       }),
     );
     this.abort = new AbortController();
-    this.setStatus(this.t.thinking);
+    this._melaSetStatus(this.t.thinking);
     const timeout = setTimeout(
       () => this.abort?.abort(),
       allowVisual ? 65000 : 30000,
@@ -831,7 +838,7 @@ class DBAssistant extends HTMLElement {
     try {
       let answer: Answer;
       try {
-        if (!navigator.onLine) throw new Error("offline");
+        if (!navigator.onLine || !this.cloud.checked) throw new Error("local");
         const response = await fetch(this.api + "/ask", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -849,15 +856,17 @@ class DBAssistant extends HTMLElement {
         });
         if (!response.ok) throw new Error("service");
         answer = await response.json();
-        this.setStatus(answer.notice || this.t.ready);
+        this._melaSetStatus(answer.notice || this.t.ready);
       } catch {
         if (version !== this.version) return;
-        await this.knowledgeReady;
+        await this._melaKnowledgeReady;
         answer = await offlineAnswer(question, this.locale, snapshot, simple);
-        this.setStatus(this.t.offline);
+        this._melaSetStatus(
+          navigator.onLine ? answer.notice || this.t.ready : this.t.offline,
+        );
       }
       if (version === this.version)
-        this.message(
+        this._melaMessage(
           "assistant",
           answer.answer,
           true,
@@ -866,23 +875,23 @@ class DBAssistant extends HTMLElement {
           artifactKey,
         );
     } catch {
-      this.setStatus(this.t.failed, true);
+      this._melaSetStatus(this.t.failed, true);
     } finally {
       clearTimeout(timeout);
       this.busy = false;
-      this.messages.setAttribute("aria-busy", "false");
+      this._melaMessages.setAttribute("aria-busy", "false");
     }
   }
-  private listen(text: string, language = this.locale) {
+  private _melaListen(text: string, language = this.locale) {
     if (!window.speechSynthesis) {
-      this.setStatus(this.t.noVoice);
+      this._melaSetStatus(this.t.noVoice);
       return;
     }
     const voice = speechSynthesis
       .getVoices()
       .find((v) => v.lang.toLowerCase().startsWith(language));
     if (!voice) {
-      this.setStatus(this.t.noVoice);
+      this._melaSetStatus(this.t.noVoice);
       return;
     }
     speechSynthesis.cancel();
@@ -893,35 +902,36 @@ class DBAssistant extends HTMLElement {
     speechSynthesis.speak(speech);
   }
   private microphone(button: HTMLButtonElement) {
-    const win = window as unknown as {
-      SpeechRecognition?: new () => Recognition;
-      webkitSpeechRecognition?: new () => Recognition;
-    };
-    const Recognition = win.SpeechRecognition || win.webkitSpeechRecognition;
-    if (!Recognition) {
-      this.setStatus(this.t.noMic);
+    if (this._melaRecognition) {
+      this._melaRecognition.toggle();
       return;
     }
-    if (this.recognition) {
-      this.recognition.stop();
-      this.recognition = undefined;
-      return;
-    }
-    if (!window.confirm(this.t.micWarning)) return;
-    const recognition = new Recognition();
-    recognition.lang = this.locale === "am" ? "am-ET" : "en-US";
-    recognition.onresult = (e) => {
-      this.input.value = e.results[0][0].transcript;
-      this.input.focus();
-    };
-    recognition.onerror = () => this.setStatus(this.t.noMic);
-    recognition.onend = () => {
-      button.classList.remove("mic-active");
-      this.recognition = undefined;
-    };
-    recognition.start();
-    this.recognition = recognition;
-    button.classList.add("mic-active");
+    button.disabled = true;
+    void loadFeature<{
+      create: (options: {
+        input: HTMLTextAreaElement;
+        button: HTMLButtonElement;
+        language: () => Language;
+        status: (message: string, error?: boolean) => void;
+        api: string;
+      }) => { stop: () => void; toggle: () => void };
+    }>(new URL("/voice.js", new URL(this.api, location.href)).href, "MelaVoice")
+      .then((feature) => {
+        if (!button.isConnected) return;
+        button.disabled = false;
+        this._melaRecognition = feature.create({
+          input: this.input,
+          button,
+          language: () => this.locale,
+          status: (message, error) => this._melaSetStatus(message, error),
+          api: this.api,
+        });
+        this._melaRecognition.toggle();
+      })
+      .catch(() => {
+        button.disabled = false;
+        this._melaSetStatus(this.t.noMic, true);
+      });
   }
   private help() {
     if (this.root.querySelector(".help-view")) return;
@@ -969,7 +979,7 @@ class DBAssistant extends HTMLElement {
     const cancel = el("button", this.t.cancel);
     cancel.onclick = () => {
       view.remove();
-      this.messages.classList.remove("hidden");
+      this._melaMessages.classList.remove("hidden");
       this.root.querySelector(".composer")?.classList.remove("hidden");
       this.input.focus();
     };
@@ -1012,10 +1022,10 @@ class DBAssistant extends HTMLElement {
         });
         if (!response.ok) throw new Error(this.t.failed);
         this.ticket = await response.json();
-        this.lastReply = 0;
-        this.message("assistant", this.t.queued + " #" + this.ticket!.id);
+        this._melaLastReply = 0;
+        this._melaMessage("assistant", this.t.queued + " #" + this.ticket!.id);
         cancel.click();
-        this.showTicket();
+        this._melaShowTicket();
         this.pollTicket();
         this.dispatchEvent(
           new CustomEvent("db-assistant:escalated", {
@@ -1031,46 +1041,50 @@ class DBAssistant extends HTMLElement {
       }
     };
     view.append(status, confirm, cancel);
-    this.messages.classList.add("hidden");
+    this._melaMessages.classList.add("hidden");
     this.root.querySelector(".composer")?.classList.add("hidden");
     this.panel.insertBefore(view, this.status);
     confirm.focus();
   }
-  private showTicket() {
+  private _melaShowTicket() {
     this.root.querySelector(".ticket-bar")?.remove();
     const bar = el("div", undefined, "ticket-bar");
     bar.append(document.createTextNode("#" + this.ticket!.id.slice(0, 8)));
     const screen = el(
       "button",
-      this.screenStop ? this.t.stopScreen : this.t.shareScreen,
+      this._melaScreenStop ? this.t.stopScreen : this.t.shareScreen,
     );
     screen.onclick = async () => {
-      if (this.screenStop) {
-        this.screenStop();
-        this.screenStop = undefined;
+      if (this._melaScreenStop) {
+        this._melaScreenStop();
+        this._melaScreenStop = undefined;
         screen.textContent = this.t.shareScreen;
         return;
       }
       try {
         const { startSharing } = await import("./support/screen-share");
-        this.screenStop = await startSharing(this.api, this.ticket!, (text) => {
-          this.setStatus(text);
-          if (text === "Screen sharing stopped.") {
-            this.screenStop = undefined;
-            screen.textContent = this.t.shareScreen;
-          }
-        });
+        this._melaScreenStop = await startSharing(
+          this.api,
+          this.ticket!,
+          (text) => {
+            this._melaSetStatus(text);
+            if (text === "Screen sharing stopped.") {
+              this._melaScreenStop = undefined;
+              screen.textContent = this.t.shareScreen;
+            }
+          },
+        );
         screen.textContent = this.t.stopScreen;
-        this.setStatus(this.t.screenWait);
+        this._melaSetStatus(this.t.screenWait);
       } catch {
-        this.setStatus(this.t.screenFallback);
+        this._melaSetStatus(this.t.screenFallback);
       }
     };
     bar.append(screen);
-    this.panel.insertBefore(bar, this.messages);
+    this.panel.insertBefore(bar, this._melaMessages);
   }
   private pollTicket() {
-    clearInterval(this.ticketTimer);
+    clearInterval(this._melaTicketTimer);
     const poll = async () => {
       if (!this.ticket) return;
       try {
@@ -1080,13 +1094,13 @@ class DBAssistant extends HTMLElement {
         );
         if (!response.ok) return;
         const data = await response.json();
-        for (const reply of data.messages.slice(this.lastReply))
-          this.message("tutor", reply.content);
-        this.lastReply = data.messages.length;
+        for (const reply of data.messages.slice(this._melaLastReply))
+          this._melaMessage("tutor", reply.content);
+        this._melaLastReply = data.messages.length;
         if (data.status === "resolved") {
-          this.screenStop?.();
-          clearInterval(this.ticketTimer);
-          this.setStatus(
+          this._melaScreenStop?.();
+          clearInterval(this._melaTicketTimer);
+          this._melaSetStatus(
             this.locale === "am"
               ? "ጥያቄው ተፈትቷል"
               : "Your support ticket is resolved.",
@@ -1095,26 +1109,16 @@ class DBAssistant extends HTMLElement {
       } catch {}
     };
     void poll();
-    this.ticketTimer = setInterval(() => void poll(), 5000);
+    this._melaTicketTimer = setInterval(() => void poll(), 5000);
   }
   private applyReadingMode() {
     this.panel.classList.toggle("reading-mode", this._melaReadingMode);
     if (this._melaReadingMode)
-      for (const details of this.messages.querySelectorAll(
+      for (const details of this._melaMessages.querySelectorAll(
         ".explanation-block details",
       ))
         details.setAttribute("open", "");
   }
-}
-interface Recognition {
-  lang: string;
-  onresult: (e: {
-    results: { [key: number]: { [key: number]: { transcript: string } } };
-  }) => void;
-  onerror: () => void;
-  onend: () => void;
-  start: () => void;
-  stop: () => void;
 }
 if (!customElements.get("db-assistant"))
   customElements.define("db-assistant", DBAssistant);

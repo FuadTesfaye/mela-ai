@@ -1,6 +1,7 @@
 import { explanationJsonSchema } from "../explanations";
 export type GeminiPart =
   | { text: string }
+  | { inlineData: { mimeType: string; data: string } }
   | {
       fileData: { fileUri: string; mimeType?: string };
       videoMetadata?: { startOffset: string; endOffset: string };

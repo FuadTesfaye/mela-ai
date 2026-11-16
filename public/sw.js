@@ -1,5 +1,5 @@
 /* Offline shell for this MELA-hosted Savanna demo, never registered on unrelated hosts. */
-const CACHE = "mela-public-v8-amharic";
+const CACHE = "mela-public-v9-browser-first";
 const PAGES = [
   "/jobs",
   "/support",
@@ -105,7 +105,7 @@ self.addEventListener("fetch", (event) => {
   const publicPage = PAGES.includes(url.pathname);
   const asset =
     ASSETS.includes(url.pathname) ||
-    ["/locale.js", "/spelling.js"].includes(url.pathname) ||
+    ["/locale.js", "/spelling.js", "/voice.js"].includes(url.pathname) ||
     url.pathname.startsWith("/i18n/") ||
     url.pathname.startsWith("/fonts/") ||
     url.pathname === "/avatar/teacher-3d.js" ||

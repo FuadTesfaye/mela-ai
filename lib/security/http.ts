@@ -20,7 +20,7 @@ export function cors(request: Request) {
     Vary: "Origin",
   });
   if (origin) {
-    if (!allowedOrigins().has(origin))
+    if (!allowedOrigins().has(origin) && origin !== new URL(request.url).origin)
       throw new HttpError(403, "Origin is not allowed.");
     headers.set("Access-Control-Allow-Origin", origin);
     headers.set(
@@ -119,7 +119,8 @@ export async function api(
         headers: {
           "Cache-Control": "no-store",
           ...(request.headers.get("origin") &&
-          allowedOrigins().has(request.headers.get("origin")!)
+          (allowedOrigins().has(request.headers.get("origin")!) ||
+            request.headers.get("origin") === new URL(request.url).origin)
             ? {
                 "Access-Control-Allow-Origin": request.headers.get("origin")!,
                 Vary: "Origin",

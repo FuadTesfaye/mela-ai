@@ -23,6 +23,7 @@ const config: NextConfig = {
         "/openapi.yaml",
         "/mela-sdk.js",
         "/locale.js",
+        "/voice.js",
         "/spelling.js",
         "/i18n/:path*",
         "/fonts/:path*",

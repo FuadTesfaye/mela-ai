@@ -6,5 +6,8 @@ export const runtime = "nodejs";
 export const OPTIONS = preflight;
 export const POST = (request: Request) =>
   api(request, async () =>
-    answerQuestion(askSchema.parse(await jsonBody(request))),
+    answerQuestion(
+      askSchema.parse(await jsonBody(request)),
+      new URL(request.url).origin,
+    ),
   );

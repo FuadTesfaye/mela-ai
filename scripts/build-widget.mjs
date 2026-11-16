@@ -139,6 +139,15 @@ await build({
   globalName: "MelaSpelling",
   outfile: "public/spelling.js",
 });
+await build({
+  entryPoints: ["module/voice/input.ts"],
+  bundle: true,
+  minify: true,
+  target: "es2020",
+  format: "iife",
+  globalName: "MelaVoice",
+  outfile: "public/voice.js",
+});
 await mkdir("public/i18n", { recursive: true });
 await copyFile("data/localization/am-prepared.json", "public/i18n/am.json");
 const sdkSize = (await stat("public/mela-sdk.js")).size;

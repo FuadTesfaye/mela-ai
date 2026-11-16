@@ -18,7 +18,8 @@
     "test:db": "node --import tsx tests/integration/postgres.test.ts",
     "test:widget": "npm run widget:build && node --import tsx tests/widget.mjs",
     "format": "prettier --write app components lib module workers scripts tests *.ts *.json *.yml *.md",
-    "prepare:video": "python3 scripts/prepare-video.py"
+    "prepare:video": "python3 scripts/prepare-video.py",
+    "prepare:translations": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx scripts/prepare-translations.ts"
   },
   "dependencies": {
     "lucide-react": "0.475.0",
