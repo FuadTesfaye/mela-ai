@@ -6,6 +6,8 @@ Next.js powers the learner workspace, tutor portal, and APIs. An independent Typ
 
 Try the standalone SDK at `/demo/sdk.html`, the iframe wrapper at `/embed`, or read the [SDK integration guide](packages/sdk/README.md).
 
+Project overview: [PowerPoint](docs/presentation/MELA-AI-Project-Overview.pptx) · [PDF](docs/presentation/MELA-AI-Project-Overview.pdf) · [presentation guide](docs/presentation/README.md).
+
 ## Run locally
 
 Requires Node.js 22 and PostgreSQL 17, or Docker Compose.
