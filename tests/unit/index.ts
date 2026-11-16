@@ -9,3 +9,7 @@ import "./learning-preview.test";
 import "./fingerspelling.test";
 import "./sdk-ssr.test";
 import "./teacher.test";
+
+import "./localization.test";
+
+import "./speech.test";

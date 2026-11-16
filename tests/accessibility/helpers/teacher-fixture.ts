@@ -9,6 +9,11 @@ const spans = [
   [103.13, 133.13, "Conversation memory"],
   [133.13, 149, "Review"],
 ] as const;
+export const teacherCues = spans.map(([start, end, text]) => ({
+  start,
+  end,
+  text,
+}));
 export async function teacherFixture(page: Page) {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.route("**/transcripts/9hE5-98ZeCg.json", (route) =>
@@ -18,7 +23,7 @@ export async function teacherFixture(page: Page) {
         language: "en",
         videoUrl: "https://www.youtube.com/watch?v=9hE5-98ZeCg",
         generated: false,
-        cues: spans.map(([start, end, text]) => ({ start, end, text })),
+        cues: teacherCues,
       },
       headers: { "Access-Control-Allow-Origin": "*" },
     }),

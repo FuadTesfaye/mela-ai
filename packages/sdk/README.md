@@ -87,7 +87,7 @@ The adapter mounts after hydration, cleans up on unmount, and accepts the SDK op
   title="MELA learning companion"
   width="100%"
   height="900"
-  allow="autoplay; fullscreen"
+  allow="autoplay; fullscreen; microphone"
   allowfullscreen
   loading="lazy"
 >
@@ -113,3 +113,11 @@ Host Content Security Policy must allow the selected SDK scripts, API connection
 ## Accessible chat preferences
 
 Reading mode is available in the chat toolbar. It remembers a local browser preference, enlarges answer text and opens diagram text equivalents; no disability or TalkBack detection is attempted. New messages use a polite, additions-only chat log and an explicit busy state. Speech starts only through Listen. Advanced context/format/saved-answer controls are in Learning options; cloud sharing remains visible by the composer. These behaviors are shared by the Web Component, SDK and iframe. Real-device TalkBack/NVDA validation remains pending.
+
+## English/Amharic browser-first experience (0.3.0)
+
+Set `language: "am"` at installation or call `instance.setLanguage("am")` / `instance.setLanguage("en")`. Web Components accept `lang="am"`; iframe installations accept `?lang=am`. The React adapter updates language without remounting the lesson video. Independent SDK roots keep their own companion state.
+
+Ordinary lesson questions use local browser retrieval. Prepared lesson/caption translations are downloaded only when needed; unknown text requires explicit consent for the private Gemini relay. Existing messages and source captions remain canonical. The lesson reader offers the English original and preserves source links and code. Amharic packs are AI drafts awaiting fluent review; video audio is unchanged.
+
+Serve optional `/locale.js`, `/voice.js`, `/spelling.js`, `/i18n/am.json` and `/fonts/` alongside the generated bundle. Allow the MELA origin in the host's script, connect and font CSP. Microphone access needs HTTPS and browser permission; iframe hosts must grant microphone permission. No API key belongs in SDK options or frontend code. See [browser-first deployment](../../docs/BROWSER_FIRST.md) for relay, caching and microphone behavior.

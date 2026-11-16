@@ -299,3 +299,9 @@ Websites cannot reliably determine blindness or detect TalkBack through a standa
 For a device check: enable TalkBack, open the lesson in Chrome, swipe to Ask MELA and double-tap, enable Reading mode, submit a question, verify the complete answer and source links are announced, explore Diagram as text, then close the chat and confirm focus returns to Ask MELA. Repeat with reading mode off, large text and a hardware keyboard if available.
 
 The 3D renderer uses [Three.js instancing](https://threejs.org/docs/pages/InstancedMesh.html) for repeated geometry/materials, following its [optimization guidance](https://threejs.org/manual/pages/optimize-lots-of-objects.html). A measured front-view frame now uses 16 draw calls versus 111 previously (about 86% fewer), with the same 16,384 triangles. This reduces GPU submission work; it does not guarantee a particular frame rate on every device or speed up the source video.
+
+### Browser-first English and Amharic
+
+Ordinary lesson questions now use browser-side retrieval by default. Choose አማርኛ for a prepared Amharic lesson reader, new source-backed answers and synchronized captions for the selected demo video. Microphone input produces editable text before sending, with a consented Gemini recording fallback where native dictation is unavailable. New AI requests use a private server relay.
+
+See [browser-first setup and limits](docs/BROWSER_FIRST.md), [the project slides](docs/presentation/MELA-AI-Project-Overview.pptx) and [the hosted demo](https://mela-ai-wheat.vercel.app/savanna/pages/homepage-v1-self-paced.html).

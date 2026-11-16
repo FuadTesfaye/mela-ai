@@ -87,6 +87,15 @@ function setup({
   };
   window.speechSynthesis = { cancel() {} };
   vm.createContext(sandbox);
+  // This DOM harness has no resource loader. Fail optional script downloads
+  // promptly, exercising source-only fallback rather than waiting 20 seconds.
+  const appendScript = window.document.head.append.bind(window.document.head);
+  window.document.head.append = (...nodes) => {
+    appendScript(...nodes);
+    for (const node of nodes)
+      if (node.tagName === "SCRIPT" && node.src?.includes("/locale.js"))
+        setTimeout(() => node.onerror?.(new window.Event("error")), 0);
+  };
   vm.runInContext(bundle, sandbox);
   if (integration)
     vm.runInContext(
@@ -120,6 +129,7 @@ async function question(fixture, text) {
   fixture.root.querySelector(".launcher").click();
   const input = fixture.root.querySelector("textarea");
   input.value = text;
+  fixture.root.querySelector(".privacy input").checked=true;
   fixture.root
     .querySelector("form")
     .dispatchEvent(new fixture.window.Event("submit", { cancelable: true }));

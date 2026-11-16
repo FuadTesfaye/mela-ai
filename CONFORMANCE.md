@@ -97,3 +97,9 @@ The chat now has a persistent, user-selected Reading mode, 44px buttons/language
 Two additional native Chromium tests cover persistence, English/Amharic controls, disclosure navigation, 320px overflow, scoped axe checks, forced colors, keyboard open/close, answer busy state, text equivalents, stable focus and absence of automatic speech. These checks do not establish actual TalkBack or NVDA behavior. Android/TalkBack and co-designer testing remain required.
 
 The teacher now instances repeated symmetric surfaces, reducing a measured frame from 111 to 16 GPU draw calls without removing fingers or changing the source clock. Browser tests enforce no more than 25 draw calls, both hands in frame, deterministic seeking and GPU disposal. This is a rendering-work reduction, not a guaranteed frame-rate measurement on learner devices.
+
+## Browser-first bilingual update
+
+The learner chooses English or Amharic; the application does not infer disability or screen-reader use. The native lesson dialog has labelled controls, original-source access, draft translation notices, code preservation and keyboard dismissal. Language changes preserve drafts, messages and video position. Caption translations must match source revisions and timestamps before installation. Ordinary questions can be answered with all APIs disabled.
+
+Microphone input shows permission and recording states, retains an editable draft and never auto-sends. Closing, unmounting or changing language stops recording. Native recognition is browser-dependent; fallback Gemini audio upload requires separate consent. Prepared Amharic is not a fluent-speaker-approved translation. Physical assistive-technology and learner comprehension review remain pending. See `docs/BROWSER_FIRST.md`.

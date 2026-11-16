@@ -58,8 +58,8 @@ def notes(s,value): s.notes_slide.notes_text_frame.text=value
 def card(s,x,y,w,num,title,body):
     box(s,x,y,w,2.4,WHITE,BORDER,True)
     text(s,num,x+.25,y+.2,w-.5,.35,13,TEAL,True)
-    text(s,title,x+.25,y+.76,w-.5,.6,23,INK,True)
-    text(s,body,x+.25,y+1.35,w-.5,.95,17,MUTED)
+    text(s,title,x+.25,y+.76,w-.5,.72,21,INK,True)
+    text(s,body,x+.25,y+1.55,w-.5,.72,16,MUTED)
 
 # 1 · Opening
 s=base('Project overview · Track 3',1,True)
@@ -96,7 +96,7 @@ pic._element.xpath('.//p:cNvPr')[0].set('descr','MELA course panel with a two-ha
 text(s,'Captions follow the video.',8.3,2.85,4.1,.8,24,INK,True)
 text(s,'Two-handed 3D illustrations\nmake concepts more visible.',8.3,3.85,4.1,1.1,21,MUTED)
 text(s,'Pause, explore a diagram,\nthen resume the lesson.',8.3,5.15,4.1,1.0,21,MUTED)
-notes(s,'Screenshot: actual implemented course panel, with synthetic caption text used in a controlled browser fixture. The selected public demo video is https://www.youtube.com/watch?v=9hE5-98ZeCg. Its locally prepared English source track has 53 cues. The procedural character has two articulated hands, seven illustrative poses and eight authored concept segments. Gesture keywords and timing follow individual transcript cues, rest during gaps, and follow pause/seek/speed. Explain pauses the source; local demonstration replay does not advance the source. The illustrations are NOT validated ASL or Ethiopian Sign Language translation. Reviewed interpreter tracks have a separate upload/review flow and take priority when provided. No validated signer recording has been supplied.')
+notes(s,'Screenshot: actual implemented course panel, with synthetic caption text used in a controlled browser fixture. The selected public demo video is https://www.youtube.com/watch?v=9hE5-98ZeCg. Prepared English and Amharic caption tracks are shipped with the demo. The procedural character has two articulated hands, seven illustrative poses and eight authored concept segments. Gesture keywords and timing follow individual transcript cues, rest during gaps, and follow pause/seek/speed. Explain pauses the source; local demonstration replay does not advance the source. The illustrations are NOT validated ASL or Ethiopian Sign Language translation. Reviewed interpreter tracks have a separate upload/review flow and take priority when provided. No validated signer recording has been supplied.')
 
 # 5 · Accessibility
 s=base('Accessible by design',5)
@@ -108,39 +108,36 @@ text(s,'Keyboard access, visible focus, reduced motion\nand optional voice suppo
 box(s,9.25,2.8,2.9,3.96,WHITE,BORDER,True)
 pic=s.shapes.add_picture(str(OUT/'assets/reading-mode.png'),Inches(9.93),Inches(2.94),height=Inches(3.67))
 pic._element.xpath('.//p:cNvPr')[0].set('descr','MELA mobile Reading mode with an expanded diagram text description, source link, optional Listen control and question composer.')
-notes(s,'The screenshot shows the real mobile chat with a controlled synthetic diagram answer. Reading mode is a user-selected local preference, not a disability flag. It enlarges text and expands diagram equivalents; it does not auto-start speech. The labelled chat log uses polite additions and aria-busy while answers are assembled. Websites cannot reliably infer blindness or detect TalkBack through a standard browser API; no such detection is claimed. Browser accessibility tests pass, but physical-device TalkBack/NVDA and fluent co-designer review remain pending.')
+notes(s,'The screenshot shows the real mobile chat with a controlled synthetic diagram answer. Reading mode is a user-selected local preference, not a disability flag. It enlarges text and expands diagram equivalents; it does not auto-start speech. The labelled chat log uses polite additions and aria-busy while answers are assembled. Websites cannot reliably infer blindness or detect TalkBack through a standard browser API; no such detection is claimed. Physical-device TalkBack/NVDA and fluent co-designer review remain pending.')
 
 # 6 · Architecture
 s=base('How it works',6)
-heading(s,'Small installation. Shared engine.','One component. Many learning platforms.','A host site adds a script and a Web Component. The backend runs separately.')
-items=[(.7,'Any website','Savanna / any LMS'),(3.78,'MELA component','UI + lesson context'),(6.86,'Next.js API','Retrieval + optional AI'),(9.94,'Learning sources','Course + database')]
+heading(s,'Browser-first learning','One component. Many learning platforms.','Lesson search and prepared translations run in the browser.')
+items=[(.7,'Your lesson','Savanna / any LMS'),(3.78,'MELA in browser','Search + reader + captions'),(6.86,'Your choice','Read / speak / translate'),(9.94,'Optional relay','Private Gemini requests')]
 for x,title,desc in items:
     box(s,x,4.0,2.7,1.65,WHITE,BORDER,True)
     text(s,title,x+.2,4.28,2.32,.6,18,INK,True)
     text(s,desc,x+.2,4.98,2.32,.58,15,MUTED)
 for x in [3.47,6.55,9.63]: text(s,'→',x,4.48,.3,.4,23,TEAL,True)
 text(s,'Web Component   ·   JavaScript SDK   ·   React adapter   ·   iframe',.74,6.2,12,.4,18,TEAL)
-notes(s,'Architecture reference: README.md and packages/sdk/README.md. Frontend: independent TypeScript Web Component with Shadow DOM. Server: Next.js/TypeScript and Node.js; PostgreSQL persists tickets and preferences. Retrieval selects evidence before optional generative explanation. No-match answers offer help rather than fabricating a course answer. Explicit sharing consent applies to external AI. All four embedding paths are implemented; host origins and CSP need configuration. Offline search supports cached learning material, not offline YouTube playback or a bundled local neural model.')
+notes(s,'The independent TypeScript Web Component uses Shadow DOM. Browser-side retrieval answers ordinary questions without an API call. Prepared English/Amharic lesson and caption packs are shipped as public assets; cached material remains available offline after an online visit. New AI explanations, translations and fallback audio transcription use an explicitly consented Next.js Gemini relay; the key remains server-side. Human tickets and external channels still require configured backend services. Offline support does not include YouTube playback or a bundled neural model. SDK, React, Web Component and iframe integration paths are available.')
 
-# 7 · Evidence
-s=base('What is working',7)
-heading(s,'Evidence from the build','A working MVP, with measurable checks.','Local verification recorded 16 November 2026.')
-for x,big,label in [(.8,'123','automated checks passed'),(5.05,'34','production browser tests')]:
-    text(s,big,x,3.65,4,1.3,68,TEAL,True)
-    text(s,label,x,5.12,4.3,.8,20,MUTED)
-box(s,9.35,3.68,3.15,2.37,NAVY,None,True)
-text(s,'~100 KB',9.6,4.02,2.7,.7,29,WHITE,True)
-text(s,'initial browser SDK\n3D loads on demand',9.6,4.96,2.7,.9,17,'C2DBDF')
-notes(s,'Source: BUILD_STATUS.md, commit 4550943. Counts: 49 unit, 28 widget/DOM, 10 API, 2 real PostgreSQL and 34 production Chromium tests, totalling 123. These are local checks, not accessibility certification or production traffic. Initial SDK is 99,980 uncompressed bytes; optional 3D runtime is 145,027 gzip bytes. A measured renderer frame uses 16 draw calls, down from 111 (about 86% fewer), with 16,384 triangles. This is reduced submission work, not an 86% speed-up claim. A live YouTube session verified both moving hands, matching captions and zero page errors. Actual assistive-technology, language and user-comprehension testing remain required.')
+# 7 · Learner experience
+s=base('Learning in your language',7)
+heading(s,'English + አማርኛ','Your language. Your lesson. Your pace.','Switch languages without losing your question or your place in the video.')
+card(s,.7,3.85,3.82,'READ','Understand the lesson','An Amharic reader keeps the English source one click away.')
+card(s,4.76,3.85,3.82,'WATCH','Follow each moment','Translated captions follow the original video timing.')
+card(s,8.82,3.85,3.82,'ASK','Use your voice','Speak a question, check the text, then send when ready.')
+notes(s,'English remains the canonical source for citations and gesture timing. Prepared Amharic translations are AI drafts awaiting fluent review. Original video audio is unchanged: there is no dubbing. The language setting is shared across chat, lesson reader and captions. SpeechRecognition is used where supported; an explicitly consented recording can use the private Gemini transcription relay. Microphone permission and browser/language support are required. Dictation never sends the question automatically. New translations require consent, and failures leave the English source available.')
 
 # 8 · Closing / next steps
 s=base('The next step',8,True)
 text(s,'Ready for a\nlearner pilot.',.85,1.5,11.8,1.8,51,WHITE,True)
 text(s,'Test with learners. Refine the languages.\nValidate accessibility on real devices.',.9,3.78,11.5,1.2,28,'C2DBDF')
 text(s,'One lesson. One question. A clearer next step.',.9,5.35,11.6,.55,23,WHITE)
-link=text(s,'github.com/FuadTesfaye/mela-ai',.9,6.25,11,.4,17,GOLD)
+link=text(s,'mela-ai-wheat.vercel.app',.9,6.25,11,.4,17,GOLD)
 link.text_frame.paragraphs[0].runs[0].font.color.rgb=color(GOLD)
-notes(s,'Next work: run a co-designer learner task unaided; verify Android TalkBack/NVDA, English/Amharic quality and low-end-device performance; validate any actual sign-language recordings with fluent signers; configure production HTTPS, credentials, retention and external channels before a release. Gemini video transcription has timed out in local checks; the demo can instead use its prepared source caption cache. No production deployment, sign-language accuracy or completed participant study is claimed. Demo locally at /demo/sdk.html or /savanna/pages/programming-for-beginners.html. Invite the audience to try the core lesson-question-answer-help flow.')
+notes(s,'Try the hosted Savanna demo at https://mela-ai-wheat.vercel.app/savanna/pages/homepage-v1-self-paced.html. Open the Offline-First and Localized AI course for the prepared Amharic lesson reader. Next: learner comprehension sessions, fluent Amharic review, real-device assistive technology checks and validated signing content. Illustrative gestures are not sign-language interpretation. Live Gemini responses depend on deployment credentials and provider availability; the prepared demo does not depend on a new transcription request.')
 
 prs.save(OUT/'MELA-AI-Project-Overview.pptx')
 print('Created',OUT/'MELA-AI-Project-Overview.pptx')

@@ -48,6 +48,7 @@ test("reading mode preserves privacy, expands text, announces complete answers a
   const log = chat.getByRole("log");
   await expect(log).toHaveAttribute("aria-live", "polite");
   await expect(log).toHaveAttribute("aria-relevant", "additions");
+  await chat.locator(".privacy input").check();
   await chat.getByRole("textbox").fill("Show a learning diagram");
   await chat.getByRole("textbox").press("Enter");
   await expect(log).toHaveAttribute("aria-busy", "true");

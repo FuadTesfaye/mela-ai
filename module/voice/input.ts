@@ -212,6 +212,7 @@ export function create(options: {
       const chunks: Blob[] = [];
       let size = 0;
       capture.ondataavailable = (e) => {
+        if (session !== id) return;
         if (e.data.size) {
           chunks.push(e.data);
           size += e.data.size;
@@ -222,11 +223,13 @@ export function create(options: {
         }
       };
       capture.onerror = () => {
+        if (session !== id) return;
         cancel();
         if (active()) options.status(t().failed, true);
       };
       capture.onstop = async () => {
-        tracks();
+        if (stream === acquired) tracks();
+        else acquired.getTracks().forEach((track) => track.stop());
         if (!active() || session !== id) return;
         recorder = undefined;
         const blob = new Blob(chunks, {
@@ -288,7 +291,7 @@ export function create(options: {
         45000,
       );
     } catch (e) {
-      tracks();
+      if (session === id) tracks();
       if (session === id && active()) {
         setState("idle");
         const name = (e as Error).name;

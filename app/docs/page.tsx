@@ -16,10 +16,10 @@ export default function Docs() {
         <section className="content-card">
           <h2>Start with a question.</h2>
           <p>
-            Open MELA using the green button. Choose English or አማርኛ, type your
-            question, and select Send. MELA looks for relevant lesson text and
-            links to its sources. If a source is missing, it says so and offers
-            human help.
+            Open MELA using the floating Help button. Choose English or አማርኛ,
+            type your question, and select Send. MELA looks for relevant lesson
+            text and links to its sources. If a source is missing, it says so
+            and offers human help.
           </p>
           <p>
             Use Tab to move between controls, Enter to activate buttons, and
@@ -30,11 +30,20 @@ export default function Docs() {
         <section className="content-card">
           <h2>Read it. Hear it. Ask again.</h2>
           <p>
+            Choose አማርኛ in Learning options to open an Amharic lesson reader and
+            switch prepared captions. Original English stays available.
+            Translations are AI drafts; video audio remains unchanged. Ordinary
+            lesson questions search locally in your browser. New AI explanations
+            and translations require sharing consent.
+          </p>
+          <p>
             Select Listen to hear an answer when your device has a matching
             voice. Stop audio is always available. Microphone support depends on
             your browser and language; a confirmation explains that your browser
-            may send audio to its speech service. English and Amharic text
-            remain available.
+            may send audio to its speech service. If browser dictation is
+            unavailable, a separate consent prompt offers recording with the
+            private Gemini relay. Review the transcript before sending your
+            question.
           </p>
           <p>
             Simplify selects the first two sentences from each retrieved section

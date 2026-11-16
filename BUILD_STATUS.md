@@ -1,11 +1,15 @@
 # Build and verification status
 
-Recorded 16 November 2026. These are observed local checks, not a production deployment or accessibility certification.
+Recorded 16 November 2026. These checks describe local implementation evidence; physical assistive-technology and fluent language review remain pending.
 
 ## Current result
 
+- Browser-first retrieval answers ordinary questions without calling the API. English/Amharic controls share language across the reader, captions and new answers while preserving drafts and video position. Prepared translation packs, the Ethiopic font and optional voice code load on demand. New Gemini translations and fallback audio transcription require explicit consent; the key stays server-side.
+- Microphone checks cover native dictation events, permission denial, real browser MediaRecorder capture with synthetic audio, cancellation and editable transcripts. Live Gemini requests timed out locally; speech quality on learner devices remains unverified.
+- The PowerPoint and PDF now describe the learner experience without test totals. See `docs/BROWSER_FIRST.md` for deployment details and provider limits.
+
 - All demo course players default to `https://www.youtube.com/watch?v=9hE5-98ZeCg`, configured once in `data/lesson-media.json`.
-- The selected Google for Developers video is 149 seconds long. Its existing English caption track was retrieved: 53 cues, with four overlapping boundaries normalized. The local JSON cache is excluded from Git; `scripts/prepare-video.py` and its pinned optional dependency reproduce it on a deployment.
+- The selected Google for Developers video is 149 seconds long. Its existing English caption track was retrieved: 53 cues, with four overlapping boundaries normalized. Prepared English and AI-draft Amharic caption packs for this selected public demo now ship in Git. Other user-video caches remain ignored. `scripts/prepare-video.py` and `npm run prepare:translations` can refresh the demo assets.
 - The default visual teacher is a procedural 3D person with two articulated hands, seven gesture poses, two camera views and eight source-backed teaching segments with readable diagrams. Illustrations explain concepts; they are not sign-language translation. Experimental fingerspelling and reviewed interpreter playback remain separate options.
 - Transcript keywords now select the current illustrative gesture; each cue supplies its own timing and speech gaps rest both hands. Larger bilateral wrist motion and articulated fingers remain deterministic when seeking. Captions and teacher poses follow play/pause, source seeking and speed. Explain pauses and enlarges the current concept; local slow demonstration replay leaves the video paused until Resume. Reduced motion, hidden/offscreen updates, data saving, late downloads and WebGL failures have explicit behavior and fallback.
 - An actual Chromium session loaded the real YouTube source, observed a playing clock and 149.221-second duration, and confirmed moving 3D hands with no page errors. A separate screenshot inspection checked the enlarged teacher/diagram/explanation layout. Controlled browser fixtures separately exercise synchronization and failure cases.
@@ -19,12 +23,12 @@ Recorded 16 November 2026. These are observed local checks, not a production dep
 | Check                                                                                   | Observed result                                                       |
 | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | TypeScript route generation/type checking                                               | Passed                                                                |
-| Retrieval, security, Gemini, media, timing, handshape and SDK SSR unit tests            | 49 passed                                                             |
-| Bundled widget/DOM tests, including source changes and first-caption context selection  | 28 passed                                                             |
-| API Route Handler integration tests                                                     | 10 passed                                                             |
-| Real PostgreSQL integration tests                                                       | 2 passed                                                              |
-| Production Chromium browser tests                                                       | 34 passed; none skipped                                               |
-| Total automated tests                                                                   | 123 passed                                                            |
+| Retrieval, security, Gemini, media, timing, handshape and SDK SSR unit tests            | Passed                                                                |
+| Bundled widget/DOM tests, including source changes and first-caption context selection  | Passed                                                                |
+| API Route Handler integration tests                                                     | Passed                                                                |
+| Real PostgreSQL integration tests                                                       | Passed                                                                |
+| Production Chromium browser tests                                                       | Passed; none skipped                                                  |
+| Total automated tests                                                                   | Passed                                                                |
 | Production build                                                                        | Passed with webpack and compiler-API type checking                    |
 | Plain HTML SDK on a separate origin                                                     | Passed with real backend requests and controlled source-clock fixture |
 | React/iframe wrapper                                                                    | Passed, including hydration and playback controls                     |
@@ -32,7 +36,7 @@ Recorded 16 November 2026. These are observed local checks, not a production dep
 | Source-caption preparation                                                              | 53 real English cues fetched and served locally                       |
 | Real YouTube player smoke check                                                         | Clock advanced; hands visibly moved; no page errors                   |
 | SDK package                                                                             | Tarball created with ESM core, React adapter, types and README        |
-| OpenAPI                                                                                 | YAML parsed; 157 local references resolved across 21 paths            |
+| OpenAPI                                                                                 | YAML parsed; all local references resolved                            |
 | Supplied-key exposure scan                                                              | No matches in tracked or public files                                 |
 
 CI runs fixture-based unit/widget/API checks without a database URL, then migrates its integration database before PostgreSQL and browser checks. This prevents fixture tests from querying unmigrated signing tables.
@@ -45,14 +49,14 @@ Gemini unit tests mock provider responses. The live Gemini model metadata endpoi
 
 | Asset                             |  Uncompressed |          Gzip |
 | --------------------------------- | ------------: | ------------: |
-| Chat widget                       |  45,252 bytes |  15,085 bytes |
-| Course-media component            |  51,816 bytes |  17,270 bytes |
-| Combined browser SDK              |  99,980 bytes |  32,112 bytes |
-| ESM core SDK                      |  99,561 bytes |  31,944 bytes |
-| React adapter (React is external) |     738 bytes |     419 bytes |
-| Optional 3D runtime               | 569,205 bytes | 145,027 bytes |
+| Chat widget                       |  44,358 bytes |  15,444 bytes |
+| Course-media component            |  52,323 bytes |  17,432 bytes |
+| Combined browser SDK              |  98,630 bytes |  32,255 bytes |
+| ESM core SDK                      |  98,211 bytes |  32,094 bytes |
+| React adapter (React is external) |     878 bytes |     475 bytes |
+| Optional 3D runtime               | 569,205 bytes | 145,025 bytes |
 
-The chat widget remains below its enforced 500,000-byte ceiling. Builds also enforce a 100,000-byte initial SDK and 250,000 gzip-byte optional 3D runtime. The initial SDK has only 20 bytes of remaining budget. The 3D runtime is requested on demand and contains Three.js; it is not part of that initial SDK. The core SDK does not require React or Tailwind on the host website.
+The chat widget remains below its enforced 500,000-byte ceiling. Builds also enforce a 100,000-byte initial SDK and 250,000 gzip-byte optional 3D runtime. Optional language, font, voice and fingerspelling assets stay outside the initial SDK. The 3D runtime is requested on demand and contains Three.js; it is not part of that initial SDK. The core SDK does not require React or Tailwind on the host website.
 
 The current procedural renderer reports 16,384 triangles, seven shared geometries and 16 draw calls (previously 111) in a single front-view frame. Browser tests check all seven poses in both camera views with both hands in frame, and three repeated mount/dispose cycles leave zero allocated geometries and no canvas. Frame targets are capped at 60 fps desktop/30 fps mobile, with limited pixel ratio and adaptive resolution; these are not real-device performance guarantees. Geometry is project-owned and Three.js is MIT licensed.
 
