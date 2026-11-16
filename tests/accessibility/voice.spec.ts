@@ -88,6 +88,10 @@ test("permission denial is actionable and changing language stops a live microph
   await chat
     .getByRole("button", { name: "Use microphone", exact: true })
     .click();
+  await expect(chat.locator("[data-voice-state]")).toHaveAttribute(
+    "data-voice-state",
+    "listening",
+  );
   await page.evaluate(() =>
     (window as any).speech.onerror({ error: "not-allowed" }),
   );
