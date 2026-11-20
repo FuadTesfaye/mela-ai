@@ -2045,8 +2045,85 @@ paths:
       responses:
         "204":
           description: Allowed origin
+  /api/v1/courses:
+    get:
+      summary: List approved public course packs
+      responses:
+        '200':
+          description: Course metadata, revisions and section counts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  courses:
+                    type: array
+                    items:
+                      type: object
+  /api/v1/courses/{id}:
+    get:
+      summary: Read an approved versioned public course pack
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Source sections, resource hashes, languages and practice questions
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          description: Unknown course
+  /api/internal/jobs:
+    post:
+      summary: Run a bounded batch of channel and webhook delivery jobs
+      security:
+        - operationsToken: []
+      responses:
+        '200':
+          description: Bounded batch processed; individual delivery failures remain retryable
+        '401':
+          description: Missing or incorrect operations bearer token
+        '503':
+          description: Not configured or storage unavailable
+  /api/telegram/webhook:
+    post:
+      summary: Durably queue authenticated private-chat Telegram updates
+      parameters:
+        - in: header
+          name: X-Telegram-Bot-Api-Secret-Token
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [update_id]
+              properties:
+                update_id:
+                  type: integer
+                message:
+                  type: object
+      responses:
+        '200':
+          description: Received or already queued
+        '401':
+          description: Webhook secret rejected
+        '503':
+          description: Not configured or storage unavailable
 components:
   securitySchemes:
+    operationsToken:
+      type: http
+      scheme: bearer
+      description: Server-only OPS_SECRET.
     tutorSession:
       type: apiKey
       in: cookie
@@ -2090,8 +2167,10 @@ components:
         language:
           type: string
           enum:
-            - en
-            - am
+          - en
+          - am
+          - om
+          - ti
           default: en
         courseId:
           type: string
@@ -2109,10 +2188,10 @@ components:
           type: number
           minimum: 0
       required:
-        - id
-        - title
-        - content
-        - url
+      - id
+      - title
+      - content
+      - url
     LearningContext:
       type: object
       properties:
@@ -2175,11 +2254,13 @@ components:
         language:
           type: string
           enum:
-            - en
-            - am
+          - en
+          - am
+          - om
+          - ti
           default: en
         context:
-          $ref: "#/components/schemas/LearningContext"
+          $ref: '#/components/schemas/LearningContext'
         cloudConsent:
           type: boolean
           default: false
@@ -2189,26 +2270,25 @@ components:
         scope:
           type: string
           enum:
-            - lesson
-            - wholeVideo
-            - moment
+          - lesson
+          - wholeVideo
+          - moment
           default: lesson
         includeVisualContext:
           type: boolean
           default: false
-          description:
-            Requires cloudConsent, moment scope and Gemini; sends the actual 30-second public
-            video segment.
+          description: Requires cloudConsent, moment scope and Gemini; sends the actual
+            30-second public video segment.
         explanationMode:
           type: string
           enum:
-            - auto
-            - simple
-            - example
-            - steps
-            - diagram
+          - auto
+          - simple
+          - example
+          - steps
+          - diagram
       required:
-        - question
+      - question
     Answer:
       type: object
       properties:
@@ -2265,13 +2345,15 @@ components:
         language:
           type: string
           enum:
-            - en
-            - am
+          - en
+          - am
+          - om
+          - ti
           default: en
         consent:
           type: boolean
           enum:
-            - true
+          - true
         conversation:
           type: array
           items:
@@ -2280,30 +2362,31 @@ components:
               role:
                 type: string
                 enum:
-                  - user
-                  - assistant
-                  - tutor
+                - user
+                - assistant
+                - tutor
               content:
                 type: string
                 maxLength: 12000
             required:
-              - role
-              - content
+            - role
+            - content
           maxItems: 100
         context:
-          $ref: "#/components/schemas/LearningContext"
+          $ref: '#/components/schemas/LearningContext'
         screenshot:
           type: string
           maxLength: 2800000
-          description: PNG, JPEG, or WebP data URL; decoded size at most 2 MiB. Magic bytes are checked.
+          description: PNG, JPEG, or WebP data URL; decoded size at most 2 MiB. Magic
+            bytes are checked.
         kind:
           type: string
           enum:
-            - learning
-            - accommodation
+          - learning
+          - accommodation
           default: learning
       required:
-        - consent
+      - consent
     TicketCreated:
       type: object
       properties:

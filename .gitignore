@@ -32,3 +32,10 @@ public/voice.js
 # The explicitly selected public demo video ships with the frontend.
 !public/transcripts/9hE5-98ZeCg.json
 !public/transcripts/9hE5-98ZeCg.am.json
+
+public/offline-library.js
+public/actions.js
+extension/dist/
+
+extension/mela-extension.zip
+drizzle/review/

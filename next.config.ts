@@ -24,6 +24,8 @@ const config: NextConfig = {
         "/mela-sdk.js",
         "/locale.js",
         "/voice.js",
+        "/actions.js",
+        "/courses/:path*",
         "/spelling.js",
         "/i18n/:path*",
         "/fonts/:path*",

@@ -1,8 +1,35 @@
 # Build and verification status
 
+## 20 November 2026 — implementation update
+
+The code now includes an installable course library, three versioned public Savanna packs with resource hashes and prepared Amharic resources, saved-course search and reader, source-backed practice, an explicit web-command engine and a Chromium extension. The widget exposes download/action entry points, answer-size choices and source-only/model response labels. Supabase runtime/migration configuration, language constraints, application-table RLS, a durable Telegram inbox, bounded scheduled delivery, private interpreter-storage proxying and an optional Drizzle mapping are prepared.
+
+Current verification for this update:
+
+| Check                                    | Result                                                |
+| ---------------------------------------- | ----------------------------------------------------- |
+| Unit tests                               | 61 passed                                             |
+| Widget/DOM tests                         | 28 passed                                             |
+| API route-handler tests                  | 10 passed                                             |
+| New foundation, privacy and action tests | 12 passed                                             |
+| TypeScript                               | Passed                                                |
+| Production Next.js build                 | Passed                                                |
+| Extension bundle and ZIP                 | Built; ZIP integrity and minimal permissions verified |
+| OpenAPI                                  | Parsed; new course and operations endpoints present   |
+
+These are **111 passing local tests**, not 111 device or production checks. Chromium launch is blocked by the execution sandbox, local server binding returns EPERM, and the installed Playwright revision's default browser binary is missing. The cached alternate binary was attempted and also failed with sandbox EPERM. The new offline/action browser specifications are included for browser-enabled CI but were not run here. The previous browser evidence below is historical, not proof of these additions.
+
+The npm registry could not resolve (`EAI_AGAIN`), so Drizzle installation and loading remain unverified. Its schema/config/adapter files are optional and unused by the production `pg` path until dependencies are installed. Supabase migrations, a real deployed tutor reply, current live Gemini requests, channel delivery, storage credentials, monitoring activation and hosted deployment were not performed or verified in this environment. Supabase/Vercel integrations were found but no account connection was confirmed.
+
+Afaan Oromo and Tigrinya currently have registry/schema support and explicit source-only behaviour, not reviewed translation packs. Prepared Amharic remains draft material. Physical-device TalkBack/NVDA, co-designer feedback and real interpreter content remain release gates. Private courses and a downloaded generative model remain outside the agreed first release.
+
+See README for setup and `npm run verify:hosted` for a labelled live smoke test after secrets and connectivity are configured. Presentation files from the earlier task remain separate from product verification.
+
+## Historical verification — 16 November
+
 Recorded 16 November 2026. These checks describe local implementation evidence; physical assistive-technology and fluent language review remain pending.
 
-## Current result
+## Earlier implementation results
 
 - Browser-first retrieval answers ordinary questions without calling the API. English/Amharic controls share language across the reader, captions and new answers while preserving drafts and video position. Prepared translation packs, the Ethiopic font and optional voice code load on demand. New Gemini translations and fallback audio transcription require explicit consent; the key stays server-side.
 - Microphone checks cover native dictation events, permission denial, real browser MediaRecorder capture with synthetic audio, cancellation and editable transcripts. Live Gemini requests timed out locally; speech quality on learner devices remains unverified.

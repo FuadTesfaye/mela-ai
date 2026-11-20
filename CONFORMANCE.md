@@ -103,3 +103,9 @@ The teacher now instances repeated symmetric surfaces, reducing a measured frame
 The learner chooses English or Amharic; the application does not infer disability or screen-reader use. The native lesson dialog has labelled controls, original-source access, draft translation notices, code preservation and keyboard dismissal. Language changes preserve drafts, messages and video position. Caption translations must match source revisions and timestamps before installation. Ordinary questions can be answered with all APIs disabled.
 
 Microphone input shows permission and recording states, retains an editable draft and never auto-sends. Closing, unmounting or changing language stops recording. Native recognition is browser-dependent; fallback Gemini audio upload requires separate consent. Prepared Amharic is not a fluent-speaker-approved translation. Physical assistive-technology and learner comprehension review remain pending. See `docs/BROWSER_FIRST.md`.
+
+## 20 November implementation additions
+
+The saved-course library uses native labels, buttons, headings, explicit download progress and source links that open the saved reader and move focus. The assistant adds three answer text sizes and a skip link on imported lesson pages. The action panel supports keyboard activation, Escape, cancellation, explicit confirmation and matching-control choices. It excludes private/form text from page reading and does not auto-execute dictation.
+
+New DOM tests cover action disambiguation, stale-target rejection and sensitive-field exclusion. Browser specifications cover saved-course reload without connectivity and confirmed actions, but the implementation environment could not launch Chromium or bind the local server. These new browser flows therefore still require a browser-enabled CI run and real-device TalkBack/NVDA validation. No new co-designer feedback, Oromo/Tigrinya translation review or sign-language interpretation is claimed.

@@ -1,12 +1,81 @@
 # MELA AI
 
-**A little support. A world of possibility.** An accessible English/Amharic learning companion for Digital Bridge Track 3, integrated into the original Savanna static UI.
+**Ask once. Keep learning.** An accessible English/Amharic learning companion for Digital Bridge Track 3, integrated into the original Savanna static UI.
 
 Next.js powers the learner workspace, tutor portal, and APIs. An independent TypeScript Web Component provides chat on plain HTML or another LMS. PostgreSQL persists consented support requests and channel preferences. No AI key is needed for the default source-extraction mode.
 
 Try the standalone SDK at `/demo/sdk.html`, the iframe wrapper at `/embed`, or read the [SDK integration guide](packages/sdk/README.md).
 
 Project overview: [PowerPoint](docs/presentation/MELA-AI-Project-Overview.pptx) · [PDF](docs/presentation/MELA-AI-Project-Overview.pdf) · [presentation guide](docs/presentation/README.md).
+
+## PWA, downloaded courses and web commands
+
+- `/offline.html` (also `/downloads`) is the installable learning library. Download an approved course, then open it from saved storage. Packs include lesson text, a prepared Amharic resource where available, saved captions, a font and optional source-backed practice questions. Video streaming remains online-only.
+- `/demo/actions.html` demonstrates the web voice assistant. Use **Learning options → Use web voice commands** in the chat to open the same action panel on a lesson.
+- The action panel supports explicit commands such as `read page`, `scroll down`, `find Downloads`, `click Next`, `fill Practice name with Hana`, `pause video`, and `stop`. `explain page` and `explain selection` show labelled source text in this no-generation action engine. Course explanations remain available in the assistant.
+- Microphone transcripts stay editable; **Run command** executes them. Every activation and field fill requires confirmation. Multiple matches become choices; changed or disconnected targets are rejected. Passwords, file uploads and payment/authentication fields are excluded. Cross-origin frames, browser-internal pages and closed shadow roots are not controlled.
+- **Listen to result** uses an available device voice, reading the beginning of long results. Text always remains available. English and Amharic have supported command phrases; the language selector does not imply reliable speech support for every device/language.
+- Build the Chromium extension with `npm run extension:build`. Load `extension/dist` as an unpacked extension from `chrome://extensions` or Edge's extension page. Click its toolbar action or use **Alt+Shift+M** on an HTTP(S) page. The packaged archive is `extension/mela-extension.zip`. It requests active-tab access after a learner gesture and bundles its own executable code. The extension is an MVP, not a store-published or universally compatible browser agent.
+
+The PWA installs this MELA-hosted experience. It does not turn an arbitrary third-party website into an offline PWA. Embedded partners keep control of their own service worker and installation scope.
+
+Downloads use IndexedDB and revision-specific caches. Course revisions include source sections, resource identities/hashes and practice content. Files are checked before publication to the saved library; interrupted downloads retain verified resources for retry and a previous complete revision remains available while its replacement downloads. The library reports missing resources after cache eviction. Browser storage is not a permanent backup.
+
+English/Amharic materials retain canonical source citations. Amharic is explicitly an AI draft pending review. Afaan Oromo (`om`) and Tigrinya (`ti`) now have shared registry, validation and database support; their lesson translations are **not yet available**, so the interface explicitly shows original source text. No on-device generative model is bundled.
+
+## Supabase deployment and migration safety
+
+Keep the existing Next.js API and tutor authentication. Supabase supplies PostgreSQL and, when configured, private interpreter storage. No Supabase browser Data API access is required by this implementation.
+
+Set these privately in the hosted app:
+
+| Setting                                         | Purpose                                                                                             |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                                  | Supabase shared transaction-pool endpoint, port 6543; copy its exact host/user from Connect         |
+| `MIGRATION_DATABASE_URL`                        | Session-pool endpoint on port 5432, or a reachable direct endpoint; used only by deployment tooling |
+| `DB_POOL_MAX`                                   | Default 1 on Supabase/serverless; raise only with measured demand                                   |
+| `APP_URL`, `ALLOWED_ORIGINS`                    | Exact HTTPS deployment and authorised embedding origins                                             |
+| `ADMIN_PASSWORD`, `SESSION_SECRET`              | Tutor password of at least 12 characters and random signing secret of at least 32 characters        |
+| `DEFAULT_COURSE_ID`                             | `va-foundations` by default                                                                         |
+| `AI_PROVIDER`, `GEMINI_API_KEY`, `GEMINI_MODEL` | Optional consented model responses; verify model availability in the actual project                 |
+
+Use the replacement database password in secret settings; do not commit it. URL-encode reserved characters when constructing a connection URL. Supabase connections require verified TLS. If your deployment requires a private CA, configure its trusted CA through the Node environment rather than disabling certificate verification. The existing `pg` queries do not use named prepared statements. Migration tooling rejects the transaction-pool endpoint because its session advisory lock requires a stable session.
+
+Run `npm run widget:build`, `npm run db:migrate`, and `npm run db:seed` from a deployment environment with the appropriate secret settings. The numbered SQL migrations and `schema_migrations` remain authoritative. Migration 004 enables RLS and removes anonymous/authenticated Data API grants on the application's tables; the server's database role must remain authorised to use them. Migration 005 adds the durable Telegram inbox. Existing rows and the migration ledger are preserved.
+
+Drizzle integration files are prepared in `drizzle/schema.mjs`, `drizzle.config.mjs` and `lib/database/orm.mjs`, using the existing `pg` pool. **The npm registry was unreachable during this implementation, so Drizzle dependencies were not installed and this optional adapter is not active.** The application continues using its tested `pg` adapter. In a network-enabled environment, install `drizzle-orm` and dev dependency `drizzle-kit`, then run `npm run db:drizzle:inspect` with `MIGRATION_DATABASE_URL`. Inspect the resulting baseline against the existing database before adopting typed queries. Do not run schema push or create a second production migration history; the optional schema is a query mapping, while SQL remains the constraints/indexes authority.
+
+`/api/v1/health` reports database migration readiness, tutor-authentication configuration, the configured default course, catalogue status, and AI configuration separately. It never presents a configured AI key as proof of a successful provider connection. Source retrieval still works when human-help storage is unavailable.
+
+To run hosted readiness checks, set `VERIFY_BASE_URL` and `ADMIN_PASSWORD` privately and execute `npm run verify:hosted`. This checks the default Savanna answer, equivalent English/Amharic course questions and an off-topic miss. It also signs in as a tutor, creates one labelled test ticket, verifies a real reply through learner authorisation and resolves the ticket. It never prints ticket tokens or session cookies. Record a separate hosted keyboard/voice demo; API checks are not device accessibility evidence.
+
+## Scheduled jobs, monitoring and private media
+
+For serverless delivery, configure `OPS_SECRET` with at least 32 random characters. Schedule an authenticated `POST /api/internal/jobs` every minute using Supabase Cron or another trusted scheduler, with `Authorization: Bearer …`. Each invocation processes bounded channel/webhook work, leases queued items and applies retention. Failed jobs remain retryable. Do not expose the operations secret to a browser or commit it to cron SQL checked into Git. Existing Docker workers remain supported; avoid running competing poll/webhook modes for the same Telegram bot.
+
+For Telegram webhooks, configure `TELEGRAM_BOT_TOKEN` and a `TELEGRAM_WEBHOOK_SECRET` of at least 24 characters. Register the HTTPS `/api/telegram/webhook` URL with Telegram's `secret_token` option. Authenticated private-chat updates are durably queued and deduplicated by update ID, then processed by scheduled jobs. Delivery is at least once: a crash between a side effect and persisting its reply can still duplicate a command or delivery. SMS continues to require its authenticated gateway and outbound adapter.
+
+Set GitHub repository variable `MELA_HEALTH_URL` to the deployed `/api/v1/health` URL to enable the scheduled health workflow. It retries three times before failing the run. Enable GitHub Actions failure notifications for the responsible operators. Scheduled Actions are best-effort monitoring, not a five-minute uptime guarantee; no external alert recipient was configured here.
+
+For reviewed interpreter media on a serverless host, set `SIGNING_STORAGE_PROVIDER=supabase`, `SUPABASE_URL`, server-only `SUPABASE_SECRET_KEY` and `SUPABASE_SIGNING_BUCKET`. Create that bucket privately. Uploads retain MIME/magic-byte validation, hashing and review; authorised playback proxies authenticated storage with byte ranges. Local temporary files are removed after upload. Platform request-size/duration limits still apply: use short clips within the host's upload limit; direct/resumable large-video uploads are not implemented in this pass. No real interpreter recording or fluent-signer validation is supplied.
+
+## Course onboarding and integration choices
+
+`node scripts/build-catalogue.mjs` publishes the three approved public lessons from their authored regions into `data/course-catalogue.json`, `/courses/index.json` and versioned packs. The normal widget build invokes it after regenerating the authored pages. Server retrieval, browser content and download packs share these source sections; superseded fixture copies of these courses are excluded. Legacy Digital Foundations remains explicitly available under its own course context.
+
+`GET /api/v1/courses` lists public pack metadata; `GET /api/v1/courses/{id}` returns an approved pack. The static `/courses` representations are used for offline downloads. `POST /api/v1/content` remains tutor-authenticated indexing for public course material, not a private-LMS entitlement system.
+
+Choose an integration independently of the SDK:
+
+| Option                       | Best fit                                                                                    |
+| ---------------------------- | ------------------------------------------------------------------------------------------- |
+| Script tag + Web Components  | Add chat/course media to an existing HTML page                                              |
+| Iframe                       | Isolate the companion from host styling; parent-page context is not automatically available |
+| REST API + OpenAPI           | Keep a platform-owned interface and backend workflow                                        |
+| Webhooks                     | Receive supported events without sharing conversations in event payloads                    |
+| Optional SDK / React adapter | Use ready-made components, lifecycle control and optional page actions                      |
+
+SDK additions are `contentUrl`, `actions`, `handle.openActions()` and `handle.downloadUrl`. New fields are optional; existing callers continue to work. Hosts approve their lesson containers and exact API origins, and configure CSP where needed. The assistant's answer text size is adjustable independently of the host page. The supplied course builder uses approved Savanna regions; adding a different platform requires an explicit approved source adapter or published content JSON. It does not scrape authenticated courses or automatically download an entire arbitrary website.
 
 ## Run locally
 
@@ -200,6 +269,8 @@ npm run typecheck
 npm test
 npm run test:widget
 npm run test:integration
+npm run test:features
+npm run extension:build
 npm run build
 npx playwright install chromium
 npm run test:e2e

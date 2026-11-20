@@ -36,6 +36,11 @@ jobs:
       - run: npm run test:widget
         env:
           DATABASE_URL: "" # Fixtures run before the integration database is migrated.
+      - run: npm run test:features
+        env:
+          DATABASE_URL: ""
+      - run: npm run test:memory
+      - run: npm run extension:build
       - run: npm run test:integration
         env:
           DATABASE_URL: "" # Fixtures run before the integration database is migrated.
