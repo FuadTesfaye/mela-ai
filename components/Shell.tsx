@@ -12,6 +12,7 @@ import {
 import Widget from "./Widget";
 const links = [
   { href: "/", label: "Home", Icon: Home },
+  { href: "/downloads", label: "Downloaded courses", Icon: BookOpen },
   { href: "/learn", label: "Access my learning", Icon: BookOpen },
   { href: "/support", label: "Human support", Icon: MessageCircle },
   { href: "/jobs", label: "Career space", Icon: BriefcaseBusiness },
