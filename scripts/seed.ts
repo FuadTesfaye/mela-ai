@@ -1,4 +1,5 @@
-import content from "../data/content.json";
+import { builtinSections } from "../lib/courses/catalogue";
+const content = builtinSections();
 import jobs from "../data/jobs.json";
 import { db, closeDb } from "../lib/database/db";
 async function main() {
@@ -13,9 +14,9 @@ async function main() {
           s.title,
           s.content,
           s.url,
-          s.language,
+          s.language || "en",
           s.courseId,
-          JSON.stringify(s.keywords),
+          JSON.stringify(s.keywords || []),
         ],
       );
     for (const j of jobs)

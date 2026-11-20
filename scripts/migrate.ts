@@ -1,7 +1,12 @@
 import { readdir, readFile } from "node:fs/promises";
-import { db, closeDb } from "../lib/database/db";
+import { Pool } from "pg";
+import { databaseConfig } from "../lib/database/config";
 async function main() {
-  const client = await db().connect();
+  const connection =
+    process.env.MIGRATION_DATABASE_URL || process.env.DATABASE_URL;
+  if (!connection) throw new Error("Set MIGRATION_DATABASE_URL.");
+  const pool = new Pool(databaseConfig(connection, true));
+  const client = await pool.connect();
   try {
     await client.query("SELECT pg_advisory_lock(617230)");
     await client.query(
@@ -29,14 +34,17 @@ async function main() {
       }
     }
   } finally {
-    await client.query("SELECT pg_advisory_unlock(617230)");
-    client.release();
-    await closeDb();
+    try {
+      await client.query("SELECT pg_advisory_unlock(617230)");
+    } finally {
+      client.release();
+      await pool.end();
+    }
   }
 }
 main().catch(() => {
   console.error(
-    "Migration failed. Check DATABASE_URL and PostgreSQL availability.",
+    "Migration failed. Check MIGRATION_DATABASE_URL (session/direct connection) and PostgreSQL availability.",
   );
   process.exitCode = 1;
 });

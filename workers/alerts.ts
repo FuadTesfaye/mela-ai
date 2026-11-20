@@ -3,17 +3,11 @@ import { db, closeDb } from "../lib/database/db";
 import { deliver } from "../lib/channels/transports";
 import { publicWebhookUrl } from "../lib/security/webhooks";
 let running = true;
-process.on("SIGTERM", () => {
-  running = false;
-});
-process.on("SIGINT", () => {
-  running = false;
-});
-export async function processAlerts() {
+export async function processAlerts(limit = 20) {
   await db().query(
     "INSERT INTO alert_deliveries(subscription_id,job_id) SELECT s.id,j.id FROM subscriptions s CROSS JOIN jobs j WHERE s.active=true AND s.verified=true AND (s.keywords='' OR position(lower(s.keywords) in lower(j.data::text))>0) ON CONFLICT DO NOTHING",
   );
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < Math.max(1, Math.min(20, limit)); i++) {
     const claimed = await db().query(
       "UPDATE alert_deliveries d SET attempts=d.attempts+1,lease_until=now()+interval '60 seconds' FROM (SELECT d.subscription_id,d.job_id FROM alert_deliveries d JOIN subscriptions s ON s.id=d.subscription_id WHERE d.status='pending' AND d.attempts<5 AND d.retry_at<=now() AND (d.lease_until IS NULL OR d.lease_until<now()) AND s.active=true AND s.verified=true ORDER BY d.retry_at FOR UPDATE OF d SKIP LOCKED LIMIT 1) q WHERE d.subscription_id=q.subscription_id AND d.job_id=q.job_id RETURNING d.*",
     );
@@ -47,8 +41,8 @@ export async function processAlerts() {
     }
   }
 }
-export async function processWebhooks() {
-  for (let i = 0; i < 20; i++) {
+export async function processWebhooks(limit = 20) {
+  for (let i = 0; i < Math.max(1, Math.min(20, limit)); i++) {
     const claimed = await db().query(
       "UPDATE webhook_deliveries d SET attempts=d.attempts+1,lease_until=now()+interval '60 seconds' FROM (SELECT id FROM webhook_deliveries WHERE delivered_at IS NULL AND attempts<5 AND retry_at<=now() AND (lease_until IS NULL OR lease_until<now()) ORDER BY retry_at FOR UPDATE SKIP LOCKED LIMIT 1) q WHERE d.id=q.id RETURNING d.*",
     );
@@ -92,9 +86,10 @@ export async function processWebhooks() {
     }
   }
 }
-export async function processTutorReplies() {
+export async function processTutorReplies(limit = 20) {
   const result = await db().query(
-    "SELECT c.ticket_id,c.channel,c.destination,m.id,m.content FROM channel_tickets c JOIN LATERAL (SELECT id,content FROM tutor_messages WHERE ticket_id=c.ticket_id AND id>c.last_message_id ORDER BY id LIMIT 1) m ON true LIMIT 20",
+    "SELECT c.ticket_id,c.channel,c.destination,m.id,m.content FROM channel_tickets c JOIN LATERAL (SELECT id,content FROM tutor_messages WHERE ticket_id=c.ticket_id AND id>c.last_message_id ORDER BY id LIMIT 1) m ON true LIMIT $1",
+    [Math.max(1, Math.min(20, limit))],
   );
   for (const row of result.rows) {
     try {
@@ -111,6 +106,13 @@ export async function processTutorReplies() {
   }
 }
 async function main() {
+  process.on("SIGTERM", () => {
+    running = false;
+  });
+  process.on("SIGINT", () => {
+    running = false;
+  });
+
   console.log("Alert, webhook and tutor-reply worker started.");
   let lastCleanup = 0;
   while (running) {

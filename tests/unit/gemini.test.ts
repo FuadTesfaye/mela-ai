@@ -66,6 +66,11 @@ test("Gemini never receives page context without cloud-sharing consent", async (
     };
     const result = await answerQuestion({
       question: "password",
+      context: {
+        pageType: "lesson",
+        courseId: "digital-foundations",
+        sections: [],
+      },
       cloudConsent: false,
     });
     assert.equal(result.provider, "none");
@@ -90,12 +95,22 @@ test("Gemini validates citations and degrades transparently on provider failure"
       });
     const generated = await answerQuestion({
       question: "password",
+      context: {
+        pageType: "lesson",
+        courseId: "digital-foundations",
+        sections: [],
+      },
       cloudConsent: true,
     });
     assert.equal(generated.provider, "gemini");
     globalThis.fetch = async () => new Response("invalid key", { status: 403 });
     const fallback = await answerQuestion({
       question: "password",
+      context: {
+        pageType: "lesson",
+        courseId: "digital-foundations",
+        sections: [],
+      },
       cloudConsent: true,
     });
     assert.equal(fallback.provider, "none");

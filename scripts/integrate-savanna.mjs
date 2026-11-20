@@ -11,6 +11,11 @@ const pages = [
 for (const page of pages) {
   const path = "public/savanna/pages/" + page;
   let html = await readFile(path, "utf8");
+  if (!html.includes('rel="manifest"'))
+    html = html.replace(
+      "</head>",
+      '<link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#103c4b"></head>',
+    );
   if (!html.includes("mela-integration.css"))
     html = html.replace(
       "</head>",

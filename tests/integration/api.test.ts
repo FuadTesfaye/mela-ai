@@ -24,7 +24,15 @@ const request = (
   });
 test("ask endpoint returns bilingual grounded answers without keys", async () => {
   const r = await ask(
-    request("/api/v1/ask", { question: "browser", language: "am" }),
+    request("/api/v1/ask", {
+      question: "browser",
+      language: "am",
+      context: {
+        pageType: "lesson",
+        courseId: "digital-foundations",
+        sections: [],
+      },
+    }),
   );
   assert.equal(r.status, 200);
   const data = await r.json();

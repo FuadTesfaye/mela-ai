@@ -6,6 +6,7 @@ await mkdir("public", { recursive: true });
 await build({
   entryPoints: ["module/db-assistant.ts"],
   bundle: true,
+  charset: "utf8",
   mangleProps: /^_mela/,
   minify: true,
   target: "es2020",
@@ -19,6 +20,7 @@ console.log(`Widget: ${(size / 1024).toFixed(1)} KB (uncompressed)`);
 await build({
   entryPoints: ["module/avatar/avatar-view.ts"],
   bundle: true,
+  charset: "utf8",
   mangleProps: /^_mela/,
   minify: true,
   target: "es2020",
@@ -27,11 +29,11 @@ await build({
 });
 
 await copyFile("openapi.yaml", "public/openapi.yaml");
-await copyFile("data/content.json", "public/content.json");
 
 await build({
   entryPoints: ["module/savanna/integration.ts"],
   bundle: true,
+  charset: "utf8",
   mangleProps: /^_mela/,
   minify: true,
   target: "es2020",
@@ -39,10 +41,12 @@ await build({
   outfile: "public/savanna-integration.js",
 });
 await import("./integrate-savanna.mjs");
+await import("./build-catalogue.mjs");
 
 await build({
   entryPoints: ["module/media/course-media.ts"],
   bundle: true,
+  charset: "utf8",
   mangleProps: /^_mela/,
   minify: true,
   target: "es2020",
@@ -56,6 +60,7 @@ await mkdir("public/sdk", { recursive: true });
 await build({
   entryPoints: ["packages/sdk/src/index.ts"],
   bundle: true,
+  charset: "utf8",
   mangleProps: /^_mela/,
   minify: true,
   target: "es2020",
@@ -65,6 +70,7 @@ await build({
 await build({
   entryPoints: ["packages/sdk/src/react.tsx"],
   bundle: true,
+  charset: "utf8",
   mangleProps: /^_mela/,
   minify: true,
   target: "es2020",
@@ -86,6 +92,7 @@ await build({
 await build({
   entryPoints: ["packages/sdk/src/browser.ts"],
   bundle: true,
+  charset: "utf8",
   mangleProps: /^_mela/,
   minify: true,
   target: "es2020",
@@ -106,6 +113,7 @@ await mkdir("public/avatar", { recursive: true });
 await build({
   entryPoints: ["module/teacher/renderer-3d.ts"],
   bundle: true,
+  charset: "utf8",
   mangleProps: /^_mela/,
   minify: true,
   target: "es2020",
@@ -122,6 +130,7 @@ await copyFile("data/visual-teacher.json", "public/avatar/storyboard.json");
 await build({
   entryPoints: ["module/localization/entry.ts"],
   bundle: true,
+  charset: "utf8",
   mangleProps: /^_mela/,
   minify: true,
   target: "es2020",
@@ -132,6 +141,7 @@ await build({
 await build({
   entryPoints: ["module/media/fingerspelling.ts"],
   bundle: true,
+  charset: "utf8",
   mangleProps: /^_mela/,
   minify: true,
   target: "es2020",
@@ -142,6 +152,7 @@ await build({
 await build({
   entryPoints: ["module/voice/input.ts"],
   bundle: true,
+  charset: "utf8",
   minify: true,
   target: "es2020",
   format: "iife",
@@ -152,3 +163,20 @@ await mkdir("public/i18n", { recursive: true });
 await copyFile("data/localization/am-prepared.json", "public/i18n/am.json");
 const sdkSize = (await stat("public/mela-sdk.js")).size;
 if (sdkSize > 100000) throw new Error(`Initial SDK exceeds 100 KB: ${sdkSize}`);
+await build({
+  entryPoints: ["module/offline/app.ts"],
+  bundle: true,
+  minify: true,
+  target: "es2020",
+  format: "iife",
+  outfile: "public/offline-library.js",
+});
+await build({
+  entryPoints: ["module/actions/entry.ts"],
+  bundle: true,
+  minify: true,
+  target: "es2020",
+  format: "iife",
+  globalName: "MelaActions",
+  outfile: "public/actions.js",
+});
