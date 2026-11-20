@@ -10,7 +10,7 @@ export const POST = (request: Request) =>
     const { sections } = z
       .object({
         sections: z
-          .array(section.extend({ language: z.enum(["en", "am"]) }))
+          .array(section.extend({ language: z.enum(["en", "am", "om", "ti"]) }))
           .min(1)
           .max(100),
       })

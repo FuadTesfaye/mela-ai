@@ -1,0 +1,4 @@
+import { redirect } from "next/navigation";
+export default function Downloads() {
+  redirect("/offline.html");
+}

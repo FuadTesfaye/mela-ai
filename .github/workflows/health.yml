@@ -1,0 +1,24 @@
+name: Hosted MVP health
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *"
+permissions:
+  contents: read
+jobs:
+  health:
+    if: ${{ vars.MELA_HEALTH_URL != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check deployed database and catalogue readiness
+        env:
+          MELA_HEALTH_URL: ${{ vars.MELA_HEALTH_URL }}
+        run: |
+          for attempt in 1 2 3; do
+            if curl --fail --silent --show-error --max-time 15 "$MELA_HEALTH_URL" > health.json; then
+              cat health.json
+              exit 0
+            fi
+            sleep 5
+          done
+          exit 1
