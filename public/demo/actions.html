@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>MELA · Web voice assistant</title>
+    <link rel="stylesheet" href="/learning.css" />
+    <script src="/actions.js" defer></script>
+  </head>
+  <body data-mela-actions-demo>
+    <header>
+      <a href="/">MELA AI</a><a href="/offline.html">Downloads</a>
+    </header>
+    <main id="main" data-mela-context>
+      <h1>Your voice. Your web.</h1>
+      <p>
+        Use MELA to read a page, find a control and request an action. Review
+        and confirm before a link is opened or a button is activated. The
+        microphone creates an editable command; select Run command to act.
+      </p>
+      <h2>Try a course task</h2>
+      <p>
+        Downloads let you save public lessons and continue learning offline.
+        Streaming videos and tutors need a connection.
+      </p>
+      <a href="/offline.html">Open downloaded courses</a>
+      <form
+        onsubmit="event.preventDefault();document.querySelector('#result').textContent='Practice task submitted. No data was sent.'"
+      >
+        <label for="practice-name">Practice name</label
+        ><input
+          id="practice-name"
+          name="practice-name"
+          autocomplete="off"
+        /><button>Submit practice task</button>
+      </form>
+      <p id="result" role="status"></p>
+      <p>
+        This is an MVP with explicit commands, not autonomous control of every
+        website. Use the extension on supported web pages, or embed the
+        component on your own site.
+      </p>
+    </main>
+  </body>
+</html>
