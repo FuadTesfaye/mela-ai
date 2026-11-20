@@ -1,5 +1,5 @@
 import { z } from "zod";
-export const language = z.enum(["en", "am"]);
+export const language = z.enum(["en", "am", "om", "ti"]);
 export const safeUrl = z
   .string()
   .max(2000)

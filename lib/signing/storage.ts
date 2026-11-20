@@ -8,7 +8,9 @@ export const MAX_SIGNING_BYTES = 128 * 1024 * 1024;
 export function storageRoot() {
   return resolve(
     process.env.SIGNING_STORAGE_DIR ||
-      join(process.cwd(), "data-runtime/signing"),
+      (process.env.SIGNING_STORAGE_PROVIDER === "supabase"
+        ? "/tmp/mela-signing"
+        : join(process.cwd(), "data-runtime/signing")),
   );
 }
 export function signingPath(name: string) {
@@ -23,7 +25,17 @@ export function signingMime(contentType: string | null) {
   return mime;
 }
 export async function removeSigningMedia(name?: string | null) {
-  if (name) await unlink(signingPath(name)).catch(() => {});
+  if (!name) return;
+  signingPath(name);
+  if (process.env.SIGNING_STORAGE_PROVIDER === "supabase") {
+    const response = await fetch(remoteSigningUrl(name), {
+      method: "DELETE",
+      headers: remoteHeaders(),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!response.ok && response.status !== 404)
+      throw new HttpError(503, "Could not remove remote signing media.");
+  } else await unlink(signingPath(name)).catch(() => {});
 }
 export async function storeSigningMedia(request: Request, id: string) {
   const mime = signingMime(request.headers.get("content-type"));
@@ -74,6 +86,28 @@ export async function storeSigningMedia(request: Request, id: string) {
     await file.sync();
     await file.close();
     await rename(temp, final);
+    if (process.env.SIGNING_STORAGE_PROVIDER === "supabase") {
+      try {
+        const response = await fetch(remoteSigningUrl(name), {
+          method: "POST",
+          headers: {
+            ...remoteHeaders(),
+            "Content-Type": mime,
+            "Content-Length": String(bytes),
+            "x-upsert": "false",
+          },
+          body: Readable.toWeb(
+            createReadStream(final),
+          ) as ReadableStream<Uint8Array>,
+          duplex: "half",
+          signal: AbortSignal.timeout(60000),
+        } as RequestInit);
+        if (!response.ok)
+          throw new HttpError(503, "Remote signing storage is unavailable.");
+      } finally {
+        await unlink(final).catch(() => {});
+      }
+    }
     return { name, mime, bytes, sha256: hash.digest("hex") };
   } catch (error) {
     await file.close().catch(() => {});
@@ -113,6 +147,34 @@ export async function streamSigningMedia(
   mime: string,
 ) {
   const path = signingPath(name);
+  if (process.env.SIGNING_STORAGE_PROVIDER === "supabase") {
+    const headers = remoteHeaders();
+    if (request.headers.get("range"))
+      headers.Range = request.headers.get("range")!;
+    const response = await fetch(remoteSigningUrl(name, true), {
+      headers,
+      signal: AbortSignal.timeout(30000),
+      cache: "no-store",
+    });
+    if (![200, 206, 416].includes(response.status))
+      throw new HttpError(
+        response.status === 404 ? 404 : 503,
+        "Signing media is unavailable.",
+      );
+    const result = new Headers({
+      "Cache-Control": "no-store",
+      "Content-Type": signingMime(mime),
+      "Accept-Ranges": "bytes",
+    });
+    for (const key of ["Content-Length", "Content-Range"]) {
+      const value = response.headers.get(key);
+      if (value) result.set(key, value);
+    }
+    return new Response(response.body, {
+      status: response.status,
+      headers: result,
+    });
+  }
   let size: number;
   try {
     size = (await stat(path)).size;
@@ -145,4 +207,24 @@ export async function streamSigningMedia(
         : {}),
     },
   });
+}
+
+function remoteHeaders(): Record<string, string> {
+  const key = process.env.SUPABASE_SECRET_KEY;
+  if (!key) throw new HttpError(503, "Signing storage is not configured.");
+  return { Authorization: `Bearer ${key}`, apikey: key };
+}
+function remoteSigningUrl(name: string, authenticated = false) {
+  const origin = new URL(
+    process.env.SUPABASE_URL || "https://unconfigured.invalid",
+  );
+  if (origin.protocol !== "https:" || !origin.hostname.endsWith(".supabase.co"))
+    throw new HttpError(503, "Set the Supabase project HTTPS URL.");
+  const bucket = process.env.SUPABASE_SIGNING_BUCKET || "mela-signing";
+  if (!/^[-a-z0-9]+$/.test(bucket))
+    throw new HttpError(503, "Invalid signing bucket.");
+  return new URL(
+    `/storage/v1/object/${authenticated ? "authenticated/" : ""}${bucket}/${encodeURIComponent(name)}`,
+    origin,
+  ).href;
 }

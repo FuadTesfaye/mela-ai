@@ -1,3 +1,4 @@
+import { languageNotice } from "../languages";
 import type { Section, LearningContext, Language, Answer } from "../types";
 const stop = new Set([
   "a",
@@ -138,6 +139,12 @@ export function groundedAnswer(
   simple = false,
   locale?: RetrievalLocale,
 ): Answer {
+  if (language === "om" || language === "ti")
+    return {
+      ...groundedAnswer(question, sections, context, "en", simple, locale),
+      notice: languageNotice(language),
+      translationStatus: "source-only",
+    };
   const found = retrieve(question, sections, context, language, locale);
   const localized = found.map((s) => {
     const translated =

@@ -1,3 +1,4 @@
+import { speechLocales, languageOrEnglish } from "../lib/languages";
 import { loadFeature } from "./localization/runtime";
 import { renderExplanationBlocks } from "./components-explanations";
 import {
@@ -10,6 +11,7 @@ import { strings } from "./i18n/strings";
 import { videoEvidence, type VideoCue } from "../lib/media/video-context";
 import type {
   Answer,
+  Section,
   Language,
   LearningContext,
   VideoSnapshot,
@@ -34,6 +36,8 @@ const el = <K extends keyof HTMLElementTagNameMap>(
 };
 class DBAssistant extends HTMLElement {
   private root!: ShadowRoot;
+  private _melaOwnKnowledge: Section[] = [];
+  private _melaActions?: { open(): void; destroy(): void };
   contextRoot?: HTMLElement;
   private _melaReadContext() {
     const context = detectContext(
@@ -245,7 +249,11 @@ class DBAssistant extends HTMLElement {
     document.addEventListener("mela:explain-moment", this.momentEvent);
     this._melaKnowledgeReady = loadKnowledge(
       this.getAttribute("content") || "/content.json",
-    ).catch(() => {});
+    )
+      .then((sections) => {
+        this._melaOwnKnowledge = sections;
+      })
+      .catch(() => {});
   }
   static get observedAttributes() {
     return ["lang"];
@@ -256,7 +264,7 @@ class DBAssistant extends HTMLElement {
     value: string | null,
   ) {
     if (!this.root || old === value) return;
-    const next = value === "am" ? "am" : "en";
+    const next = languageOrEnglish(value);
     if (next === this.locale) return;
     const draft = this.input.value;
     const optionsOpen = this.root
@@ -299,6 +307,7 @@ class DBAssistant extends HTMLElement {
       if (values[strings.en[key]]) strings.am[key] = values[strings.en[key]];
   }
   disconnectedCallback() {
+    this._melaActions?.destroy();
     this._melaStopObserving?.();
     window.removeEventListener("mela:open", this.openEvent);
     document.removeEventListener("mela:video-state", this.videoEvent);
@@ -348,6 +357,8 @@ class DBAssistant extends HTMLElement {
     for (const [value, label] of [
       ["en", "English"],
       ["am", "አማርኛ"],
+      ["om", "Afaan Oromo · source text"],
+      ["ti", "ትግርኛ · source text"],
     ]) {
       const option = el("option", label);
       option.value = value;
@@ -402,6 +413,66 @@ class DBAssistant extends HTMLElement {
     toolbar.append(reading);
     const options = el("details", undefined, "options");
     options.append(el("summary", this.t.options), scope);
+    const library = el("a", "Download public courses");
+    library.href = new URL(
+      "/offline.html",
+      new URL(this.api, location.href),
+    ).href;
+    options.append(library);
+    const sizeLabel = el("label", "Answer text size");
+    const size = el("select");
+    size.setAttribute("aria-label", "Answer text size");
+    for (const [value, label] of [
+      ["14", "Standard"],
+      ["18", "Large"],
+      ["22", "Extra large"],
+    ]) {
+      const option = el("option", label);
+      option.value = value;
+      size.append(option);
+    }
+    try {
+      size.value = localStorage.getItem("mela-answer-size") || "14";
+    } catch {
+      size.value = "14";
+    }
+    const applySize = () => {
+      const value = ["14", "18", "22"].includes(size.value) ? size.value : "14";
+      this.style.setProperty("--mela-answer-size", value + "px");
+      try {
+        localStorage.setItem("mela-answer-size", value);
+      } catch {}
+    };
+    applySize();
+    size.onchange = applySize;
+    sizeLabel.append(size);
+    options.append(sizeLabel);
+    const actions = el("button", "Use web voice commands");
+    actions.type = "button";
+    actions.onclick = async () => {
+      try {
+        const feature = await loadFeature<{
+          mountActions: (options: { root?: ParentNode; api: string }) => {
+            open(): void;
+            destroy(): void;
+          };
+        }>(
+          new URL("/actions.js", new URL(this.api, location.href)).href,
+          "MelaActions",
+        );
+        this._melaActions?.destroy();
+        this._melaActions = feature.mountActions({
+          root: this.contextRoot,
+          api: this.api,
+        });
+        this._melaActions.open();
+      } catch {
+        this._melaSetStatus(
+          "Web voice commands are unavailable. Please retry.",
+        );
+      }
+    };
+    options.append(actions);
     this._melaMessages = el("div", undefined, "messages");
     this._melaMessages.setAttribute("role", "log");
     this._melaMessages.setAttribute("aria-label", this.t.title);
@@ -674,6 +745,18 @@ class DBAssistant extends HTMLElement {
       ),
       el("p", answer?.summary || text),
     );
+    if (answer) {
+      const generated = ["gemini", "cloud", "local"].includes(answer.provider);
+      const mode = el(
+        "small",
+        generated
+          ? "AI explanation · check the lesson sources"
+          : "Source-only answer · no language model used",
+        "answer-mode",
+      );
+      mode.lang = "en";
+      node.append(mode);
+    }
     if (answer?.blocks?.length) renderExplanationBlocks(answer.blocks, node);
     if (answer?.citations.length) {
       const sources = el("ul", undefined, "sources");
@@ -860,7 +943,13 @@ class DBAssistant extends HTMLElement {
       } catch {
         if (version !== this.version) return;
         await this._melaKnowledgeReady;
-        answer = await offlineAnswer(question, this.locale, snapshot, simple);
+        answer = await offlineAnswer(
+          question,
+          this.locale,
+          snapshot,
+          simple,
+          this._melaOwnKnowledge,
+        );
         this._melaSetStatus(
           navigator.onLine ? answer.notice || this.t.ready : this.t.offline,
         );
@@ -896,7 +985,7 @@ class DBAssistant extends HTMLElement {
     }
     speechSynthesis.cancel();
     const speech = new SpeechSynthesisUtterance(text);
-    speech.lang = language === "am" ? "am-ET" : "en-US";
+    speech.lang = speechLocales[language];
     speech.voice = voice;
     speech.rate = 0.9;
     speechSynthesis.speak(speech);
@@ -1009,6 +1098,7 @@ class DBAssistant extends HTMLElement {
         }
         const response = await fetch(this.api + "/escalations", {
           method: "POST",
+          signal: AbortSignal.timeout(20000),
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             language: this.locale,
