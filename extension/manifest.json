@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "MELA \u2014 web voice assistant",
+  "version": "0.2.0",
+  "description": "Read and navigate websites, and remember approved site context locally for future visits.",
+  "permissions": ["activeTab", "scripting", "storage"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Open MELA on this page"
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+Shift+M"
+      },
+      "description": "Open MELA on the active page"
+    }
+  },
+  "icons": {
+    "192": "icons/mela-192.png"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  }
+}

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>MELA · Site memory</title>
+    <link rel="stylesheet" href="options.css" />
+    <script src="options.js" defer></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to saved sites</a>
+    <header>MELA AI <span>Site memory</span></header>
+    <main id="main">
+      <p class="eyebrow">YOUR CONTEXT. YOUR CONTROL.</p>
+      <h1>Pick up where you left off.</h1>
+      <p>
+        MELA remembers public page text only after you choose Remember this
+        site. Context stays in this browser's local extension storage, with no
+        cloud upload or browsing-history permission.
+      </p>
+      <p>
+        Up to 25 sites and 10 pages per site within a 2 MiB budget. Context
+        older than 90 days is excluded and removed the next time memory is
+        accessed. Old pages can become stale; open the original website to
+        check.
+      </p>
+      <button id="refresh">Refresh saved sites</button
+      ><button id="clear">Forget every saved site</button>
+      <p id="status" role="status" aria-live="polite"></p>
+      <section id="sites" aria-label="Saved sites"></section>
+    </main>
+  </body>
+</html>
