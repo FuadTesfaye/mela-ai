@@ -23,6 +23,20 @@ Downloads use IndexedDB and revision-specific caches. Course revisions include s
 
 English/Amharic materials retain canonical source citations. Amharic is explicitly an AI draft pending review. Afaan Oromo (`om`) and Tigrinya (`ti`) now have shared registry, validation and database support; their lesson translations are **not yet available**, so the interface explicitly shows original source text. No on-device generative model is bundled.
 
+## Remembering websites in the extension
+
+Extension v0.2 adds **Site memory**. Open MELA on a readable article or lesson, choose **Remember this site**, review the text preview, and confirm. MELA then refreshes approved context when you explicitly open the extension on another page of that enabled site. It does not monitor every tab or collect background browsing history.
+
+On a later visit, ask a question in **Web command**, or ask **What do you remember?** / **Continue from last time**. Local retrieval uses current-page text and the site's saved pages, with source URLs and saved timestamps. Fresh text replaces stale evidence for the same URL. Remembered content never grants action permissions and is not executed as instructions. Existing website actions still require confirmation. Saved context is not uploaded to Gemini or another cloud model by this feature; microphone transcription retains its existing separate consent.
+
+The **Review saved sites** button opens the extension-owned manager. Review saved page text, pause/resume a site, forget one page or site, or clear everything. Removing one page deletes its current saved copy; pause or forget the site to prevent future capture. Paused sites retain their records for review but do not supply saved context to answers or capture later visits. Limits are 25 sites, 10 pages per site, 12,000 characters per page, and a 2 MiB total budget. Older items are pruned by age/recency; records older than 90 days are excluded and removed on the next memory access. This stores bounded page context, not a full website archive.
+
+Snapshots exclude forms, input values, private-marked regions, hidden content and assistant UI. Titles come from the same filtered headings. Query strings and fragments are omitted from stored URLs; sensitive URL parameters and common account/authentication/financial routes are rejected. A site without a readable main/article region cannot be saved. Review the initial preview: DOM filtering cannot independently determine the sensitivity of all visible prose on every website.
+
+Persistence uses `chrome.storage.local` behind the background worker, restricted to trusted extension contexts. Content scripts receive only the current site's enabled context; they cannot list other origins or clear all sites. Global review is restricted to the extension-owned options page, and the injected extension UI uses a closed shadow root. Private/incognito page contexts cannot read or save persistent memory. The new permission is `storage`; no `history`, all-sites host permission or `unlimitedStorage` is requested. Memory is local to this browser profile and is not a cross-device sync or permanent backup.
+
+Rebuild with `npm run extension:build`, replace/reload the unpacked `extension/dist`, or extract the updated archive. Reload open websites after updating the extension. Existing installations must accept the new extension version/permission before using memory. Run `npm run test:memory` for persistence, isolation, capture filtering, recall and request-cancellation checks. Real Chromium installation/restart testing remains pending in a browser-enabled environment.
+
 ## Supabase deployment and migration safety
 
 Keep the existing Next.js API and tutor authentication. Supabase supplies PostgreSQL and, when configured, private interpreter storage. No Supabase browser Data API access is required by this implementation.

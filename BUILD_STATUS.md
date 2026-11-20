@@ -1,5 +1,11 @@
 # Build and verification status
 
+## Extension site-memory follow-up
+
+Version 0.2 adds opt-in local site memory, preview-before-save, same-origin recall with citations/dates, paused-site exclusion, a private extension manager and bounded retention. Context is refreshed only when MELA is opened on an enabled site, not through background history tracking. Persistent storage is restricted to trusted extension contexts and routed through the background worker; the extension panel now uses a closed shadow root. No cloud memory upload or action execution from saved text is introduced.
+
+The site-memory suite passes all 15 tests. The related 12 foundation tests and 28 widget/DOM tests also pass, alongside TypeScript checks and validation of the seven-file v0.2 extension ZIP. The suite covers persistence across a recreated service, concurrent updates, pause/resume/forget, cross-origin and incognito rejection, capture filtering, storage limits and failures, background message security, recall, and stale async response cancellation. Actual Chromium extension installation/restart verification remains blocked by the same environment restrictions documented below.
+
 ## 20 November 2026 — implementation update
 
 The code now includes an installable course library, three versioned public Savanna packs with resource hashes and prepared Amharic resources, saved-course search and reader, source-backed practice, an explicit web-command engine and a Chromium extension. The widget exposes download/action entry points, answer-size choices and source-only/model response labels. Supabase runtime/migration configuration, language constraints, application-table RLS, a durable Telegram inbox, bounded scheduled delivery, private interpreter-storage proxying and an optional Drizzle mapping are prepared.

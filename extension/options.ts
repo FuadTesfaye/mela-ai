@@ -84,7 +84,11 @@ async function refresh() {
         link,
         element("p", page.text),
         button("Forget this page", async () => {
-          if (confirm("Remove this page from saved context?"))
+          if (
+            confirm(
+              "Remove this saved copy? If this site is still enabled, opening MELA on the page again can save a new copy.",
+            )
+          )
             await memoryRequest("remove-page", {
               origin: site.origin,
               url: page.url,

@@ -16,6 +16,7 @@ export type ActionResult = {
   status: "done" | "choose" | "confirm" | "unsupported";
   message: string;
   choices?: { id: number; name: string }[];
+  sources?: { title: string; url: string }[];
 };
 export function parseAction(raw: string): PageAction | undefined {
   const text = raw.trim().replace(/[.!?።]+$/u, "");

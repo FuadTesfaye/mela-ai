@@ -9,7 +9,7 @@ export function memoryControls(
   status.setAttribute("role", "status");
   const intro = document.createElement("p");
   intro.textContent =
-    "Remember public text on this site for your next visit. Saved locally on this device; not uploaded to an AI service. No background browsing history is collected.";
+    "Remember public text on this site for your next visit. Saved locally on this device; not uploaded to an AI service. No background browsing history is collected. Ask “What do you remember?” in Web command to pick up again.";
   const preview = document.createElement("p");
   preview.textContent =
     "Queries, form values, private regions and sensitive account pages are excluded. Up to 25 sites, 10 pages per site and 90 days, within a 2 MiB limit.";

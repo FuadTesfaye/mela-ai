@@ -203,6 +203,25 @@ export function searchSiteMemory(
   view: SiteView,
   current?: PageSnapshot,
 ): MemoryHit[] {
+  if (
+    /^(?:what do you remember(?: about this site)?|show (?:my )?(?:site )?memory|continue from last time)[?.!]*$/iu.test(
+      question.trim(),
+    )
+  )
+    return view.enabled
+      ? view.pages
+          .filter((p) => new URL(p.url).origin === view.origin)
+          .slice()
+          .sort((a, b) => b.savedAt - a.savedAt)
+          .slice(0, 3)
+          .map((p) => ({
+            title: p.title,
+            url: p.url,
+            text: p.text.slice(0, 1000),
+            savedAt: p.savedAt,
+            current: false,
+          }))
+      : [];
   const terms = tokenize(question);
   if (!terms.length) return [];
   const pages: Array<SavedPage & { current: boolean }> = view.enabled

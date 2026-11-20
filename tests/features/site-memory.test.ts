@@ -363,7 +363,7 @@ test("answers retrieve source evidence only from the current site and prefer fre
 test("capture excludes form values, private/hidden regions, assistant UI and hidden heading text", async () => {
   const { parseHTML } = await import("linkedom");
   const { document } = parseHTML(
-    '<html><body><main><h1>Course <span data-private>HIDDEN_TITLE</span></h1><p>Public quantization lesson.</p><form><label>PRIVATE_FORM</label><input value="PRIVATE_VALUE"></form><p data-private>PRIVATE_TEXT</p><p hidden>HIDDEN_TEXT</p><p style="display:none">CSS_HIDDEN</p><aside data-mela-actions-ui>ASSISTANT_UI</aside><h2>Practice</h2></main></body></html>',
+    '<html><body><main><h1>Course <span data-private>HIDDEN_TITLE</span></h1><p>Public quantization lesson.</p><form><label>PRIVATE_FORM</label><input value="PRIVATE_VALUE"></form><p data-private>PRIVATE_TEXT</p><p hidden>HIDDEN_TEXT</p><p style="display:none">CSS_HIDDEN</p><p style="opacity:0">TRANSPARENT_HIDDEN</p><aside data-mela-actions-ui>ASSISTANT_UI</aside><h2>Practice</h2></main></body></html>',
   );
   const prior = Object.getOwnPropertyDescriptor(globalThis, "getComputedStyle");
   Object.defineProperty(globalThis, "getComputedStyle", {
@@ -371,6 +371,7 @@ test("capture excludes form values, private/hidden regions, assistant UI and hid
     value: (element: HTMLElement) => ({
       display: element.style.display,
       visibility: element.style.visibility,
+      opacity: element.style.opacity,
     }),
   });
   try {
@@ -383,7 +384,7 @@ test("capture excludes form values, private/hidden regions, assistant UI and hid
     assert.match(captured.text, /Public quantization lesson/);
     assert.doesNotMatch(
       JSON.stringify(captured),
-      /PRIVATE_|HIDDEN_|CSS_HIDDEN|ASSISTANT_UI/,
+      /PRIVATE_|HIDDEN_|CSS_HIDDEN|TRANSPARENT_HIDDEN|ASSISTANT_UI/,
     );
   } finally {
     if (prior) Object.defineProperty(globalThis, "getComputedStyle", prior);
@@ -552,4 +553,59 @@ test("late site-context answers cannot overwrite Stop, and extension mode keeps 
       if (descriptor) Object.defineProperty(globalThis, key, descriptor);
       else Reflect.deleteProperty(globalThis, key);
   }
+});
+
+test("explicit recall shows saved pages without inventing a browsing history or using paused context", () => {
+  const stored = savePage(
+    { version: 1, sites: [] },
+    "https://learn.example",
+    page(),
+    now,
+  );
+  const view: SiteView = {
+    origin: "https://learn.example",
+    enabled: true,
+    pageCount: 1,
+    pages: stored.sites[0].pages,
+  };
+  const hits = searchSiteMemory(
+    "What do you remember?",
+    view,
+    page("https://learn.example/new", "Unsaved live page."),
+  );
+  assert.equal(hits.length, 1);
+  assert.equal(hits[0].current, false);
+  assert.equal(hits[0].url, "https://learn.example/course");
+  assert.deepEqual(
+    searchSiteMemory("Continue from last time", { ...view, enabled: false }),
+    [],
+  );
+});
+
+test("total-byte pruning removes the oldest context even before site and page-count limits are reached", () => {
+  const raw: MemoryStore = {
+    version: 1,
+    sites: Array.from({ length: 7 }, (_, i) => ({
+      origin: `https://site${i}.example`,
+      enabled: true,
+      updatedAt: now,
+      pages: Array.from({ length: 10 }, (_, j) => ({
+        ...page(`https://site${i}.example/${j}`, "አ".repeat(12000)),
+        savedAt: now - i * 10 - j,
+        firstSavedAt: now - i * 10 - j,
+        visits: 1,
+      })),
+    })),
+  };
+  assert.ok(
+    new TextEncoder().encode(JSON.stringify(raw)).byteLength > MAX_BYTES,
+  );
+  const clean = pruneMemory(raw, now);
+  assert.ok(
+    new TextEncoder().encode(JSON.stringify(clean)).byteLength <= MAX_BYTES,
+  );
+  assert.ok(clean.sites.flatMap((s) => s.pages).length < 70);
+  assert.ok(
+    clean.sites[0].pages.some((p) => p.url === "https://site0.example/0"),
+  );
 });

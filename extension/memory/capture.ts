@@ -5,8 +5,13 @@ function allowed(element: Element, root: Element) {
   if (element.closest(excluded)) return false;
   for (let node: Element | null = element; node; node = node.parentElement) {
     const style = getComputedStyle(node);
-    if (style.display === "none" || style.visibility === "hidden") return false;
-    if (node === root) break;
+    if (
+      style.display === "none" ||
+      style.visibility === "hidden" ||
+      style.opacity === "0" ||
+      style.contentVisibility === "hidden"
+    )
+      return false;
   }
   return true;
 }

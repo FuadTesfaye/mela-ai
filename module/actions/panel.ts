@@ -65,6 +65,24 @@ export function mountActions(
   };
   const show = (result: ActionResult) => {
     output.textContent = result.message;
+    if (result.sources?.length) {
+      const list = document.createElement("ul");
+      for (const source of result.sources) {
+        try {
+          const url = new URL(source.url);
+          if (!["http:", "https:"].includes(url.protocol)) continue;
+          const item = document.createElement("li"),
+            link = document.createElement("a");
+          link.textContent = source.title;
+          link.href = url.href;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          item.append(link);
+          list.append(item);
+        } catch {}
+      }
+      output.append(list);
+    }
     confirm.replaceChildren();
     if (result.status === "confirm")
       confirm.append(
