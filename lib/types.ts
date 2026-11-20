@@ -1,4 +1,5 @@
-export type Language = "en" | "am";
+import type { Language } from "./languages";
+export type { Language } from "./languages";
 export interface Section {
   id: string;
   title: string;

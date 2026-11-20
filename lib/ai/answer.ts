@@ -2,7 +2,12 @@ import prepared from "../../data/localization/am-prepared.json";
 import { preparedTranslator } from "../localization/shared";
 import { videoEntries, amharicGlossary } from "../localization/service";
 import { z } from "zod";
-import fixtures from "../../data/content.json";
+import {
+  builtinSections,
+  defaultCourse,
+  supersededFixtureIds,
+} from "../courses/catalogue";
+const fixtures = builtinSections();
 import jobs from "../../data/jobs.json";
 import type { Section, Answer } from "../types";
 import { askSchema } from "../security/schemas";
@@ -22,7 +27,10 @@ export async function publicSections(): Promise<Section[]> {
   const result = await db().query(
     'SELECT id,title,content,url,language,course_id AS "courseId",keywords FROM sections LIMIT 1000',
   );
-  return result.rows;
+  const combined = new Map(fixtures.map((s) => [s.id, s]));
+  for (const row of result.rows)
+    if (!supersededFixtureIds.has(row.id)) combined.set(row.id, row);
+  return [...combined.values()];
 }
 export function validateGenerated(raw: string, base: Answer) {
   const generated = generatedAnswerSchema.parse(JSON.parse(raw));
@@ -43,6 +51,12 @@ export async function answerQuestion(
   sourceBase?: string,
 ): Promise<Answer> {
   const request = askSchema.parse(input);
+  if (
+    !request.context.courseId &&
+    !request.context.sections.length &&
+    request.context.pageType !== "jobs"
+  )
+    request.context.courseId = defaultCourse();
   const mode = request.explanationMode || (request.simple ? "simple" : "auto");
   const provider = process.env.AI_PROVIDER || "none";
   let media: import("./providers/gemini").GeminiPart | undefined;
@@ -180,7 +194,8 @@ export async function answerQuestion(
     base.citations.push(visualCitation);
     base.matched = true;
   }
-  if (!base.matched) return base;
+  if (!base.matched || request.language === "om" || request.language === "ti")
+    return base;
   if (
     provider === "none" ||
     (["cloud", "gemini"].includes(provider) && !request.cloudConsent)
