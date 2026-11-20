@@ -1,4 +1,5 @@
 import type { Language } from "../../lib/types";
+import { languages } from "../../lib/languages";
 type Result = { isFinal?: boolean; 0: { transcript: string } };
 interface Recognition {
   lang: string;
@@ -90,7 +91,7 @@ export function create(options: {
     writing = false,
     heard = false,
     hadError = false;
-  const t = () => messages[options.language()];
+  const t = () => messages[options.language() === "am" ? "am" : "en"];
   const active = () => !disposed && input.isConnected && button.isConnected;
   function setState(value: typeof state) {
     state = value;
@@ -347,7 +348,7 @@ export function create(options: {
       return;
     }
     recognition = engine;
-    engine.lang = options.language() === "am" ? "am-ET" : "en-US";
+    engine.lang = languages[options.language()].speech;
     engine.continuous = false;
     engine.interimResults = true;
     engine.maxAlternatives = 1;
@@ -389,6 +390,7 @@ export function create(options: {
   setState("idle");
   return {
     toggle,
+    cancel,
     stop() {
       cancel();
       disposed = true;

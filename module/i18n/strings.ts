@@ -41,7 +41,7 @@ const en = {
   screenFallback:
     "Screen sharing is unavailable. Share context or a screenshot.",
 };
-export const strings = {
+const baseStrings = {
   en,
   am: {
     ...en,
@@ -54,3 +54,5 @@ export const strings = {
     privacy: "ጥያቄዎን እና ተዛማጅ የትምህርት ክፍሎችን ለደመና AI ለመላክ ይፈቅዱ",
   },
 };
+
+export const strings = { ...baseStrings, om: en, ti: en };

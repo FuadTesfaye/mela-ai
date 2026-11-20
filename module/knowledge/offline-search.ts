@@ -29,32 +29,48 @@ function valid(data: unknown): data is Section[] {
   );
 }
 export async function loadKnowledge(url: string) {
+  let loaded: Section[] = [];
   const key = "mela-content:" + new URL(url, location.href).href;
   try {
     const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
     if (!response.ok) throw new Error("content");
     const data = await response.json();
     if (!valid(data)) throw new Error("format");
-    knowledge = data.map((s) => ({
+    loaded = data.map((s) => ({
       ...s,
       url: new URL(s.url, new URL(url, location.href)).href,
     }));
     try {
-      localStorage.setItem(key, JSON.stringify(knowledge));
+      localStorage.setItem(key, JSON.stringify(loaded));
     } catch {}
   } catch {
     try {
       const cached = JSON.parse(localStorage.getItem(key) || "[]");
-      if (valid(cached)) knowledge = cached;
+      if (valid(cached)) loaded = cached;
     } catch {}
   }
-  return knowledge;
+  knowledge = loaded;
+  return loaded;
 }
 export async function offlineAnswer(
   question: string,
   language: Language,
   context: LearningContext,
   simple = false,
+  ownKnowledge = knowledge,
 ) {
-  return groundedAnswer(question, knowledge, context, language, simple, locale);
+  const scope =
+    !context.courseId &&
+    !context.sections.length &&
+    ownKnowledge.some((s) => s.courseId === "va-foundations")
+      ? { ...context, courseId: "va-foundations" }
+      : context;
+  return groundedAnswer(
+    question,
+    ownKnowledge,
+    scope,
+    language,
+    simple,
+    locale,
+  );
 }

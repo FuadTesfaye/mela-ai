@@ -2,6 +2,15 @@
 function mount() {
   const main = document.querySelector<HTMLElement>("main#content");
   if (!main) return;
+  if (!document.querySelector("[data-mela-skip]")) {
+    const skip = document.createElement("a");
+    skip.dataset.melaSkip = "";
+    skip.href = "#content";
+    skip.textContent = "Skip to lesson content";
+    skip.className = "mela-skip-link";
+    document.body.prepend(skip);
+    main.tabIndex = -1;
+  }
   const concept = main.querySelector<HTMLElement>(
     "#curriculum_navigation_content",
   );

@@ -15,6 +15,8 @@ export function MelaCompanion({
   assistant,
   renderer,
   contextRoot,
+  contentUrl,
+  actions,
   className,
   style,
   onReady,
@@ -38,6 +40,8 @@ export function MelaCompanion({
       assistant,
       renderer,
       contextRoot,
+      contentUrl,
+      actions,
     })
       .then((result) => {
         if (!active) {
@@ -62,7 +66,16 @@ export function MelaCompanion({
       handle?.destroy();
       mounted.current = undefined;
     };
-  }, [api, videoUrl, lessonId, assistant, renderer, contextRoot]);
+  }, [
+    api,
+    videoUrl,
+    lessonId,
+    assistant,
+    renderer,
+    contextRoot,
+    contentUrl,
+    actions,
+  ]);
   useEffect(() => {
     if (language) mounted.current?.setLanguage(language);
   }, [language]);

@@ -121,3 +121,13 @@ Set `language: "am"` at installation or call `instance.setLanguage("am")` / `ins
 Ordinary lesson questions use local browser retrieval. Prepared lesson/caption translations are downloaded only when needed; unknown text requires explicit consent for the private Gemini relay. Existing messages and source captions remain canonical. The lesson reader offers the English original and preserves source links and code. Amharic packs are AI drafts awaiting fluent review; video audio is unchanged.
 
 Serve optional `/locale.js`, `/voice.js`, `/spelling.js`, `/i18n/am.json` and `/fonts/` alongside the generated bundle. Allow the MELA origin in the host's script, connect and font CSP. Microphone access needs HTTPS and browser permission; iframe hosts must grant microphone permission. No API key belongs in SDK options or frontend code. See [browser-first deployment](../../docs/BROWSER_FIRST.md) for relay, caching and microphone behavior.
+
+## Downloads and optional web commands
+
+`mount({ ...options, contentUrl: "https://your-host/public-course.json", actions: true })` can select another approved public catalogue and enable `handle.openActions()`. The React adapter forwards the same optional props. Action code loads separately on explicit request, so ordinary embeds retain the existing bundle budgets. Actions use `contextRoot` or the mounted instance; confirmations precede activation/filling, and sensitive fields remain excluded.
+
+`handle.downloadUrl` opens the MELA-hosted installable course library. Downloads and service-worker scope stay with that origin; the SDK does not install a service worker over your site. The initial download library lists the approved authored course packs; a custom `contentUrl` is not automatically an approved/downloadable course pack.
+
+The language type accepts `en`, `am`, `om` and `ti`. English/Amharic prepared support exists; Oromo and Tigrinya currently show a source-only notice. Device voice availability is separate from interface language support.
+
+Direct script-tag components, an iframe and the REST API remain independent integration choices. You do not need the SDK to use MELA.

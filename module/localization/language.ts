@@ -1,3 +1,4 @@
+import { languageOrEnglish } from "../../lib/languages";
 import { loadFeature } from "./runtime";
 import type { Language } from "../../lib/types";
 export const languageRoot = (host: HTMLElement) =>
@@ -5,9 +6,9 @@ export const languageRoot = (host: HTMLElement) =>
 export function initialLanguage(host: HTMLElement): Language {
   const explicit =
     host.getAttribute("lang") || languageRoot(host).dataset.melaLanguage;
-  if (explicit) return explicit === "am" ? "am" : "en";
+  if (explicit) return languageOrEnglish(explicit);
   try {
-    return localStorage.getItem("mela-language") === "am" ? "am" : "en";
+    return languageOrEnglish(localStorage.getItem("mela-language"));
   } catch {
     return "en";
   }
