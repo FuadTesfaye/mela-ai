@@ -1,3 +1,4 @@
+import { isLanguage } from "../../../lib/languages";
 import {
   initialLanguage,
   setLanguage,
@@ -9,22 +10,26 @@ export interface MelaOptions {
   api: string;
   videoUrl?: string;
   lessonId?: string;
-  language?: "en" | "am";
+  language?: "en" | "am" | "om" | "ti";
   assistant?: boolean;
   renderer?: "auto" | "2d" | "3d";
   contextRoot?: HTMLElement | string;
+  contentUrl?: string;
+  actions?: boolean;
 }
 export interface MelaHandle {
   element: HTMLElement;
   media: HTMLElement;
   assistant?: HTMLElement;
   setVideo(url: string): void;
-  setLanguage(language: "en" | "am"): void;
+  setLanguage(language: "en" | "am" | "om" | "ti"): void;
+  openActions(): Promise<void>;
+  downloadUrl: string;
   destroy(): void;
 }
 export async function register() {
   if (typeof window === "undefined")
-    throw new Error("Register MELA in the browser after mounting your page.");
+    throw new Error("Register MELA in a browser.");
   await Promise.all([
     import("../../../module/media/course-media"),
     import("../../../module/db-assistant"),
@@ -47,7 +52,7 @@ export async function mount(options: MelaOptions): Promise<MelaHandle> {
   const container = find(options.container);
   const api = new URL(options.api, location.href);
   if (!["https:", "http:"].includes(api.protocol))
-    throw new Error("MELA api must be an HTTP(S) URL.");
+    throw new Error("Use an HTTP(S) API URL.");
   const root = document.createElement("section");
   root.dataset.melaContext = "";
   root.dataset.melaLanguage = options.language || initialLanguage(root);
@@ -70,7 +75,7 @@ export async function mount(options: MelaOptions): Promise<MelaHandle> {
     assistant.setAttribute("api", api.href.replace(/\/$/, ""));
     assistant.setAttribute(
       "content",
-      new URL("/content.json", api.origin).href,
+      new URL(options.contentUrl || "/content.json", api.origin).href,
     );
     assistant.setAttribute("lang", root.dataset.melaLanguage);
     root.append(assistant);
@@ -92,23 +97,56 @@ export async function mount(options: MelaOptions): Promise<MelaHandle> {
       context || root;
   container.append(root);
   let destroyed = false;
+  let actions:
+    | {
+        open(): void;
+        destroy(): void;
+        setLanguage(language: import("../../../lib/types").Language): void;
+      }
+    | undefined;
   return {
     element: root,
     media,
     assistant,
+    downloadUrl: new URL("/offline.html", api.origin).href,
+    async openActions() {
+      if (destroyed) throw new Error("MELA instance destroyed.");
+      if (!options.actions) throw new Error("Enable actions first.");
+      if (!actions) {
+        const { loadFeature } = await import(
+          "../../../module/localization/runtime"
+        );
+        const feature = await loadFeature<{
+          mountActions: (options: {
+            root?: ParentNode;
+            api: string;
+            language: import("../../../lib/types").Language;
+          }) => NonNullable<typeof actions>;
+        }>(new URL("/actions.js", api.origin).href, "MelaActions");
+        if (destroyed) return;
+        actions = feature.mountActions({
+          root: context || root,
+          api: api.href.replace(/\/$/, "") + "/v1",
+          language: root.dataset
+            .melaLanguage as import("../../../lib/types").Language,
+        });
+      }
+      actions.open();
+    },
     setLanguage(language) {
-      if (destroyed) throw new Error("This MELA instance has been destroyed.");
-      if (language !== "en" && language !== "am")
-        throw new Error("Unsupported language.");
+      if (destroyed) throw new Error("MELA instance destroyed.");
+      if (!isLanguage(language)) throw new Error("Unsupported language.");
       setLanguage(root, language);
+      actions?.setLanguage(language);
     },
     setVideo(url) {
-      if (destroyed) throw new Error("This MELA instance has been destroyed.");
+      if (destroyed) throw new Error("MELA instance destroyed.");
       media.setAttribute("video-src", youtubeUrl(url));
     },
     destroy() {
       if (destroyed) return;
       destroyed = true;
+      actions?.destroy();
       root.remove();
       if (context) {
         const entry = contextOwners.get(context);

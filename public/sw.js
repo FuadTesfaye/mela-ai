@@ -1,6 +1,8 @@
 /* Offline shell for this MELA-hosted Savanna demo, never registered on unrelated hosts. */
-const CACHE = "mela-public-v9-browser-first";
+const CACHE = "mela-public-v10-course-library";
 const PAGES = [
+  "/offline.html",
+  "/demo/actions.html",
   "/jobs",
   "/support",
   "/docs",
@@ -17,6 +19,13 @@ const PAGES = [
   "/savanna/pages/programming-for-beginners.html",
 ];
 const ASSETS = [
+  "/offline-library.js",
+  "/actions.js",
+  "/learning.css",
+  "/courses/index.json",
+  "/manifest.webmanifest",
+  "/icons/mela-192.png",
+  "/icons/mela-512.png",
   "/db-assistant.js",
   "/avatar-view.js",
   "/savanna-integration.js",
@@ -87,14 +96,18 @@ self.addEventListener("fetch", (event) => {
     return;
   if (
     request.mode === "navigate" &&
-    (url.pathname === "/" || url.pathname === "/learn")
+    (url.pathname === "/" ||
+      url.pathname === "/learn" ||
+      url.pathname === "/downloads")
   ) {
     event.respondWith(
       Response.redirect(
         new URL(
-          url.pathname === "/learn"
-            ? "/savanna/pages/concept-with-navigation.html"
-            : "/savanna/pages/homepage-v1-self-paced.html",
+          url.pathname === "/downloads"
+            ? "/offline.html"
+            : url.pathname === "/learn"
+              ? "/savanna/pages/concept-with-navigation.html"
+              : "/savanna/pages/homepage-v1-self-paced.html",
           url.origin,
         ),
         302,
@@ -106,6 +119,7 @@ self.addEventListener("fetch", (event) => {
   const asset =
     ASSETS.includes(url.pathname) ||
     ["/locale.js", "/spelling.js", "/voice.js"].includes(url.pathname) ||
+    url.pathname.startsWith("/courses/") ||
     url.pathname.startsWith("/i18n/") ||
     url.pathname.startsWith("/fonts/") ||
     url.pathname === "/avatar/teacher-3d.js" ||
@@ -122,7 +136,15 @@ self.addEventListener("fetch", (event) => {
         if (response.ok) await cache.put(key, response.clone());
         return response;
       } catch {
-        return (await cache.match(key)) || Response.error();
+        const saved = await cache.match(key);
+        if (saved) return saved;
+        for (const name of await caches.keys()) {
+          if (name.startsWith("mela-course-")) {
+            const resource = await (await caches.open(name)).match(request);
+            if (resource) return resource;
+          }
+        }
+        return Response.error();
       }
     })(),
   );

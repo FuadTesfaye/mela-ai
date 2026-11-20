@@ -3,17 +3,21 @@ export interface MelaOptions {
   api: string;
   videoUrl?: string;
   lessonId?: string;
-  language?: "en" | "am";
+  language?: "en" | "am" | "om" | "ti";
   assistant?: boolean;
   renderer?: "auto" | "2d" | "3d";
   contextRoot?: HTMLElement | string;
+  contentUrl?: string;
+  actions?: boolean;
 }
 export interface MelaHandle {
   element: HTMLElement;
   media: HTMLElement;
   assistant?: HTMLElement;
   setVideo(url: string): void;
-  setLanguage(language: "en" | "am"): void;
+  setLanguage(language: "en" | "am" | "om" | "ti"): void;
+  openActions(): Promise<void>;
+  downloadUrl: string;
   destroy(): void;
 }
 export declare function register(): Promise<void>;

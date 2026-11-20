@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#103c4b" />
+    <title>MELA · Saved learning</title>
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="stylesheet" href="/learning.css" />
+    <script src="/offline-library.js" defer></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to courses</a>
+    <header>
+      <a href="/">MELA AI</a>
+      <nav aria-label="Learning">
+        <a href="/learn">Online lesson</a><a href="/support">Human help</a
+        ><a href="/demo/actions.html">Web voice assistant</a>
+      </nav>
+    </header>
+    <main id="main">
+      <p class="eyebrow">YOUR LESSON. YOUR PACE.</p>
+      <h1>Take your learning with you.</h1>
+      <p>
+        Install MELA, download a public course, and search saved lessons without
+        an internet connection.
+      </p>
+      <button id="install" hidden>Install MELA</button>
+      <details>
+        <summary>How to install on your device</summary>
+        <p>
+          Chrome or Edge: use Install in the browser menu. iPhone/iPad: open in
+          Safari, choose Share, then Add to Home Screen. Installation and
+          downloads are separate: save a course below before going offline.
+        </p>
+      </details>
+      <p id="network" role="status"></p>
+      <p id="status" role="status" aria-live="polite"></p>
+      <div id="library" aria-label="Available and downloaded courses"></div>
+      <article id="reader" hidden>
+        <h2 id="lesson-title" tabindex="-1"></h2>
+        <form id="question-form">
+          <label for="language">Answer language</label
+          ><select id="language"></select
+          ><label for="question">Ask about this saved course</label
+          ><input
+            id="question"
+            required
+            maxlength="2000"
+            autocomplete="off"
+          /><button>Search saved lessons</button>
+        </form>
+        <div id="answer" tabindex="-1" aria-live="polite"></div>
+        <details>
+          <summary>Read the saved lessons</summary>
+          <div id="lesson-content"></div>
+        </details>
+        <p>
+          Course answers are source extracts, not a downloaded generative model.
+          Amharic translations are AI drafts awaiting review; unavailable
+          translations show the original source. Streaming videos and live
+          support need connectivity.
+        </p>
+      </article>
+    </main>
+  </body>
+</html>
