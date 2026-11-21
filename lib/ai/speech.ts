@@ -6,8 +6,12 @@
  *     (`dnf install espeak-ng` / `apt install espeak-ng`); not on Vercel.
  * Results are cached in memory so repeated phrases cost nothing. */
 import { spawn } from "node:child_process";
+import { addisConfigured, addisSpeak, ADDIS_VOICES } from "./providers/addis";
 
-export type Speech = { audio: Buffer; engine: "groq" | "gemini" | "espeak" };
+export type Speech = {
+  audio: Buffer;
+  engine: "addis" | "groq" | "gemini" | "espeak";
+};
 const cache = new Map<string, Speech>();
 const failedUntil: Record<string, number> = {};
 const skip = (engine: string) => (failedUntil[engine] || 0) > Date.now();
@@ -51,7 +55,7 @@ async function groq(text: string) {
   });
   if (!response.ok) {
     // Terms not accepted / quota: stop trying for a while.
-    pause("groq", response.status === 400 || response.status === 403 ? 10 : 2);
+    pause("groq", response.status === 400 || response.status === 403 ? 3 : 1);
     return;
   }
   return Buffer.from(await response.arrayBuffer());
@@ -136,6 +140,18 @@ export async function synthesize(
   const hit = cache.get(key);
   if (hit) return hit;
   let result: Speech | undefined;
+  // Ethiopian languages: Addis AI's native voices first.
+  if (ADDIS_VOICES[language] && addisConfigured() && !skip("addis")) {
+    const audio = await addisSpeak(text, language).catch(() => {
+      pause("addis", 2);
+      return undefined;
+    });
+    if (audio) {
+      result = { audio, engine: "addis" };
+      cache.set(key, result);
+      return result;
+    }
+  }
   const natural =
     language === "en" ? await groq(text).catch(() => undefined) : undefined;
   if (natural) result = { audio: natural, engine: "groq" };

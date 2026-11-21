@@ -37,6 +37,7 @@ const NUMBERS: Record<string, number> = {
   fifth: 5,
 };
 
+const scriptOrigin = (document.currentScript as HTMLScriptElement | null)?.src;
 function install() {
   const w = window as unknown as { MelaVoiceAccess?: unknown };
   if (w.MelaVoiceAccess) return;
@@ -58,36 +59,107 @@ function install() {
     speechSynthesis
       .getVoices()
       .find((v) => v.lang.toLowerCase().startsWith("en"));
-  /** Speak (voice mode) and always announce for screen readers. */
-  const say = (text: string, onDone?: () => void) => {
-    region.textContent = "";
-    setTimeout(() => (region.textContent = text), 50);
-    if (mode !== "voice" || !("speechSynthesis" in window)) {
-      onDone?.();
-      return;
+  // MELA's voice: the server's natural voice (Groq → Gemini → eSpeak), with the
+  // device's own voice as a fallback. Audio for upcoming text is prefetched.
+  const ttsUrl = new URL("/api/v1/tts", scriptOrigin || location.href).href;
+  const voiceCache = new Map<string, Promise<string | undefined>>();
+  const fetchVoice = (text: string, language = "en") => {
+    const cacheKey = language + ":" + text;
+    let hit = voiceCache.get(cacheKey);
+    if (!hit) {
+      hit = fetch(ttsUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: text.slice(0, 1000), language }),
+      })
+        .then((r) => (r.ok ? r.blob() : undefined))
+        .then((b) => (b ? URL.createObjectURL(b) : undefined))
+        .catch(() => undefined);
+      voiceCache.set(cacheKey, hit);
+      if (voiceCache.size > 60) {
+        const [oldest, value] = voiceCache.entries().next().value!;
+        voiceCache.delete(oldest);
+        void value.then((u) => u && URL.revokeObjectURL(u));
+      }
     }
-    speechSynthesis.cancel();
+    return hit;
+  };
+  const chunks = (text: string) => {
+    const out: string[] = [];
+    for (const sentence of text.match(/[^.!?።፧]+[.!?።፧]*\s*/g) || [text]) {
+      if (out.length && out[out.length - 1].length + sentence.length < 400)
+        out[out.length - 1] += sentence;
+      else out.push(sentence);
+    }
+    return out.map((c) => c.trim()).filter(Boolean);
+  };
+  let player: HTMLAudioElement | undefined;
+  let token = 0;
+  const spokenLog: string[] = [];
+  const deviceSay = (text: string, done: () => void) => {
+    if (!("speechSynthesis" in window)) return done();
     const utterance = new SpeechSynthesisUtterance(text);
     const voice = voiceFor();
     if (voice) utterance.voice = voice;
     utterance.lang = voice?.lang || "en-US";
     utterance.rate = rate;
-    speaking = true;
-    const finish = () => {
-      if (!speaking) return;
-      speaking = false;
-      onDone?.();
-    };
-    utterance.onend = finish;
+    utterance.onend = done;
     utterance.onerror = (e) => {
-      // "interrupted"/"canceled" mean we stopped it on purpose.
-      if (e.error === "interrupted" || e.error === "canceled") speaking = false;
-      else finish();
+      if (e.error !== "interrupted" && e.error !== "canceled") done();
     };
     speechSynthesis.speak(utterance);
   };
+  /** Play text out loud (no mode check); calls onDone when finished. */
+  const speakOut = (text: string, onDone?: () => void, language = "en") => {
+    quiet();
+    const mine = ++token;
+    speaking = true;
+    spokenLog.push(text);
+    if (spokenLog.length > 50) spokenLog.shift();
+    const parts = chunks(text);
+    const finish = () => {
+      if (mine !== token) return;
+      speaking = false;
+      onDone?.();
+    };
+    const play = (i: number) => {
+      if (mine !== token) return;
+      if (i >= parts.length) return finish();
+      if (parts[i + 1]) void fetchVoice(parts[i + 1], language);
+      const next = () => play(i + 1);
+      void fetchVoice(parts[i], language).then((url) => {
+        if (mine !== token) return;
+        // No server voice: the device voice only makes sense for English.
+        if (!url)
+          return language === "en"
+            ? deviceSay(parts[i], () => mine === token && next())
+            : next();
+        const audio = new Audio(url);
+        player = audio;
+        audio.playbackRate = rate;
+        audio.onended = () => mine === token && next();
+        audio.onerror = () => mine === token && deviceSay(parts[i], next);
+        // Blocked autoplay (no click yet on this page) → device voice.
+        audio.play().catch(() => mine === token && deviceSay(parts[i], next));
+      });
+    };
+    play(0);
+  };
+  /** Speak (talk mode) and always announce for screen readers. */
+  const say = (text: string, onDone?: () => void) => {
+    region.textContent = "";
+    setTimeout(() => (region.textContent = text), 50);
+    if (mode !== "voice") {
+      onDone?.();
+      return;
+    }
+    speakOut(text, onDone);
+  };
   const quiet = () => {
+    token++;
     speaking = false;
+    player?.pause();
+    player = undefined;
     speechSynthesis?.cancel();
   };
 
@@ -174,6 +246,7 @@ function install() {
       return;
     }
     reading = true;
+    if (all[cursor + 1]) void fetchVoice(chunks(all[cursor + 1].text)[0] || "");
     say(block.text, () => {
       if (!reading) return;
       if (cursor + 1 < all.length) readFrom(cursor + 1);
@@ -550,6 +623,11 @@ function install() {
     talk,
     setMode: (next: Mode) => setMode(next, true),
     command: async (text: string) => (await handle(text))?.reply,
+    /** Speak with MELA's voice (used by the chat's Listen button and answers). */
+    speak: (text: string, language = "en") =>
+      speakOut(text, undefined, language),
+    stop: quiet,
+    spoken: () => [...spokenLog],
     get mode() {
       return mode;
     },

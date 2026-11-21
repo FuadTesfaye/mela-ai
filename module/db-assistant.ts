@@ -1020,6 +1020,13 @@ class DBAssistant extends HTMLElement {
     }
   }
   private _melaListen(text: string, language = this.locale) {
+    // MELA's natural server voice (module/voice-access.ts) when it is loaded.
+    const access = (
+      window as unknown as {
+        MelaVoiceAccess?: { speak(t: string, l: string): void };
+      }
+    ).MelaVoiceAccess;
+    if (access) return access.speak(text, language);
     if (!window.speechSynthesis) {
       this._melaSetStatus(this.t.noVoice);
       return;

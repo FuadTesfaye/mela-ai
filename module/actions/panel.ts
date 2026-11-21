@@ -230,7 +230,8 @@ export function mountActions(
     }
     return chunks.filter((c) => c.text.trim());
   };
-  let naturalPausedUntil = 0;
+  // Per language: an English voice failure must not silence Amharic.
+  const naturalPausedUntil: Record<string, number> = {};
   const speakNatural = async (
     text: string,
     lang: "en" | "am",
@@ -257,7 +258,7 @@ export function mountActions(
       if (token !== speechToken) return "";
       // Gemini voice unavailable (e.g. daily quota): hand the rest to the device voice.
       if (!buffer) {
-        naturalPausedUntil = Date.now() + 10 * 60 * 1000;
+        naturalPausedUntil[language] = Date.now() + 10 * 60 * 1000;
         return text.slice(chunks[i].from);
       }
       if (i === 0) signBox?.play(text, lang);
@@ -286,7 +287,7 @@ export function mountActions(
     if (token !== speechToken) return;
     if (
       options.tts &&
-      Date.now() > naturalPausedUntil &&
+      Date.now() > (naturalPausedUntil[language] || 0) &&
       (mode === "gemini" || (mode === "auto" && !voice))
     ) {
       const rest = await speakNatural(text, lang, token);

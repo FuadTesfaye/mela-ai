@@ -20,7 +20,11 @@ export function cors(request: Request) {
     Vary: "Origin",
   });
   if (origin) {
-    if (!allowedOrigins().has(origin) && origin !== new URL(request.url).origin)
+    if (
+      !allowedOrigins().has(origin) &&
+      origin !== new URL(request.url).origin &&
+      !/^chrome-extension:\/\/[a-p]{32}$/.test(origin)
+    )
       throw new HttpError(403, "Origin is not allowed.");
     headers.set("Access-Control-Allow-Origin", origin);
     headers.set(
