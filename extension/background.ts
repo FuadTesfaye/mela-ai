@@ -4,6 +4,8 @@ import { createMemoryService } from "./memory/service";
 import {
   askGemini,
   askPrompt,
+  geminiText,
+  languageName,
   transcribeGemini,
   speakGemini,
   GEMINI_SETTINGS_KEY,
@@ -54,7 +56,13 @@ async function firstOf<T>(attempts: (false | (() => Promise<T>))[]) {
   throw last;
 }
 type AiMessage = {
-  type: "mela:ask" | "mela:transcribe" | "mela:tts" | "mela:prefs";
+  type:
+    | "mela:ask"
+    | "mela:transcribe"
+    | "mela:tts"
+    | "mela:prefs"
+    | "mela:translate";
+  context?: string;
   text?: string;
   question?: string;
   language?: string;
@@ -65,9 +73,13 @@ type AiMessage = {
 chrome.runtime.onMessage.addListener((raw, sender, reply) => {
   const message = raw as unknown as AiMessage;
   if (
-    !["mela:ask", "mela:transcribe", "mela:tts", "mela:prefs"].includes(
-      message?.type,
-    )
+    ![
+      "mela:ask",
+      "mela:transcribe",
+      "mela:tts",
+      "mela:prefs",
+      "mela:translate",
+    ].includes(message?.type)
   )
     return;
   if ((sender as { id?: string }).id !== chrome.runtime.id) return;
@@ -88,6 +100,25 @@ chrome.runtime.onMessage.addListener((raw, sender, reply) => {
       chrome.runtime.openOptionsPage().catch(() => {});
       throw new Error(
         "Add a Gemini or Groq API key in the MELA extension settings (the page just opened), then ask again.",
+      );
+    }
+    if (message.type === "mela:translate") {
+      // Live video captions → the viewer's language.
+      const target = String(message.language || "en").slice(0, 5);
+      const text = String(message.text || "")
+        .trim()
+        .slice(0, 1500);
+      if (!text) return "";
+      const system = `You translate live video captions for Deaf viewers. Translate the caption into ${languageName(target)}. Use simple, clear, natural everyday language. Output only the translation, with no quotes, notes or explanations.`;
+      const context = String(message.context || "").slice(-600);
+      const user =
+        (context
+          ? `Earlier captions, for context only (do not translate): ${context}\n\n`
+          : "") + `Caption to translate: ${text}`;
+      const viaGroq = groq && (() => groqChat(settings.groqKey!, system, user));
+      const viaGemini = gemini && (() => geminiText(settings, user, system));
+      return firstOf(
+        target === "en" ? [viaGroq, viaGemini] : [viaGemini, viaGroq],
       );
     }
     if (message.type === "mela:tts") {

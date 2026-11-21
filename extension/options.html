@@ -13,18 +13,24 @@
     <main id="main">
       <section id="gemini" aria-labelledby="gemini-title" class="gemini">
         <p class="eyebrow">TALKING ASSISTANT</p>
-        <h1 id="gemini-title">Connect Gemini</h1>
+        <h1 id="gemini-title">Connect the AI</h1>
         <p>
-          MELA uses Google Gemini to answer your questions about the page you
-          are on, reads the answer aloud and shows it in the sign-language box.
-          Get a free API key at
+          MELA uses Groq (fast transcription and English answers) and Google
+          Gemini (Amharic and backup) to answer questions about the page you are
+          on. Add either key, or both. Gemini keys:
           <a
             href="https://aistudio.google.com/apikey"
             target="_blank"
             rel="noopener noreferrer"
             >aistudio.google.com/apikey</a
           >
-          and paste it below. The key stays in this browser only.
+          · Groq keys:
+          <a
+            href="https://console.groq.com/keys"
+            target="_blank"
+            rel="noopener noreferrer"
+            >console.groq.com/keys</a
+          >. Keys stay in this browser only.
         </p>
         <label for="gemini-key">Gemini API key</label>
         <input
@@ -34,7 +40,17 @@
           spellcheck="false"
           placeholder="AIza…"
         />
-        <label for="gemini-model">Model</label>
+        <label for="groq-key"
+          >Groq API key (recommended: fast voice input and answers)</label
+        >
+        <input
+          id="groq-key"
+          type="password"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="gsk_…"
+        />
+        <label for="gemini-model">Gemini model</label>
         <input
           id="gemini-model"
           type="text"
@@ -42,6 +58,16 @@
           spellcheck="false"
           placeholder="gemini-3.5-flash"
         />
+        <label for="gemini-voice">MELA's voice</label>
+        <select id="gemini-voice">
+          <option value="auto">
+            Automatic (device voice, or Gemini voice if the device has none)
+          </option>
+          <option value="gemini">
+            Natural Gemini voice (works everywhere)
+          </option>
+          <option value="device">Device voice only</option>
+        </select>
         <div>
           <button id="gemini-save" type="button">Save key</button
           ><button id="gemini-test" type="button">Test connection</button

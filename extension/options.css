@@ -103,6 +103,7 @@ a {
   font-weight: 650;
   margin-top: 12px;
 }
+.gemini select,
 .gemini input {
   width: 100%;
   font: inherit;

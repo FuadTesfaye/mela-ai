@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { ExplanationBlock } from "../types";
-const refs = z.array(z.string().max(100)).min(1).max(4);
+const refs = z.array(z.string().max(100)).max(4);
 const diagram = z
   .object({
     kind: z.literal("diagram"),
@@ -57,7 +57,8 @@ export const explanationBlockSchema = z.discriminatedUnion("kind", [
 ]);
 export const generatedAnswerSchema = z.object({
   answer: z.string().trim().min(1).max(6000),
-  sourceIds: refs,
+  // Empty when the lesson doesn't cover the question and a general answer is given.
+  sourceIds: z.array(z.string().max(160)).max(12),
   blocks: z.array(explanationBlockSchema).max(6).optional(),
 });
 export const explanationJsonSchema = z.toJSONSchema(generatedAnswerSchema);

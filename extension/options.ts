@@ -6,6 +6,7 @@ import {
   GEMINI_SETTINGS_KEY,
   type GeminiSettings,
 } from "./gemini";
+import { groqChat } from "./groq";
 const root = document.querySelector<HTMLElement>("#sites")!,
   status = document.querySelector<HTMLElement>("#status")!;
 const element = <K extends keyof HTMLElementTagNameMap>(tag: K, text = "") => {
@@ -145,10 +146,16 @@ const storage = (
 ).chrome.storage.local;
 const keyInput = document.querySelector<HTMLInputElement>("#gemini-key")!,
   modelInput = document.querySelector<HTMLInputElement>("#gemini-model")!,
-  geminiStatus = document.querySelector<HTMLElement>("#gemini-status")!;
+  geminiStatus = document.querySelector<HTMLElement>("#gemini-status")!,
+  voiceInput = document.querySelector<HTMLSelectElement>("#gemini-voice")!,
+  groqInput = document.querySelector<HTMLInputElement>("#groq-key")!;
 const current = (): GeminiSettings => ({
   key: keyInput.value.trim(),
+  groqKey: groqInput.value.trim(),
   model: modelInput.value.trim() || DEFAULT_MODEL,
+  voice: (["auto", "gemini", "device"].includes(voiceInput.value)
+    ? voiceInput.value
+    : "auto") as GeminiSettings["voice"],
 });
 void storage.get(GEMINI_SETTINGS_KEY).then((data) => {
   const saved = data[GEMINI_SETTINGS_KEY] as
@@ -156,16 +163,19 @@ void storage.get(GEMINI_SETTINGS_KEY).then((data) => {
     | undefined;
   keyInput.value = saved?.key || "";
   modelInput.value = saved?.model || DEFAULT_MODEL;
-  geminiStatus.textContent = saved?.key
-    ? "Gemini is connected. Click the MELA icon on any website and ask a question."
-    : "No key saved yet. Paste your Gemini API key to turn on the talking assistant.";
+  voiceInput.value = saved?.voice || "auto";
+  groqInput.value = saved?.groqKey || "";
+  geminiStatus.textContent =
+    saved?.key || saved?.groqKey
+      ? "Connected. Click the MELA icon on any website and ask a question."
+      : "No key saved yet. Paste a Groq or Gemini API key to turn on the talking assistant.";
 });
 document.querySelector<HTMLButtonElement>("#gemini-save")!.onclick =
   async () => {
     const value = current();
-    if (!value.key) {
-      geminiStatus.textContent = "Paste a Gemini API key first.";
-      keyInput.focus();
+    if (!value.key && !value.groqKey) {
+      geminiStatus.textContent = "Paste a Groq or Gemini API key first.";
+      groqInput.focus();
       return;
     }
     if (!/^[a-zA-Z0-9._-]+$/.test(value.model)) {
@@ -179,26 +189,42 @@ document.querySelector<HTMLButtonElement>("#gemini-save")!.onclick =
 document.querySelector<HTMLButtonElement>("#gemini-test")!.onclick =
   async () => {
     const value = current();
-    if (!value.key) {
-      geminiStatus.textContent = "Paste a Gemini API key first.";
+    if (!value.key && !value.groqKey) {
+      geminiStatus.textContent = "Paste a Groq or Gemini API key first.";
       return;
     }
-    geminiStatus.textContent = "Testing Gemini…";
-    try {
-      const answer = await askGemini(value, {
-        question: "Say hello and confirm you are ready, in one short sentence.",
-        language: "en",
-        page: { title: "MELA settings", url: "", text: "" },
-      });
-      geminiStatus.textContent = "Connected ✓ Gemini says: " + answer;
-    } catch (e) {
-      geminiStatus.textContent =
-        e instanceof Error ? e.message : "Gemini test failed.";
-    }
+    geminiStatus.textContent = "Testing…";
+    const results: string[] = [];
+    const prompt =
+      "Say hello and confirm you are ready, in one short sentence.";
+    if (value.groqKey)
+      try {
+        const answer = await groqChat(
+          value.groqKey,
+          "You are MELA, a friendly assistant.",
+          prompt,
+        );
+        results.push("Groq ✓ " + answer);
+      } catch (e) {
+        results.push("Groq ✗ " + (e instanceof Error ? e.message : "failed"));
+      }
+    if (value.key)
+      try {
+        const answer = await askGemini(value, {
+          question: prompt,
+          language: "en",
+          page: { title: "MELA settings", url: "", text: "" },
+        });
+        results.push("Gemini ✓ " + answer);
+      } catch (e) {
+        results.push("Gemini ✗ " + (e instanceof Error ? e.message : "failed"));
+      }
+    geminiStatus.textContent = results.join("\n");
   };
 document.querySelector<HTMLButtonElement>("#gemini-remove")!.onclick =
   async () => {
     await storage.remove(GEMINI_SETTINGS_KEY);
     keyInput.value = "";
-    geminiStatus.textContent = "Key removed from this browser.";
+    groqInput.value = "";
+    geminiStatus.textContent = "Keys removed from this browser.";
   };
