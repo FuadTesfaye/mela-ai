@@ -1,6 +1,8 @@
 import { build } from "esbuild";
 import { mkdir, copyFile, readFile, writeFile } from "node:fs/promises";
 await mkdir("extension/dist/icons", { recursive: true });
+await mkdir("extension/dist/avatar", { recursive: true });
+await mkdir("public/downloads", { recursive: true });
 await build({
   entryPoints: ["extension/content.ts"],
   bundle: true,
@@ -31,6 +33,14 @@ await copyFile(
   "public/icons/mela-192.png",
   "extension/dist/icons/mela-192.png",
 );
+// Same visual-teacher runtime and fingerspelling module the course player uses.
+// Run `npm run widget:build` first so these public bundles are current.
+for (const [from, to] of [
+  ["public/avatar/teacher-3d.js", "avatar/teacher-3d.js"],
+  ["public/avatar/storyboard.json", "avatar/storyboard.json"],
+  ["public/spelling.js", "spelling.js"],
+])
+  await copyFile(from, "extension/dist/" + to);
 console.log("Load extension/dist as an unpacked extension in Chromium.");
 
 import { zipFiles } from "./zip.mjs";
@@ -43,7 +53,13 @@ for (const name of [
   "options.html",
   "options.css",
   "icons/mela-192.png",
+  "avatar/teacher-3d.js",
+  "avatar/storyboard.json",
+  "spelling.js",
 ])
   files.push({ name, data: await readFile("extension/dist/" + name) });
-await writeFile("extension/mela-extension.zip", zipFiles(files));
+const zip = zipFiles(files);
+await writeFile("extension/mela-extension.zip", zip);
+// Public download served by the web app at /downloads/mela-extension.zip
+await writeFile("public/downloads/mela-extension.zip", zip);
 console.log("Packaged extension/mela-extension.zip");

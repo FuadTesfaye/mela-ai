@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>MELA · Site memory</title>
+    <title>MELA · Settings</title>
     <link rel="stylesheet" href="options.css" />
     <script src="options.js" defer></script>
   </head>
@@ -11,6 +11,44 @@
     <a class="skip" href="#main">Skip to saved sites</a>
     <header>MELA AI <span>Site memory</span></header>
     <main id="main">
+      <section id="gemini" aria-labelledby="gemini-title" class="gemini">
+        <p class="eyebrow">TALKING ASSISTANT</p>
+        <h1 id="gemini-title">Connect Gemini</h1>
+        <p>
+          MELA uses Google Gemini to answer your questions about the page you
+          are on, reads the answer aloud and shows it in the sign-language box.
+          Get a free API key at
+          <a
+            href="https://aistudio.google.com/apikey"
+            target="_blank"
+            rel="noopener noreferrer"
+            >aistudio.google.com/apikey</a
+          >
+          and paste it below. The key stays in this browser only.
+        </p>
+        <label for="gemini-key">Gemini API key</label>
+        <input
+          id="gemini-key"
+          type="password"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="AIza…"
+        />
+        <label for="gemini-model">Model</label>
+        <input
+          id="gemini-model"
+          type="text"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="gemini-3.5-flash"
+        />
+        <div>
+          <button id="gemini-save" type="button">Save key</button
+          ><button id="gemini-test" type="button">Test connection</button
+          ><button id="gemini-remove" type="button">Remove key</button>
+        </div>
+        <p id="gemini-status" role="status" aria-live="polite"></p>
+      </section>
       <p class="eyebrow">YOUR CONTEXT. YOUR CONTROL.</p>
       <h1>Pick up where you left off.</h1>
       <p>

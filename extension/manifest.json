@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "MELA \u2014 web voice assistant",
-  "version": "0.2.0",
-  "description": "Read and navigate websites, and remember approved site context locally for future visits.",
+  "name": "MELA — talking web assistant",
+  "version": "0.3.0",
+  "description": "Ask questions about any website by voice or text, hear the answer read aloud with Gemini, and follow along in a sign-language box.",
   "permissions": ["activeTab", "scripting", "storage"],
   "background": {
     "service_worker": "background.js"
@@ -27,5 +27,12 @@
   "options_ui": {
     "page": "options.html",
     "open_in_tab": true
-  }
+  },
+  "host_permissions": ["https://generativelanguage.googleapis.com/*"],
+  "web_accessible_resources": [
+    {
+      "resources": ["avatar/storyboard.json"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }
