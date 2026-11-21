@@ -47,7 +47,7 @@ export function mountSignBox(
   box.setAttribute("aria-label", "Sign language box");
   const label = document.createElement("div");
   label.className = "sign-label";
-  label.textContent = "SIGN LANGUAGE BOX · CAPTIONS + VISUAL TEACHER";
+  label.textContent = "🤟 SIGN LANGUAGE · VISUAL AID";
   const content = document.createElement("div");
   content.className = "sign-content";
   box.append(label, content);
@@ -83,6 +83,11 @@ export function mountSignBox(
     // Answer-specific wording (the shared panel is written for course videos).
     const hint = content.querySelector(".live-caption small");
     if (hint) hint.textContent = "MELA's answer, timed to the voice.";
+    const words = content.querySelector(".caption-words");
+    if (words && !playing)
+      words.textContent = cues.length
+        ? cues.map((c) => c.text).join(" ")
+        : "Answers appear here as captions.";
     const motion = content.querySelector(".motion-state");
     if (motion && /video/i.test(motion.textContent || ""))
       motion.textContent = playing

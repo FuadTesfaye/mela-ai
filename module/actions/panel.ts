@@ -30,6 +30,7 @@ export function mountActions(
     /** Natural voice (base64 WAV) used when the device has no voice, or when preferred. */
     tts?: (text: string, language: Language) => Promise<string>;
     voiceMode?: () => "auto" | "gemini" | "device";
+    onLanguageChange?: (language: Language) => void;
     transcribe?: (
       audio: string,
       mimeType: string,
@@ -580,6 +581,7 @@ export function mountActions(
     engine.cancel();
     confirm.replaceChildren();
     language = isLanguage(locale.value) ? locale.value : "en";
+    options.onLanguageChange?.(language);
   };
   const mic = b(options.assistant ? "🎙 Talk" : "Use microphone", () => {
     if (jarvis) stopSpeech();
@@ -767,6 +769,13 @@ export function mountActions(
       else output.textContent = text;
     },
     getLanguage: () => language,
+    /** Start (or stop) talking, as if the Talk button was pressed. */
+    talk() {
+      details.open = true;
+      ensureAudio();
+      stopSpeech();
+      voice.toggle();
+    },
     makeButton: (label: string, fn: () => unknown) => b(label, fn),
     setLanguage(value: Language) {
       if (isLanguage(value)) {

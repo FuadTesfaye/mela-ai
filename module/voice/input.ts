@@ -80,8 +80,16 @@ export function create(options: {
   onEnd?: (outcome: "heard" | "none" | "error") => void;
   /** Skip the browser-dictation privacy prompt (already accepted, e.g. hands-free mode). */
   skipWarning?: () => boolean;
+  /** Assistant mode: switch to Gemini transcription automatically when the
+   * browser's dictation is unavailable (e.g. Brave, Linux Chromium) and stop
+   * recording by itself when the speaker goes quiet. */
+  autoMode?: boolean;
   /** Button label while idle (defaults to "Use microphone"). */
   useLabel?: string;
+  /** Observe microphone state (e.g. to show a "listening" indicator). */
+  onState?: (
+    state: "idle" | "starting" | "listening" | "recording" | "processing",
+  ) => void;
   /** Optional transcription relay (the extension routes audio through its worker). */
   transcribe?: (
     audio: string,
@@ -104,11 +112,18 @@ export function create(options: {
     written = "",
     writing = false,
     heard = false,
-    hadError = false;
+    hadError = false,
+    switching = false,
+    relayOk = false,
+    nativeOk = false;
+  // Assistant mode records and transcribes with Gemini: browser dictation is
+  // missing or silently broken in Brave, Linux Chromium builds and headless runs.
+  if (options.autoMode) fallback = true;
   const t = () => messages[options.language() === "am" ? "am" : "en"];
   const active = () => !disposed && input.isConnected && button.isConnected;
   function setState(value: typeof state) {
     state = value;
+    options.onState?.(value);
     if (!active()) return;
     const label =
       value === "idle"
@@ -185,6 +200,67 @@ export function create(options: {
     );
     if (["network", "language-not-supported"].includes(reason)) fallback = true;
   }
+  /** Stop automatically ~1.3 s after the speaker goes quiet (or after 8 s of silence). */
+  function listenForSilence(
+    source: MediaStream,
+    id: number,
+    done: (heardSpeech: boolean) => void,
+  ) {
+    const AC =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext?: typeof AudioContext })
+        .webkitAudioContext;
+    if (!AC) return;
+    let context: AudioContext;
+    try {
+      context = new AC();
+    } catch {
+      return;
+    }
+    void context.resume?.();
+    // Without a user gesture (e.g. launched from a PWA shortcut) audio analysis
+    // stays suspended: then stop after a fixed 7 s instead.
+    setTimeout(() => {
+      if (
+        context.state !== "running" &&
+        session === id &&
+        state === "recording"
+      ) {
+        clearInterval(tick);
+        void context.close();
+        setTimeout(() => session === id && done(true), 6500);
+      }
+    }, 500);
+    const analyser = context.createAnalyser();
+    analyser.fftSize = 1024;
+    context.createMediaStreamSource(source).connect(analyser);
+    const data = new Float32Array(analyser.fftSize);
+    const began = Date.now();
+    let first = 0,
+      lastVoice = 0;
+    const tick = setInterval(() => {
+      if (session !== id || state !== "recording") {
+        clearInterval(tick);
+        void context.close();
+        return;
+      }
+      analyser.getFloatTimeDomainData(data);
+      let sum = 0;
+      for (const v of data) sum += v * v;
+      const now = Date.now();
+      if (Math.sqrt(sum / data.length) > 0.02) {
+        lastVoice = now;
+        if (!first) first = now;
+      }
+      const finished =
+        (first && now - lastVoice > 1300) || (!first && now - began > 8000);
+      if (finished) {
+        clearInterval(tick);
+        void context.close();
+        done(!!first);
+      }
+    }, 100);
+  }
   async function record(id: number) {
     if (
       !navigator.mediaDevices?.getUserMedia ||
@@ -194,10 +270,12 @@ export function create(options: {
       options.status(t().unsupported, true);
       return;
     }
-    if (!window.confirm(t().relay)) {
+    if (!relayOk && !options.skipWarning?.() && !window.confirm(t().relay)) {
       setState("idle");
+      options.onEnd?.("error");
       return;
     }
+    relayOk = true;
     setState("starting");
     options.status(t().start);
     try {
@@ -250,9 +328,10 @@ export function create(options: {
         const blob = new Blob(chunks, {
           type: capture.mimeType.split(";")[0] || "audio/webm",
         });
-        if (!blob.size || blob.size > 2000000) {
+        if (!blob.size || blob.size > 2000000 || silent) {
           setState("idle");
-          options.status(blob.size ? t().limit : t().none, true);
+          options.status(blob.size > 2000000 ? t().limit : t().none, true);
+          options.onEnd?.("none");
           return;
         }
         setState("processing");
@@ -294,14 +373,24 @@ export function create(options: {
           if (!active() || session !== id) return;
           if (typeof value.text !== "string" || value.text.length > 2000)
             throw new Error("speech");
+          let outcome: "heard" | "none" = "none";
           if (value.text.trim()) {
             write(value.text);
             options.status(t().ready);
             input.focus();
-            options.onFinal?.(input.value);
+            outcome = "heard";
           } else options.status(t().none);
+          if (session === id) {
+            request = undefined;
+            setState("idle");
+          }
+          if (outcome === "heard") options.onFinal?.(input.value);
+          options.onEnd?.(outcome);
         } catch {
-          if (active() && session === id) options.status(t().failed, true);
+          if (active() && session === id) {
+            options.status(t().failed, true);
+            options.onEnd?.("error");
+          }
         } finally {
           if (session === id) {
             request = undefined;
@@ -309,9 +398,15 @@ export function create(options: {
           }
         }
       };
+      let silent = false;
       capture.start(250);
       setState("recording");
-      options.status(t().record);
+      options.status(options.autoMode ? t().listen : t().record);
+      if (options.autoMode)
+        listenForSilence(acquired, id, (heardSpeech) => {
+          silent = !heardSpeech;
+          if (capture.state === "recording") capture.stop();
+        });
       timer = setTimeout(
         () => capture.state === "recording" && capture.stop(),
         45000,
@@ -364,7 +459,9 @@ export function create(options: {
       void record(id);
       return;
     }
-    if (!options.skipWarning?.() && !window.confirm(t().warning)) return;
+    if (!nativeOk && !options.skipWarning?.() && !window.confirm(t().warning))
+      return;
+    nativeOk = true;
     let engine: Recognition;
     try {
       engine = new Native();
@@ -394,9 +491,27 @@ export function create(options: {
       write(text);
     };
     engine.onerror = (e) => {
-      if (active() && session === id) error(e.error);
+      if (!active() || session !== id) return;
+      if (
+        options.autoMode &&
+        ["network", "language-not-supported", "service-not-allowed"].includes(
+          e.error,
+        )
+      ) {
+        // Browser dictation is unavailable here: record and transcribe with Gemini instead.
+        fallback = true;
+        switching = true;
+        return;
+      }
+      error(e.error);
     };
     engine.onend = () => {
+      if (switching && active() && id === session) {
+        switching = false;
+        recognition = undefined;
+        void record(id);
+        return;
+      }
       if (active() && id === session) {
         recognition = undefined;
         setState("idle");

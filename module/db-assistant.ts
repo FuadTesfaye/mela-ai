@@ -203,6 +203,21 @@ class DBAssistant extends HTMLElement {
   private _melaLastQuestion = "";
   private _melaRecognition?: { stop: () => void; toggle: () => void };
   private _melaScreenStop?: () => void;
+  // Voice access (screen readers, Ctrl+Shift+M, PWA "Talk" shortcut): see module/voice-access.ts.
+  private _melaVoiceMode = false;
+  private _melaRecAuto = false;
+  private _melaMic?: HTMLButtonElement;
+  private talkEvent = () => {
+    this.open();
+    if (this._melaMic) this.microphone(this._melaMic);
+  };
+  private voiceModeEvent = (e: Event) => {
+    const mode = (e as CustomEvent).detail;
+    this._melaVoiceMode = !!mode;
+    // Screen-reader users hear answers through their screen reader (live region).
+    this._melaSpeak = mode !== "screen-reader";
+  };
+  private _melaSpeak = true;
   private openEvent = (e: Event) => {
     this.open();
     const q = (e as CustomEvent).detail?.question;
@@ -244,6 +259,12 @@ class DBAssistant extends HTMLElement {
       () => this._melaReadContext(),
     );
     window.addEventListener("mela:open", this.openEvent);
+    window.addEventListener("mela:talk", this.talkEvent);
+    window.addEventListener("mela:voice-mode", this.voiceModeEvent);
+    void loadFeature(
+      new URL("/voice-access.js", new URL(this.api, location.href)).href,
+      "MelaVoiceAccess",
+    ).catch(() => {});
     document.addEventListener("mela:video-state", this.videoEvent);
     document.addEventListener("mela:transcript-ready", this.transcriptEvent);
     document.addEventListener("mela:explain-moment", this.momentEvent);
@@ -310,6 +331,8 @@ class DBAssistant extends HTMLElement {
     this._melaActions?.destroy();
     this._melaStopObserving?.();
     window.removeEventListener("mela:open", this.openEvent);
+    window.removeEventListener("mela:talk", this.talkEvent);
+    window.removeEventListener("mela:voice-mode", this.voiceModeEvent);
     document.removeEventListener("mela:video-state", this.videoEvent);
     document.removeEventListener("mela:transcript-ready", this.transcriptEvent);
     document.removeEventListener("mela:explain-moment", this.momentEvent);
@@ -514,6 +537,7 @@ class DBAssistant extends HTMLElement {
     mic.type = "button";
     mic.setAttribute("aria-label", this.t.mic);
     mic.onclick = () => this.microphone(mic);
+    this._melaMic = mic;
     footer.append(help, mic);
     composer.append(row, privacy, footer);
     composer.onsubmit = (e) => {
@@ -826,8 +850,23 @@ class DBAssistant extends HTMLElement {
     this._melaMessages.scrollTop = this._melaMessages.scrollHeight;
   }
   private async ask(simple = false) {
-    const question = this.input.value.trim();
-    if (!question || this.busy) return;
+    const said = this.input.value.trim();
+    if (!said || this.busy) return;
+    // Voice navigation (module/voice-access.ts) may handle or rewrite a command.
+    const heard = new CustomEvent("mela:heard", {
+      cancelable: true,
+      detail: {
+        text: said,
+        reply: (t: string) =>
+          setTimeout(() => this._melaMessage("assistant", t, false)),
+      },
+    });
+    if (!window.dispatchEvent(heard)) {
+      this.input.value = "";
+      this._melaMessage("user", said, false);
+      return;
+    }
+    const question = heard.detail.text;
     if (this.locale === "am")
       try {
         await enhanceLanguage(this);
@@ -907,7 +946,7 @@ class DBAssistant extends HTMLElement {
       return;
     }
     this.input.value = "";
-    this._melaMessage("user", question);
+    this._melaMessage("user", said);
     this.dispatchEvent(
       new CustomEvent("db-assistant:question", {
         bubbles: true,
@@ -957,7 +996,7 @@ class DBAssistant extends HTMLElement {
           navigator.onLine ? answer.notice || this.t.ready : this.t.offline,
         );
       }
-      if (version === this.version)
+      if (version === this.version) {
         this._melaMessage(
           "assistant",
           answer.answer,
@@ -966,6 +1005,12 @@ class DBAssistant extends HTMLElement {
           question,
           artifactKey,
         );
+        window.dispatchEvent(
+          new CustomEvent("mela:answer", { detail: answer.answer }),
+        );
+        if (this._melaVoiceMode && this._melaSpeak)
+          this._melaListen(answer.answer);
+      }
     } catch {
       this._melaSetStatus(this.t.failed, true);
     } finally {
@@ -982,22 +1027,25 @@ class DBAssistant extends HTMLElement {
     const voice = speechSynthesis
       .getVoices()
       .find((v) => v.lang.toLowerCase().startsWith(language));
-    if (!voice) {
+    // English can use the device's default voice; other languages need a match.
+    if (!voice && language !== "en") {
       this._melaSetStatus(this.t.noVoice);
       return;
     }
     speechSynthesis.cancel();
     const speech = new SpeechSynthesisUtterance(text);
     speech.lang = speechLocales[language];
-    speech.voice = voice;
+    if (voice) speech.voice = voice;
     speech.rate = 0.9;
     speechSynthesis.speak(speech);
   }
   private microphone(button: HTMLButtonElement) {
-    if (this._melaRecognition) {
+    if (this._melaRecognition && this._melaRecAuto === this._melaVoiceMode) {
       this._melaRecognition.toggle();
       return;
     }
+    this._melaRecognition?.stop();
+    this._melaRecAuto = this._melaVoiceMode;
     button.disabled = true;
     void loadFeature<{
       create: (options: {
@@ -1006,6 +1054,8 @@ class DBAssistant extends HTMLElement {
         language: () => Language;
         status: (message: string, error?: boolean) => void;
         api: string;
+        autoMode?: boolean;
+        onFinal?: () => void;
       }) => { stop: () => void; toggle: () => void };
     }>(new URL("/voice.js", new URL(this.api, location.href)).href, "MelaVoice")
       .then((feature) => {
@@ -1017,6 +1067,8 @@ class DBAssistant extends HTMLElement {
           language: () => this.locale,
           status: (message, error) => this._melaSetStatus(message, error),
           api: this.api,
+          autoMode: this._melaVoiceMode,
+          onFinal: () => this._melaVoiceMode && void this.ask(),
         });
         this._melaRecognition.toggle();
       })

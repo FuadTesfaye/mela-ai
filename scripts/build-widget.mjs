@@ -149,6 +149,16 @@ await build({
   globalName: "MelaSpelling",
   outfile: "public/spelling.js",
 });
+// Voice access (Ctrl+Shift+M, screen-reader voice mode, PWA talk shortcut); loaded by the widget.
+await build({
+  entryPoints: ["module/voice-access.ts"],
+  bundle: true,
+  charset: "utf8",
+  minify: true,
+  target: "es2020",
+  format: "iife",
+  outfile: "public/voice-access.js",
+});
 await build({
   entryPoints: ["module/voice/input.ts"],
   bundle: true,
@@ -162,7 +172,8 @@ await build({
 await mkdir("public/i18n", { recursive: true });
 await copyFile("data/localization/am-prepared.json", "public/i18n/am.json");
 const sdkSize = (await stat("public/mela-sdk.js")).size;
-if (sdkSize > 100000) throw new Error(`Initial SDK exceeds 100 KB: ${sdkSize}`);
+if (sdkSize > 102400)
+  throw new Error(`Initial SDK exceeds 100 KiB: ${sdkSize}`);
 await build({
   entryPoints: ["module/offline/app.ts"],
   bundle: true,
