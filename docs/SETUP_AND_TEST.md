@@ -55,6 +55,15 @@ speaks with the device voice first. **Microsoft Edge** has the best built-in voi
 on Linux; Brave/Flatpak Chrome on Linux may have robotic or no voices (MELA then shows
 captions and the sign box).
 
+### MELA's voice (website)
+
+`POST /api/v1/tts` speaks with the best free engine available, in order:
+**Groq Orpheus** (natural; accept its terms once in the Groq console) →
+**Gemini voice** (natural; ~10/day free) → **eSpeak NG** (free, offline, robotic;
+`sudo dnf install espeak-ng` / `sudo apt install espeak-ng`, not available on Vercel) →
+the browser's own voice. The `X-Mela-Voice` response header shows which one spoke.
+Optional: `GROQ_VOICE=diana` (or hannah, autumn, troy) in `.env.local`.
+
 ## 4. Keyboard and voice shortcuts
 
 | Where | Shortcut | Does |

@@ -7,6 +7,7 @@ import {
   type GeminiSettings,
 } from "./gemini";
 import { groqChat } from "./groq";
+import { addisChat } from "./addis";
 const root = document.querySelector<HTMLElement>("#sites")!,
   status = document.querySelector<HTMLElement>("#status")!;
 const element = <K extends keyof HTMLElementTagNameMap>(tag: K, text = "") => {
@@ -148,10 +149,12 @@ const keyInput = document.querySelector<HTMLInputElement>("#gemini-key")!,
   modelInput = document.querySelector<HTMLInputElement>("#gemini-model")!,
   geminiStatus = document.querySelector<HTMLElement>("#gemini-status")!,
   voiceInput = document.querySelector<HTMLSelectElement>("#gemini-voice")!,
-  groqInput = document.querySelector<HTMLInputElement>("#groq-key")!;
+  groqInput = document.querySelector<HTMLInputElement>("#groq-key")!,
+  addisInput = document.querySelector<HTMLInputElement>("#addis-key")!;
 const current = (): GeminiSettings => ({
   key: keyInput.value.trim(),
   groqKey: groqInput.value.trim(),
+  addisKey: addisInput.value.trim(),
   model: modelInput.value.trim() || DEFAULT_MODEL,
   voice: (["auto", "gemini", "device"].includes(voiceInput.value)
     ? voiceInput.value
@@ -165,16 +168,17 @@ void storage.get(GEMINI_SETTINGS_KEY).then((data) => {
   modelInput.value = saved?.model || DEFAULT_MODEL;
   voiceInput.value = saved?.voice || "auto";
   groqInput.value = saved?.groqKey || "";
+  addisInput.value = saved?.addisKey || "";
   geminiStatus.textContent =
-    saved?.key || saved?.groqKey
+    saved?.key || saved?.groqKey || saved?.addisKey
       ? "Connected. Click the MELA icon on any website and ask a question."
       : "No key saved yet. Paste a Groq or Gemini API key to turn on the talking assistant.";
 });
 document.querySelector<HTMLButtonElement>("#gemini-save")!.onclick =
   async () => {
     const value = current();
-    if (!value.key && !value.groqKey) {
-      geminiStatus.textContent = "Paste a Groq or Gemini API key first.";
+    if (!value.key && !value.groqKey && !value.addisKey) {
+      geminiStatus.textContent = "Paste a Groq, Gemini or Addis AI key first.";
       groqInput.focus();
       return;
     }
@@ -189,8 +193,8 @@ document.querySelector<HTMLButtonElement>("#gemini-save")!.onclick =
 document.querySelector<HTMLButtonElement>("#gemini-test")!.onclick =
   async () => {
     const value = current();
-    if (!value.key && !value.groqKey) {
-      geminiStatus.textContent = "Paste a Groq or Gemini API key first.";
+    if (!value.key && !value.groqKey && !value.addisKey) {
+      geminiStatus.textContent = "Paste a Groq, Gemini or Addis AI key first.";
       return;
     }
     geminiStatus.textContent = "Testing…";
@@ -219,6 +223,20 @@ document.querySelector<HTMLButtonElement>("#gemini-test")!.onclick =
       } catch (e) {
         results.push("Gemini ✗ " + (e instanceof Error ? e.message : "failed"));
       }
+    if (value.addisKey)
+      try {
+        const answer = await addisChat(
+          value.addisKey,
+          "am",
+          "You are MELA, a friendly assistant.",
+          "ሰላም በል፤ ዝግጁ መሆንህን በአንድ አጭር ዓረፍተ ነገር አረጋግጥ።",
+        );
+        results.push("Addis AI ✓ " + answer);
+      } catch (e) {
+        results.push(
+          "Addis AI ✗ " + (e instanceof Error ? e.message : "failed"),
+        );
+      }
     geminiStatus.textContent = results.join("\n");
   };
 document.querySelector<HTMLButtonElement>("#gemini-remove")!.onclick =
@@ -226,5 +244,6 @@ document.querySelector<HTMLButtonElement>("#gemini-remove")!.onclick =
     await storage.remove(GEMINI_SETTINGS_KEY);
     keyInput.value = "";
     groqInput.value = "";
+    addisInput.value = "";
     geminiStatus.textContent = "Keys removed from this browser.";
   };

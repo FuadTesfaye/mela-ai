@@ -3,6 +3,7 @@ import { api, jsonBody, preflight } from "@/lib/security/http";
 import { HttpError } from "@/lib/security/auth";
 import { geminiGenerate } from "@/lib/ai/providers/gemini";
 import { groqConfigured, groqTranscribe } from "@/lib/ai/providers/groq";
+import { addisConfigured, addisTranscribe } from "@/lib/ai/providers/addis";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 export const OPTIONS = preflight;
@@ -46,6 +47,14 @@ export const POST = (request: Request) =>
                   ? header.subarray(0, 4).toString() === "RIFF"
                   : true;
       if (!valid) throw new HttpError(400, "The recording format is invalid.");
+      // Amharic: Addis AI's Ethiopian speech model first.
+      if (input.language === "am" && addisConfigured())
+        try {
+          const text = await addisTranscribe(bytes, input.mimeType, "am");
+          if (text) return { text, language: input.language };
+        } catch {
+          /* fall through */
+        }
       // Whisper on Groq is fastest (~1 s); Gemini remains the fallback.
       if (groqConfigured())
         try {

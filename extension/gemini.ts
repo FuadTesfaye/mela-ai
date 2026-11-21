@@ -8,6 +8,8 @@ export type GeminiSettings = {
   voice?: "auto" | "gemini" | "device";
   /** Optional Groq key: fast Whisper transcription, English answers and voice. */
   groqKey?: string;
+  /** Optional Addis AI key: Amharic/Oromo/Tigrinya voice, speech and answers. */
+  addisKey?: string;
 };
 export const DEFAULT_MODEL = "gemini-3.5-flash";
 const FALLBACKS = [

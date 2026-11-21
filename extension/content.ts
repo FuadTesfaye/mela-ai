@@ -30,6 +30,26 @@ async function ai<T>(message: Record<string, unknown>): Promise<T> {
 }
 
 function pageText() {
+  // YouTube: only this video's title, description and what was said — never
+  // the sidebar of recommended videos, which would mislead the answer.
+  if (isYouTubeVideo()) {
+    const title =
+      document.querySelector("#title h1, h1.ytd-watch-metadata")?.textContent ||
+      document.title;
+    const description =
+      document.querySelector<HTMLElement>("#description, #description-inner")
+        ?.innerText || "";
+    const spoken = live?.transcript() || "";
+    return [
+      `Video title: ${title.trim()}`,
+      spoken ? `Video transcript so far: ${spoken}` : "",
+      description
+        ? `Video description: ${description.trim().slice(0, 3000)}`
+        : "",
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+  }
   // On a video, what has been said so far is the most useful context.
   const spoken = live?.transcript();
   const video = spoken ? `Video transcript so far: ${spoken}\n\n` : "";

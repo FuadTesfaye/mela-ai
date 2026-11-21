@@ -1,5 +1,12 @@
 import { chromeApi } from "./chrome";
 import { groqChat, groqSpeak, groqTranscribe } from "./groq";
+import {
+  ADDIS_LANGUAGES,
+  addisChat,
+  addisSpeak,
+  addisTranscribe,
+  addisTranslate,
+} from "./addis";
 import { createMemoryService } from "./memory/service";
 import {
   askGemini,
@@ -40,8 +47,34 @@ const geminiSettings = async (): Promise<GeminiSettings> => {
       ? (stored!.voice as GeminiSettings["voice"])
       : "auto",
     groqKey: typeof stored?.groqKey === "string" ? stored.groqKey.trim() : "",
+    addisKey:
+      typeof stored?.addisKey === "string" ? stored.addisKey.trim() : "",
   };
 };
+const SERVERS = ["http://localhost:3000", "https://mela-ai-wheat.vercel.app"];
+async function serverSpeak(text: string, language: string) {
+  for (const server of SERVERS) {
+    try {
+      const response = await fetch(server + "/api/v1/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: text.slice(0, 1000), language }),
+        signal: AbortSignal.timeout(
+          server.includes("localhost") ? 6000 : 15000,
+        ),
+      });
+      if (!response.ok) continue;
+      const bytes = new Uint8Array(await response.arrayBuffer());
+      let binary = "";
+      for (let i = 0; i < bytes.length; i += 0x8000)
+        binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+      return btoa(binary);
+    } catch {
+      /* try the next server */
+    }
+  }
+  throw new Error("No voice is available right now.");
+}
 /** Try providers in order; return the first success, or throw the last error. */
 async function firstOf<T>(attempts: (false | (() => Promise<T>))[]) {
   let last: unknown = new Error("No AI provider is configured.");
@@ -92,14 +125,17 @@ chrome.runtime.onMessage.addListener((raw, sender, reply) => {
     if (message.type === "mela:prefs")
       return {
         voice: settings.voice,
-        connected: !!(settings.key || settings.groqKey),
+        connected: !!(settings.key || settings.groqKey || settings.addisKey),
       };
     const gemini = !!settings.key,
-      groq = !!settings.groqKey;
-    if (!gemini && !groq) {
+      groq = !!settings.groqKey,
+      addis = !!settings.addisKey;
+    // Addis AI covers Amharic, Afaan Oromo and Tigrinya natively.
+    const ethiopian = (code: string) => addis && ADDIS_LANGUAGES.includes(code);
+    if (!gemini && !groq && !addis) {
       chrome.runtime.openOptionsPage().catch(() => {});
       throw new Error(
-        "Add a Gemini or Groq API key in the MELA extension settings (the page just opened), then ask again.",
+        "Add a Groq, Gemini or Addis AI key in the MELA extension settings (the page just opened), then ask again.",
       );
     }
     if (message.type === "mela:translate") {
@@ -117,8 +153,13 @@ chrome.runtime.onMessage.addListener((raw, sender, reply) => {
           : "") + `Caption to translate: ${text}`;
       const viaGroq = groq && (() => groqChat(settings.groqKey!, system, user));
       const viaGemini = gemini && (() => geminiText(settings, user, system));
+      const source = /[\u1200-\u137f]/.test(text) ? "am" : "en";
+      const viaAddis =
+        ethiopian(target) &&
+        source !== target &&
+        (() => addisTranslate(settings.addisKey!, text, source, target));
       return firstOf(
-        target === "en" ? [viaGroq, viaGemini] : [viaGemini, viaGroq],
+        target === "en" ? [viaGroq, viaGemini] : [viaAddis, viaGemini, viaGroq],
       );
     }
     if (message.type === "mela:tts") {
@@ -128,8 +169,12 @@ chrome.runtime.onMessage.addListener((raw, sender, reply) => {
       if (!text) throw new Error("Nothing to say.");
       // Groq's Orpheus voice is English-only; Gemini covers other languages.
       return firstOf([
+        ethiopian(language) &&
+          (() => addisSpeak(settings.addisKey!, text, language)),
         groq && language === "en" && (() => groqSpeak(settings.groqKey!, text)),
         gemini && (() => speakGemini(settings, text, language)),
+        // Last resort: the MELA server's voice (eSpeak locally, providers on Vercel).
+        () => serverSpeak(text, language),
       ]);
     }
     if (message.type === "mela:transcribe") {
@@ -139,6 +184,8 @@ chrome.runtime.onMessage.addListener((raw, sender, reply) => {
       const mime = String(message.mimeType || "audio/webm").split(";")[0];
       // Whisper on Groq is ~1 s; Gemini is the fallback.
       return firstOf([
+        ethiopian(language) &&
+          (() => addisTranscribe(settings.addisKey!, audio, mime, language)),
         groq &&
           (() => groqTranscribe(settings.groqKey!, audio, mime, language)),
         gemini && (() => transcribeGemini(settings, audio, mime, language)),
@@ -161,9 +208,24 @@ chrome.runtime.onMessage.addListener((raw, sender, reply) => {
     const viaGroq =
       groq && (() => groqChat(settings.groqKey!, prompt.system, prompt.user));
     const viaGemini = gemini && (() => askGemini(settings, input));
-    // English: Groq is fastest. Amharic and others: Gemini writes far better.
+    // Amharic/Oromo: Addis AI (shorter page context keeps it fast and cheap).
+    const viaAddis =
+      (language === "am" || language === "om") &&
+      addis &&
+      (() =>
+        addisChat(
+          settings.addisKey!,
+          language as "am" | "om",
+          prompt.system +
+            " Answer only from the video transcript and page text when the question is about this page or video.",
+          // Question first, then the most relevant context (transcript, title,
+          // main text). Never the tail of the page: on YouTube that is the
+          // sidebar of unrelated recommended videos.
+          `Question: ${question}\n\n${prompt.user.replace(/\n*Question:[\s\S]*$/, "").slice(0, 5000)}`,
+        ));
+    // English: Groq is fastest. Others: Addis, then Gemini.
     return firstOf(
-      language === "en" ? [viaGroq, viaGemini] : [viaGemini, viaGroq],
+      language === "en" ? [viaGroq, viaGemini] : [viaAddis, viaGemini, viaGroq],
     );
   })().then(
     (value) => reply({ ok: true, value }),
