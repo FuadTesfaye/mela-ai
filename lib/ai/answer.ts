@@ -1,3 +1,4 @@
+import { addisChat, addisConfigured } from "./providers/addis";
 import prepared from "../../data/localization/am-prepared.json";
 import { preparedTranslator } from "../localization/shared";
 import { videoEntries, amharicGlossary } from "../localization/service";
@@ -220,6 +221,31 @@ export async function answerQuestion(
             : request.language === "ti"
               ? "Tigrinya"
               : "English";
+      // Amharic / Afaan Oromo: Addis AI writes the most natural answers.
+      if (
+        (request.language === "am" || request.language === "om") &&
+        addisConfigured()
+      )
+        try {
+          const answer = await addisChat(
+            request.question,
+            request.language,
+            "You are MELA, a friendly learning assistant for Ethiopian learners. Answer in 2 to 4 short, plain sentences.",
+          );
+          return {
+            ...base,
+            answer,
+            provider: "gemini" as const,
+            matched: false,
+            notice:
+              request.language === "am"
+                ? "አጠቃላይ የAI መልስ፤ ከኮርሱ ምንጮች አይደለም።"
+                : "General AI answer, not from your course materials.",
+            actions: ["human-help"],
+          };
+        } catch {
+          /* fall back to Gemini */
+        }
       const raw = await geminiGenerate(
         [
           {

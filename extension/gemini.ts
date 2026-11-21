@@ -212,6 +212,8 @@ export async function speakGemini(
       );
       if (response.status === 401 || response.status === 403)
         throw new Error("Gemini rejected the API key.");
+      if (response.status === 429)
+        throw new Error("Gemini voice quota is used up for today.");
       if (!response.ok) continue;
       const data = await response.json();
       const part = data.candidates?.[0]?.content?.parts?.find(
@@ -223,7 +225,10 @@ export async function speakGemini(
       const raw = Uint8Array.from(atob(part.data), (c) => c.charCodeAt(0));
       return toBase64(pcmToWav(raw, rate));
     } catch (error) {
-      if (error instanceof Error && /rejected the API key/.test(error.message))
+      if (
+        error instanceof Error &&
+        /rejected the API key|quota/.test(error.message)
+      )
         throw error;
     }
   }

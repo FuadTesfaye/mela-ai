@@ -51,6 +51,17 @@ const geminiSettings = async (): Promise<GeminiSettings> => {
       typeof stored?.addisKey === "string" ? stored.addisKey.trim() : "",
   };
 };
+// A voice provider that just refused (locked model, daily quota) is skipped for a
+// while so every sentence doesn't wait on the same failure.
+const voicePausedUntil: Record<string, number> = {};
+const voiceReady = (name: string) => (voicePausedUntil[name] || 0) < Date.now();
+const voiceGuard =
+  <T>(name: string, minutes: number, run: () => Promise<T>) =>
+  () =>
+    run().catch((error) => {
+      voicePausedUntil[name] = Date.now() + minutes * 60_000;
+      throw error;
+    });
 const SERVERS = ["http://localhost:3000", "https://mela-ai-wheat.vercel.app"];
 async function serverSpeak(text: string, language: string) {
   for (const server of SERVERS) {
@@ -170,9 +181,17 @@ chrome.runtime.onMessage.addListener((raw, sender, reply) => {
       // Groq's Orpheus voice is English-only; Gemini covers other languages.
       return firstOf([
         ethiopian(language) &&
-          (() => addisSpeak(settings.addisKey!, text, language)),
-        groq && language === "en" && (() => groqSpeak(settings.groqKey!, text)),
-        gemini && (() => speakGemini(settings, text, language)),
+          voiceReady("addis") &&
+          voiceGuard("addis", 2, () =>
+            addisSpeak(settings.addisKey!, text, language),
+          ),
+        groq &&
+          language === "en" &&
+          voiceReady("groq") &&
+          voiceGuard("groq", 10, () => groqSpeak(settings.groqKey!, text)),
+        gemini &&
+          voiceReady("gemini") &&
+          voiceGuard("gemini", 60, () => speakGemini(settings, text, language)),
         // Last resort: the MELA server's voice (eSpeak locally, providers on Vercel).
         () => serverSpeak(text, language),
       ]);
