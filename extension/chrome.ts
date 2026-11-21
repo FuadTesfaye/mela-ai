@@ -4,8 +4,11 @@ export interface ExtensionChrome {
     id: string;
     getURL: (path: string) => string;
     openOptionsPage: () => Promise<void>;
+    onInstalled?: {
+      addListener: (fn: (details: { reason: string }) => void) => void;
+    };
     sendMessage: (
-      message: MemoryMessage,
+      message: MemoryMessage | Record<string, unknown>,
     ) => Promise<{ ok: boolean; value?: unknown; error?: string }>;
     onMessage: {
       addListener: (

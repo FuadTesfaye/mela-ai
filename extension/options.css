@@ -88,3 +88,26 @@ a {
     scroll-behavior: auto !important;
   }
 }
+.gemini {
+  background: #fff;
+  border: 2px solid #087e8b;
+  border-radius: 14px;
+  padding: 8px 24px 16px;
+  margin-bottom: 32px;
+}
+.gemini h1 {
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
+}
+.gemini label {
+  display: block;
+  font-weight: 650;
+  margin-top: 12px;
+}
+.gemini input {
+  width: 100%;
+  font: inherit;
+  padding: 10px;
+  min-height: 44px;
+  border: 2px solid #526e78;
+  border-radius: 6px;
+}
