@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>MELA</title>
+    <style>
+      * { box-sizing: border-box }
+      body { margin: 0; width: 340px; font: 15px/1.45 system-ui, sans-serif; color: #17394e; background: #fff }
+      header { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: #103c4b; color: #fff }
+      .logo { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #087e8b, #0b6574); font-size: 10px; font-weight: 800 }
+      header b { font-size: 16px } header small { display: block; opacity: .8 }
+      main { padding: 12px 14px 14px }
+      #state { margin: 0 0 10px; padding: 10px 12px; border-radius: 10px; background: #e5f6ec; color: #0a6b30; font-weight: 700 }
+      #state[data-kind=warn] { background: #fff4dc; color: #8a5300 }
+      #state[data-kind=error] { background: #fde8e7; color: #b3261e }
+      button { font: inherit; font-weight: 700; width: 100%; min-height: 48px; margin: 4px 0; border: 2px solid #087e8b; border-radius: 10px; background: #087e8b; color: #fff; cursor: pointer }
+      button.ghost { background: #fff; color: #103c4b; border-color: #9fc3d0; min-height: 40px; font-weight: 600 }
+      button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #b46d05; outline-offset: 2px }
+      label { display: block; font-weight: 600; margin-top: 8px }
+      label.row { display: flex; gap: 8px; align-items: center; font-weight: 500 }
+      input[type=password], select { width: 100%; font: inherit; padding: 8px; min-height: 40px; border: 2px solid #c3d6dd; border-radius: 8px }
+      input[type=checkbox] { width: 20px; height: 20px }
+      details { margin-top: 10px; border-top: 1px solid #e2ecef; padding-top: 6px }
+      summary { cursor: pointer; font-weight: 700; min-height: 36px; display: flex; align-items: center }
+      .keys span { font-size: 13px; color: #4f6b78 }
+      #msg { min-height: 1em; font-size: 13px; white-space: pre-wrap; margin: 6px 0 0 }
+      .hint { font-size: 13px; color: #4f6b78; margin: 8px 0 0 }
+    </style>
+    <script src="popup.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <span class="logo" aria-hidden="true">MELA</span>
+      <div><b>MELA</b><small>Talking web assistant</small></div>
+    </header>
+    <main>
+      <p id="state" role="status" aria-live="assertive">Opening MELA on this page…</p>
+      <button id="open" type="button">🎙 Open MELA and talk</button>
+      <label class="row"><input id="auto" type="checkbox" /> Open by itself on every website</label>
+      <label for="lang">MELA talks in</label>
+      <select id="lang">
+        <option value="en">English</option>
+        <option value="am">አማርኛ (Amharic)</option>
+        <option value="om">Afaan Oromoo</option>
+        <option value="ti">ትግርኛ (Tigrinya)</option>
+      </select>
+      <details id="keysBox">
+        <summary>🔑 API keys <span id="keyCount" style="margin-left:6px;font-weight:500"></span></summary>
+        <div class="keys">
+          <label for="addis">Addis AI key <span>(Amharic, Afaan Oromoo, Tigrinya)</span></label>
+          <input id="addis" type="password" autocomplete="off" spellcheck="false" placeholder="sk_…" />
+          <label for="groq">Groq key <span>(fast English)</span></label>
+          <input id="groq" type="password" autocomplete="off" spellcheck="false" placeholder="gsk_…" />
+          <label for="gemini">Gemini key <span>(backup)</span></label>
+          <input id="gemini" type="password" autocomplete="off" spellcheck="false" placeholder="AIza…" />
+          <button id="save" type="button">Save keys</button>
+          <p id="msg" role="status" aria-live="polite"></p>
+        </div>
+      </details>
+      <button id="settings" class="ghost" type="button">⚙ All settings</button>
+      <p class="hint">On the page: <b>Ctrl+Shift+M</b> to talk · say “speak Oromo” to switch language.</p>
+    </main>
+  </body>
+</html>

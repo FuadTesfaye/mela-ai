@@ -17,6 +17,7 @@ AI_PROVIDER=gemini
 GEMINI_API_KEY=...          # aistudio.google.com/apikey
 GEMINI_MODEL=gemini-3.5-flash-lite
 GROQ_API_KEY=...            # console.groq.com/keys — fast transcription + backup answers
+ADDIS_API_KEY=...           # platform.addisassistant.com — Amharic/Oromo voice, speech, answers
 ```
 
 Check it: open <http://localhost:3000/api/v1/health> — `"ai":{"mode":"gemini",...}`.
@@ -48,16 +49,18 @@ Add the same variables in Vercel → Settings → Environment Variables, plus
 Optional natural English voice: accept the Orpheus terms once at
 <https://console.groq.com/playground?model=canopylabs%2Forpheus-v1-english>.
 
-Which AI does what: Groq Whisper transcribes speech (~1 s); English answers come
-from Groq; Amharic answers and caption translation from Gemini; each falls back to
-the other. Gemini's natural voice is limited to 10 uses/day on a free key, so MELA
+Which AI does what: English — Groq (speech-to-text ~1 s, answers ~0.5 s). Amharic and
+Afaan Oromo — Addis AI (speech-to-text, answers ~2 s, natural voice ~5 s, live-caption
+translation). Gemini backs both up. Add the Addis AI key in the extension settings too. Gemini's natural voice is limited to 10 uses/day on a free key, so MELA
 speaks with the device voice first. **Microsoft Edge** has the best built-in voices
 on Linux; Brave/Flatpak Chrome on Linux may have robotic or no voices (MELA then shows
 captions and the sign box).
 
 ### MELA's voice (website)
 
-`POST /api/v1/tts` speaks with the best free engine available, in order:
+`POST /api/v1/tts` speaks with the best engine available. Amharic, Afaan Oromo and
+Tigrinya use **Addis AI** voices first (Hamen, Bikila, Berhane; ~5 ETB per spoken
+minute, cached). English, in order:
 **Groq Orpheus** (natural; accept its terms once in the Groq console) →
 **Gemini voice** (natural; ~10/day free) → **eSpeak NG** (free, offline, robotic;
 `sudo dnf install espeak-ng` / `sudo apt install espeak-ng`, not available on Vercel) →

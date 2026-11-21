@@ -89,7 +89,9 @@ export async function addisTranscribe(
 ) {
   const bytes = Uint8Array.from(atob(audio), (c) => c.charCodeAt(0));
   const form = new FormData();
-  form.append("audio", new Blob([bytes], { type: mimeType }), "speech.webm");
+  // Chrome records WebM, Firefox records Ogg.
+  const ext = mimeType.split("/")[1]?.replace("mpeg", "mp3") || "webm";
+  form.append("audio", new Blob([bytes], { type: mimeType }), "speech." + ext);
   const response = await fetch(
     `${BASE}/api/v1/scribe/transcribe?language=${encodeURIComponent(language)}&request_id=mela-${crypto.randomUUID()}`,
     {

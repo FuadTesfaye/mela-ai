@@ -1,0 +1,114 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: #f5f7f3;
+  color: #17394e;
+  font:
+    18px/1.6 system-ui,
+    sans-serif;
+}
+header,
+main {
+  max-width: 1000px;
+  margin: auto;
+  padding: 24px;
+}
+header {
+  font-weight: 750;
+  border-bottom: 1px solid #d6e2df;
+}
+header span {
+  font-weight: 400;
+  margin-left: 24px;
+}
+h1 {
+  font-size: clamp(2rem, 5vw, 3.8rem);
+  line-height: 1.12;
+}
+.eyebrow {
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  color: #087e8b;
+  font-weight: 750;
+}
+article {
+  background: white;
+  border: 1px solid #d6e2df;
+  border-radius: 16px;
+  padding: 24px;
+  margin: 24px 0;
+  overflow-wrap: anywhere;
+}
+button {
+  font: inherit;
+  border: 2px solid #103c4b;
+  background: #103c4b;
+  color: white;
+  padding: 10px 16px;
+  min-height: 48px;
+  border-radius: 8px;
+  margin: 6px 10px 6px 0;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+summary {
+  padding: 12px 0;
+  cursor: pointer;
+}
+details p {
+  white-space: pre-wrap;
+}
+a {
+  color: #086b78;
+}
+*:focus-visible {
+  outline: 3px solid #b46d05;
+  outline-offset: 4px;
+}
+.skip {
+  position: absolute;
+  top: -100px;
+  left: 12px;
+}
+.skip:focus {
+  top: 10px;
+  background: white;
+  padding: 10px;
+}
+#status:empty {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+  }
+}
+.gemini {
+  background: #fff;
+  border: 2px solid #087e8b;
+  border-radius: 14px;
+  padding: 8px 24px 16px;
+  margin-bottom: 32px;
+}
+.gemini h1 {
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
+}
+.gemini label {
+  display: block;
+  font-weight: 650;
+  margin-top: 12px;
+}
+.gemini select,
+.gemini input {
+  width: 100%;
+  font: inherit;
+  padding: 10px;
+  min-height: 44px;
+  border: 2px solid #526e78;
+  border-radius: 6px;
+}

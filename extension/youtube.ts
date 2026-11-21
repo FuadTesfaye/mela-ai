@@ -26,6 +26,41 @@ export function youtubeLiveCaptions(options: {
     sequence = 0,
     shown = 0;
   const transcript: string[] = [];
+  // Prepared captions (bundled/served transcript for this video): exact timing,
+  // no transcription or translation calls for English/Amharic.
+  type Cue = { start: number; end: number; text: string };
+  let prepared: { cues: Cue[]; amCues?: Cue[] } | undefined;
+  let preparedTimer: ReturnType<typeof setInterval> | undefined;
+  const translatedCue = new Map<string, string>();
+  let lastCue = -1;
+  let lastLanguage = "";
+  const followPrepared = () => {
+    const element = video();
+    if (!prepared || !element) return;
+    const t = element.currentTime;
+    const index = prepared.cues.findIndex((c) => t >= c.start && t < c.end);
+    const language = options.language();
+    if (index === lastCue && language === lastLanguage) return;
+    lastCue = index;
+    lastLanguage = language;
+    if (index < 0) return void (line.textContent = "");
+    const cue = prepared.cues[index];
+    if (!transcript.includes(cue.text)) transcript.push(cue.text);
+    if (language === "en") return show(cue.text, "en", ++sequence);
+    if (language === "am" && prepared.amCues?.[index])
+      return show(prepared.amCues[index].text, "am", ++sequence);
+    const key = language + ":" + index;
+    const id = ++sequence;
+    const cached = translatedCue.get(key);
+    if (cached) return show(cached, language, id);
+    options
+      .ai<string>({ type: "mela:translate", text: cue.text, language })
+      .then((text) => {
+        translatedCue.set(key, text);
+        show(text, language, id);
+      })
+      .catch(() => show(cue.text, "en", id));
+  };
 
   // Large translated subtitles over the player (closed shadow root, no page styles).
   const host = document.createElement("div");
@@ -171,6 +206,12 @@ export function youtubeLiveCaptions(options: {
       return active;
     },
     transcript: () => transcript.join(" ").slice(-6000),
+    /** Use prepared captions for this video instead of live transcription. */
+    usePrepared(cues: Cue[], amCues?: Cue[]) {
+      prepared = { cues, amCues };
+      transcript.length = 0;
+      transcript.push(...cues.map((c) => c.text));
+    },
     start() {
       if (active || !isYouTubeVideo()) return false;
       active = true;
@@ -179,6 +220,11 @@ export function youtubeLiveCaptions(options: {
       const player = document.querySelector("#movie_player") || document.body;
       player.append(host);
       document.head.append(hideNative);
+      if (prepared) {
+        lastCue = -1;
+        preparedTimer = setInterval(followPrepared, 200);
+        return true;
+      }
       enableNative();
       observer = new MutationObserver(readCaptions);
       observer.observe(player, {
@@ -194,6 +240,7 @@ export function youtubeLiveCaptions(options: {
     },
     stop() {
       active = false;
+      clearInterval(preparedTimer);
       observer?.disconnect();
       clearTimeout(flushTimer);
       clearTimeout(audioTimer);

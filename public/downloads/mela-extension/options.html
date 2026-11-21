@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>MELA · Settings</title>
+    <link rel="stylesheet" href="options.css" />
+    <script src="options.js" defer></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to saved sites</a>
+    <header>MELA AI <span>Site memory</span></header>
+    <main id="main">
+      <section id="gemini" aria-labelledby="gemini-title" class="gemini">
+        <p class="eyebrow">TALKING ASSISTANT</p>
+        <h1 id="gemini-title">Connect the AI</h1>
+        <p>
+          MELA uses Groq (fast transcription and English answers) and Google
+          Gemini (Amharic and backup) to answer questions about the page you are
+          on. Add either key, or both. Gemini keys:
+          <a
+            href="https://aistudio.google.com/apikey"
+            target="_blank"
+            rel="noopener noreferrer"
+            >aistudio.google.com/apikey</a
+          >
+          · Groq keys:
+          <a
+            href="https://console.groq.com/keys"
+            target="_blank"
+            rel="noopener noreferrer"
+            >console.groq.com/keys</a
+          >. Keys stay in this browser only.
+        </p>
+        <label for="gemini-key">Gemini API key</label>
+        <input
+          id="gemini-key"
+          type="password"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="AIza…"
+        />
+        <label for="groq-key"
+          >Groq API key (recommended: fast voice input and answers)</label
+        >
+        <input
+          id="groq-key"
+          type="password"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="gsk_…"
+        />
+        <label for="addis-key"
+          >Addis AI key (Amharic, Afaan Oromo, Tigrinya voice and
+          answers)</label
+        >
+        <input
+          id="addis-key"
+          type="password"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="sk_…"
+        />
+        <label for="gemini-model">Gemini model</label>
+        <input
+          id="gemini-model"
+          type="text"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="gemini-3.5-flash"
+        />
+        <label for="gemini-voice">MELA's voice</label>
+        <select id="gemini-voice">
+          <option value="auto">
+            Automatic (device voice, or Gemini voice if the device has none)
+          </option>
+          <option value="gemini">
+            Natural Gemini voice (works everywhere)
+          </option>
+          <option value="device">Device voice only</option>
+        </select>
+        <div>
+          <button id="gemini-save" type="button">Save key</button
+          ><button id="gemini-test" type="button">Test connection</button
+          ><button id="gemini-remove" type="button">Remove key</button>
+        </div>
+        <p id="gemini-status" role="status" aria-live="polite"></p>
+        <h2>For blind users</h2>
+        <label
+          ><input id="auto-open" type="checkbox" /> Open MELA by itself on
+          every website and greet me out loud</label
+        >
+        <label for="mela-language">Language MELA talks in</label>
+        <select id="mela-language">
+          <option value="en">English</option>
+          <option value="am">አማርኛ (Amharic)</option>
+          <option value="om">Afaan Oromoo</option>
+          <option value="ti">ትግርኛ (Tigrinya)</option>
+        </select>
+        <p id="prefs-status" role="status" aria-live="polite"></p>
+      </section>
+      <p class="eyebrow">YOUR CONTEXT. YOUR CONTROL.</p>
+      <h1>Pick up where you left off.</h1>
+      <p>
+        MELA remembers public page text only after you choose Remember this
+        site. Context stays in this browser's local extension storage, with no
+        cloud upload or browsing-history permission.
+      </p>
+      <p>
+        Up to 25 sites and 10 pages per site within a 2 MiB budget. Context
+        older than 90 days is excluded and removed the next time memory is
+        accessed. Old pages can become stale; open the original website to
+        check.
+      </p>
+      <button id="refresh">Refresh saved sites</button
+      ><button id="clear">Forget every saved site</button>
+      <p id="status" role="status" aria-live="polite"></p>
+      <section id="sites" aria-label="Saved sites"></section>
+    </main>
+  </body>
+</html>

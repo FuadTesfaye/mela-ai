@@ -1,0 +1,221 @@
+{
+  "version": 1,
+  "glossaryVersion": "am-1",
+  "status": "ai-draft",
+  "videoUrl": "https://www.youtube.com/watch?v=9hE5-98ZeCg",
+  "revision": "d703f778",
+  "entries": [
+    {
+      "sourceText": "Okay, this is a quick demo of multimodal live streaming in Gemini 2.0,",
+      "targetText": "እሺ፣ ይህ በGemini 2.0 የተለያዩ የመረጃ ዓይነቶችን በቀጥታ ማስተላለፍ አጭር ማሳያ ነው።"
+    },
+    {
+      "sourceText": "and we are casting a tab into AI studio.",
+      "targetText": "አንድ የአሳሽ ትር ወደ AI studio እያጋራን ነው።"
+    },
+    {
+      "sourceText": "[user] “Can you see my screen?”",
+      "targetText": "[user] “ማያዬን ማየት ትችላለህ?”"
+    },
+    {
+      "sourceText": "[model] “Yes, I see your screen.",
+      "targetText": "[model] “አዎ፣ ማያህን አያለሁ።"
+    },
+    {
+      "sourceText": "It's showing a document with the title ‘demo’.",
+      "targetText": "‘demo’ የሚል ርዕስ ያለው ሰነድ እያሳየ ነው።"
+    },
+    {
+      "sourceText": "It also contains bullet points and a Google Meet window",
+      "targetText": "በነጥብ የተዘረዘሩ ሐሳቦችና የGoogle Meet መስኮትም አሉ።"
+    },
+    {
+      "sourceText": "with a person in the video. Is there anything in particular",
+      "targetText": "በቪዲዮው ውስጥ አንድ ሰው አለ። በተለይ"
+    },
+    {
+      "sourceText": "you would like to talk about on the screen?”",
+      "targetText": "በማያው ላይ ልታወራበት የምትፈልገው ነገር አለ?”"
+    },
+    {
+      "sourceText": "[user] “Yeah.",
+      "targetText": "[user] “አዎ።"
+    },
+    {
+      "sourceText": "Can you start the demo by just reading the text",
+      "targetText": "ማሳያውን ለመጀመር ጽሑፉን ብቻ ማንበብ"
+    },
+    {
+      "sourceText": "I highlighted?”",
+      "targetText": "እኔ ያደመቅኩትን ትችላለህ?”"
+    },
+    {
+      "sourceText": "[model] “Sure, I can do that.",
+      "targetText": "[model] “እርግጥ ነው፣ ማድረግ እችላለሁ።"
+    },
+    {
+      "sourceText": "The text you highlighted reads ‘the Multimodal Live API lets you build",
+      "targetText": "ያደመቅከው ጽሑፍ እንዲህ ይላል፦ ‘Multimodal Live API"
+    },
+    {
+      "sourceText": "real time multimodal applications powered by Gemini 2.0 Flash.",
+      "targetText": "በGemini 2.0 Flash የሚሠሩ በቅጽበት የተለያዩ መረጃዎችን የሚያቀናጁ መተግበሪያዎችን እንድትገነባ ያስችላል።"
+    },
+    {
+      "sourceText": "It features tool use",
+      "targetText": "መሣሪያዎችን የመጠቀም ችሎታ አለው።"
+    },
+    {
+      "sourceText": "like Google search and code execution, function calling, and more.’",
+      "targetText": "ለምሳሌ Google search፣ ኮድ ማስኬድ፣ function calling እና ሌሎችም።’"
+    },
+    {
+      "sourceText": "Would you like me to read the following lines too?”",
+      "targetText": "የሚቀጥሉትን መስመሮችም እንዳነብ ትፈልጋለህ?”"
+    },
+    {
+      "sourceText": "[user] “No,",
+      "targetText": "[user] “አይ።"
+    },
+    {
+      "sourceText": "can you actually just tell me what this word means though?”",
+      "targetText": "ግን ይህ ቃል ምን ማለት እንደሆነ ልትነግረኝ ትችላለህ?”"
+    },
+    {
+      "sourceText": "[model] “I can do that.",
+      "targetText": "[model] “ማድረግ እችላለሁ።"
+    },
+    {
+      "sourceText": "Multimodal refers to the ability to process and understand",
+      "targetText": "Multimodal ማለት ማቀናበርና መረዳት መቻል ነው፣"
+    },
+    {
+      "sourceText": "different types of data like text, images, and audio altogether.",
+      "targetText": "እንደ ጽሑፍ፣ ምስልና ድምፅ ያሉ የተለያዩ መረጃዎችን በአንድነት።"
+    },
+    {
+      "sourceText": "Does that help?”",
+      "targetText": "ይህ ይረዳሃል?”"
+    },
+    {
+      "sourceText": "[user] “Yeah.",
+      "targetText": "[user] “አዎ።"
+    },
+    {
+      "sourceText": "I need to demo the interruptions feature next.",
+      "targetText": "ቀጥሎ የማቋረጥ ባህሪውን ማሳየት እፈልጋለሁ።"
+    },
+    {
+      "sourceText": "Can you tell me a really boring kind of \"once upon a time\"",
+      "targetText": "በጣም አሰልቺ የሆነ፣ ‘ድሮ በአንድ ወቅት’ ብሎ የሚጀምር"
+    },
+    {
+      "sourceText": "sort of story?”",
+      "targetText": "ዓይነት ታሪክ ልትነግረኝ ትችላለህ?”"
+    },
+    {
+      "sourceText": "[model] “Okay, I can do that.",
+      "targetText": "[model] “እሺ፣ ማድረግ እችላለሁ።"
+    },
+    {
+      "sourceText": "Once upon a time, in a small village nestled beside",
+      "targetText": "ድሮ በአንድ ወቅት፣ አንድ ትንሽ መንደር ነበረ፣"
+    },
+    {
+      "sourceText": "a quiet forest, there was a very unremarkable rock.",
+      "targetText": "ጸጥ ካለ ደን አጠገብ፤ እዚያም ምንም ልዩ ነገር የሌለው ድንጋይ ነበረ።"
+    },
+    {
+      "sourceText": "This rock was gray, and it was round,",
+      "targetText": "ይህ ድንጋይ ግራጫና ክብ ነበር።"
+    },
+    {
+      "sourceText": "and it sat there-”",
+      "targetText": "እዚያም ተቀምጦ ነበር—”"
+    },
+    {
+      "sourceText": "[user] “Sorry, I have to interrupt you.”",
+      "targetText": "[user] “ይቅርታ፣ ላቋርጥህ ይገባኛል።”"
+    },
+    {
+      "sourceText": "[model] “No problem.",
+      "targetText": "[model] “ችግር የለም።"
+    },
+    {
+      "sourceText": "I understand that interruptions are part of the demo.",
+      "targetText": "ማቋረጥ የማሳያው ክፍል መሆኑን ተረድቻለሁ።"
+    },
+    {
+      "sourceText": "What should I do now?”",
+      "targetText": "አሁን ምን ላድርግ?”"
+    },
+    {
+      "sourceText": "[user] “So we're going to demo memory.",
+      "targetText": "[user] “አሁን ማስታወስን እናሳያለን።"
+    },
+    {
+      "sourceText": "Can you just summarize everything we've seen or heard so far?”",
+      "targetText": "እስካሁን ያየነውንና የሰማነውን ሁሉ ማጠቃለል ትችላለህ?”"
+    },
+    {
+      "sourceText": "[model] “I can do that.",
+      "targetText": "[model] “ማድረግ እችላለሁ።"
+    },
+    {
+      "sourceText": "So far, we've discussed a demo of the Multimodal Live API,",
+      "targetText": "እስካሁን ስለ Multimodal Live API ማሳያ ተነጋግረናል፣"
+    },
+    {
+      "sourceText": "which lets you build realtime multimodal apps.",
+      "targetText": "ይህም በቅጽበት ብዙ የግቤት ዓይነቶችን የሚያቀናጁ መተግበሪያዎችን እንድትገነባ ያስችላል።"
+    },
+    {
+      "sourceText": "And I defined what multimodal means.",
+      "targetText": "Multimodal ምን እንደሆነም ገልጫለሁ።"
+    },
+    {
+      "sourceText": "I was also asked to tell a very boring \"once upon a time\" story,",
+      "targetText": "በጣም አሰልቺ የሆነ ‘ድሮ በአንድ ወቅት’ ታሪክ እንድነግር ተጠይቄ ነበር፣"
+    },
+    {
+      "sourceText": "but I was interrupted.",
+      "targetText": "ግን ተቋርጬ ነበር።"
+    },
+    {
+      "sourceText": "Is there anything else?”",
+      "targetText": "ሌላ ነገር አለ?”"
+    },
+    {
+      "sourceText": "[user] “No. I think we're done.",
+      "targetText": "[user] “አይ። የጨረስን ይመስለኛል።"
+    },
+    {
+      "sourceText": "Do you want to read this ending card,",
+      "targetText": "ይህን የመጨረሻ ካርድ ማንበብ ትፈልጋለህ፣"
+    },
+    {
+      "sourceText": "or should I?”",
+      "targetText": "ወይስ እኔ ላንብበው?”"
+    },
+    {
+      "sourceText": "[model] “I can read it if you would like.",
+      "targetText": "[model] “ከፈለግህ ማንበብ እችላለሁ።"
+    },
+    {
+      "sourceText": "The ending card says, ‘start building with Gemini 2.0 at aistudio.google.com.’",
+      "targetText": "የመጨረሻው ካርድ፣ ‘በaistudio.google.com በGemini 2.0 መገንባት ጀምር’ ይላል።"
+    },
+    {
+      "sourceText": "Is that correct?”",
+      "targetText": "ይህ ትክክል ነው?”"
+    },
+    {
+      "sourceText": "[user] “Yeah. That's great.",
+      "targetText": "[user] “አዎ። ጥሩ ነው።"
+    },
+    {
+      "sourceText": "All right, thanks, talk to you later.”",
+      "targetText": "እሺ፣ አመሰግናለሁ፤ በኋላ እንነጋገራለን።”"
+    }
+  ]
+}

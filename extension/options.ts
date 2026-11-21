@@ -151,6 +151,26 @@ const keyInput = document.querySelector<HTMLInputElement>("#gemini-key")!,
   voiceInput = document.querySelector<HTMLSelectElement>("#gemini-voice")!,
   groqInput = document.querySelector<HTMLInputElement>("#groq-key")!,
   addisInput = document.querySelector<HTMLInputElement>("#addis-key")!;
+// Remembered preferences (same key the service worker reads).
+const autoOpen = document.querySelector<HTMLInputElement>("#auto-open")!,
+  melaLanguage = document.querySelector<HTMLSelectElement>("#mela-language")!,
+  prefsStatus = document.querySelector<HTMLElement>("#prefs-status")!;
+void storage.get("mela:prefs").then((data) => {
+  const prefs = data["mela:prefs"] as
+    | { language?: string; autoOpen?: boolean }
+    | undefined;
+  autoOpen.checked = prefs?.autoOpen === true;
+  melaLanguage.value = prefs?.language || "en";
+});
+const savePrefs = async () => {
+  await storage.set({
+    "mela:prefs": { autoOpen: autoOpen.checked, language: melaLanguage.value },
+  });
+  prefsStatus.textContent = autoOpen.checked
+    ? "Saved. MELA will open and talk on every website you visit."
+    : "Saved. MELA opens only when you click its icon or press Alt+Shift+M.";
+};
+autoOpen.onchange = melaLanguage.onchange = () => void savePrefs();
 const current = (): GeminiSettings => ({
   key: keyInput.value.trim(),
   groqKey: groqInput.value.trim(),

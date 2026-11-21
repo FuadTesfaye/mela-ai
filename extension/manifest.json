@@ -1,14 +1,22 @@
 {
   "manifest_version": 3,
   "name": "MELA — talking web assistant",
-  "version": "0.3.0",
+  "version": "0.5.0",
   "description": "Ask questions about any website by voice or text, hear the answer read aloud with Gemini, and follow along in a sign-language box.",
   "permissions": ["activeTab", "scripting", "storage"],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "scripts": ["background.js"]
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "mela@mela-ai.app",
+      "strict_min_version": "128.0"
+    }
   },
   "action": {
-    "default_title": "Open MELA on this page"
+    "default_title": "Open MELA on this page",
+    "default_popup": "popup.html"
   },
   "commands": {
     "_execute_action": {
@@ -24,6 +32,13 @@
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"
   },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["autoload.js"],
+      "run_at": "document_idle"
+    }
+  ],
   "options_ui": {
     "page": "options.html",
     "open_in_tab": true
@@ -33,7 +48,9 @@
     "https://api.groq.com/*",
     "https://api.addisassistant.com/*",
     "http://localhost:3000/*",
-    "https://mela-ai-wheat.vercel.app/*"
+    "https://mela-ai-wheat.vercel.app/*",
+    "http://*/*",
+    "https://*/*"
   ],
   "web_accessible_resources": [
     {

@@ -1,0 +1,275 @@
+{
+  "title": "Building with Gemini 2.0: Multimodal live streaming",
+  "language": "en",
+  "videoUrl": "https://www.youtube.com/watch?v=9hE5-98ZeCg",
+  "generated": false,
+  "source": "youtube-captions",
+  "retrievedAt": "2026-11-15T18:29:04.811411+00:00",
+  "cues": [
+    {
+      "start": 0.333,
+      "end": 5.5,
+      "text": "Okay, this is a quick demo of multimodal live streaming in Gemini 2.0,"
+    },
+    {
+      "start": 5.833,
+      "end": 9.533,
+      "text": "and we are casting a tab into AI studio."
+    },
+    {
+      "start": 10.6,
+      "end": 13.6,
+      "text": "[user] “Can you see my screen?”"
+    },
+    {
+      "start": 15.6,
+      "end": 17.533,
+      "text": "[model] “Yes, I see your screen."
+    },
+    {
+      "start": 17.533,
+      "end": 20.033,
+      "text": "It's showing a document with the title ‘demo’."
+    },
+    {
+      "start": 20.033,
+      "end": 22.5,
+      "text": "It also contains bullet points and a Google Meet window"
+    },
+    {
+      "start": 22.5,
+      "end": 25.233,
+      "text": "with a person in the video. Is there anything in particular"
+    },
+    {
+      "start": 25.233,
+      "end": 28.233,
+      "text": "you would like to talk about on the screen?”"
+    },
+    {
+      "start": 28.533,
+      "end": 28.866,
+      "text": "[user] “Yeah."
+    },
+    {
+      "start": 28.866,
+      "end": 32.366,
+      "text": "Can you start the demo by just reading the text"
+    },
+    {
+      "start": 32.366,
+      "end": 35.366,
+      "text": "I highlighted?”"
+    },
+    {
+      "start": 36.333,
+      "end": 37.366,
+      "text": "[model] “Sure, I can do that."
+    },
+    {
+      "start": 37.366,
+      "end": 41.633,
+      "text": "The text you highlighted reads ‘the Multimodal Live API lets you build"
+    },
+    {
+      "start": 41.633,
+      "end": 45.8,
+      "text": "real time multimodal applications powered by Gemini 2.0 Flash."
+    },
+    {
+      "start": 45.833,
+      "end": 46.9,
+      "text": "It features tool use"
+    },
+    {
+      "start": 46.9,
+      "end": 50.566,
+      "text": "like Google search and code execution, function calling, and more.’"
+    },
+    {
+      "start": 50.866,
+      "end": 52.9,
+      "text": "Would you like me to read the following lines too?”"
+    },
+    {
+      "start": 54.066,
+      "end": 54.566,
+      "text": "[user] “No,"
+    },
+    {
+      "start": 54.566,
+      "end": 57.566,
+      "text": "can you actually just tell me what this word means though?”"
+    },
+    {
+      "start": 60.233,
+      "end": 61.266,
+      "text": "[model] “I can do that."
+    },
+    {
+      "start": 61.266,
+      "end": 64.2,
+      "text": "Multimodal refers to the ability to process and understand"
+    },
+    {
+      "start": 64.2,
+      "end": 68.233,
+      "text": "different types of data like text, images, and audio altogether."
+    },
+    {
+      "start": 68.6,
+      "end": 70.333,
+      "text": "Does that help?”"
+    },
+    {
+      "start": 70.333,
+      "end": 71.333,
+      "text": "[user] “Yeah."
+    },
+    {
+      "start": 71.333,
+      "end": 74.466,
+      "text": "I need to demo the interruptions feature next."
+    },
+    {
+      "start": 74.5,
+      "end": 78.766,
+      "text": "Can you tell me a really boring kind of \"once upon a time\""
+    },
+    {
+      "start": 78.766,
+      "end": 81.766,
+      "text": "sort of story?”"
+    },
+    {
+      "start": 83.433,
+      "end": 84.666,
+      "text": "[model] “Okay, I can do that."
+    },
+    {
+      "start": 84.666,
+      "end": 87.766,
+      "text": "Once upon a time, in a small village nestled beside"
+    },
+    {
+      "start": 87.766,
+      "end": 91.2,
+      "text": "a quiet forest, there was a very unremarkable rock."
+    },
+    {
+      "start": 91.333,
+      "end": 92.906,
+      "text": "This rock was gray, and it was round,"
+    },
+    {
+      "start": 92.906,
+      "end": 93.806,
+      "text": "and it sat there-”"
+    },
+    {
+      "start": 93.806,
+      "end": 96.966,
+      "text": "[user] “Sorry, I have to interrupt you.”"
+    },
+    {
+      "start": 97.4,
+      "end": 98.466,
+      "text": "[model] “No problem."
+    },
+    {
+      "start": 98.466,
+      "end": 100.5,
+      "text": "I understand that interruptions are part of the demo."
+    },
+    {
+      "start": 100.5,
+      "end": 103.133,
+      "text": "What should I do now?”"
+    },
+    {
+      "start": 103.133,
+      "end": 104.466,
+      "text": "[user] “So we're going to demo memory."
+    },
+    {
+      "start": 104.466,
+      "end": 108.733,
+      "text": "Can you just summarize everything we've seen or heard so far?”"
+    },
+    {
+      "start": 111.733,
+      "end": 112.8,
+      "text": "[model] “I can do that."
+    },
+    {
+      "start": 112.8,
+      "end": 116.166,
+      "text": "So far, we've discussed a demo of the Multimodal Live API,"
+    },
+    {
+      "start": 116.266,
+      "end": 118.533,
+      "text": "which lets you build realtime multimodal apps."
+    },
+    {
+      "start": 118.533,
+      "end": 120.8,
+      "text": "And I defined what multimodal means."
+    },
+    {
+      "start": 120.8,
+      "end": 124.233,
+      "text": "I was also asked to tell a very boring \"once upon a time\" story,"
+    },
+    {
+      "start": 124.4,
+      "end": 125.7,
+      "text": "but I was interrupted."
+    },
+    {
+      "start": 125.7,
+      "end": 127.9,
+      "text": "Is there anything else?”"
+    },
+    {
+      "start": 127.9,
+      "end": 130.1,
+      "text": "[user] “No. I think we're done."
+    },
+    {
+      "start": 130.1,
+      "end": 132.5,
+      "text": "Do you want to read this ending card,"
+    },
+    {
+      "start": 132.5,
+      "end": 135.5,
+      "text": "or should I?”"
+    },
+    {
+      "start": 136.8,
+      "end": 138.033,
+      "text": "[model] “I can read it if you would like."
+    },
+    {
+      "start": 138.033,
+      "end": 143.7,
+      "text": "The ending card says, ‘start building with Gemini 2.0 at aistudio.google.com.’"
+    },
+    {
+      "start": 144.033,
+      "end": 145.5,
+      "text": "Is that correct?”"
+    },
+    {
+      "start": 145.5,
+      "end": 146.7,
+      "text": "[user] “Yeah. That's great."
+    },
+    {
+      "start": 146.7,
+      "end": 148.566,
+      "text": "All right, thanks, talk to you later.”"
+    }
+  ]
+}

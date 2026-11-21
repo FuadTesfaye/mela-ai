@@ -93,6 +93,10 @@ const actions = mountActions({
     : "https://mela-ai-wheat.vercel.app/api/v1",
   assistant: true,
   onLanguageChange: (language) => {
+    // Remember the language for every page and the next visit.
+    void chrome.runtime
+      .sendMessage({ type: "mela:setPrefs", language })
+      .catch(() => {});
     if (live?.active)
       actions.say(
         `🎬 Live captions now in ${languageNames[language] || "English"}.`,
@@ -116,14 +120,40 @@ const actions = mountActions({
     storyboardUrl: chrome.runtime.getURL("avatar/storyboard.json"),
   },
 });
-void ai<{ voice: typeof voiceMode }>({ type: "mela:prefs" })
+const ready: Record<string, string> = {
+  en: "MELA is ready. Press Control Shift M and talk, or say: speak Oromo.",
+  am: "መላ ዝግጁ ነው። ኮንትሮል ሺፍት ኤም ይጫኑና ይናገሩ።",
+  om: "MELA qophaa'eera. Control Shift M tuqiitii dubbadhu.",
+  ti: "መላ ድሉው እዩ። ኮንትሮል ሺፍት ኤም ጠውቑ እሞ ተዛረቡ።",
+};
+/** Speak once the browser allows audio (after any key or click on the page). */
+const greet = () => {
+  const text = ready[actions.getLanguage()] || ready.en;
+  const activated = (
+    navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }
+  ).userActivation?.hasBeenActive;
+  if (activated) return void actions.announce(text);
+  actions.say(text); // screen readers read this right away (live region)
+  const go = () => {
+    removeEventListener("keydown", go, true);
+    removeEventListener("pointerdown", go, true);
+    void actions.announce(text);
+  };
+  addEventListener("keydown", go, true);
+  addEventListener("pointerdown", go, true);
+};
+void ai<{ voice: typeof voiceMode; language?: string }>({ type: "mela:prefs" })
   .then((prefs) => {
     voiceMode = prefs.voice;
+    if (prefs.language && prefs.language !== actions.getLanguage())
+      actions.setLanguage(prefs.language as Parameters<typeof actions.setLanguage>[0]);
   })
-  .catch(() => {});
+  .catch(() => {})
+  .finally(greet);
 // ---- YouTube: live translated captions for Deaf / other-language viewers ----
 let live: ReturnType<typeof youtubeLiveCaptions> | undefined;
 let liveButton: HTMLElement | undefined;
+let preparedLoaded = false;
 const setLive = (on: boolean) => {
   if (!live) return;
   if (on && live.start()) {
@@ -144,14 +174,53 @@ if (isYouTubeVideo()) {
   live = youtubeLiveCaptions({
     ai,
     language: () => actions.getLanguage(),
-    onCaption: (text, language) => actions.showCaption(text, language),
+    onCaption: (text, language) => {
+      // With prepared captions the sign box follows the video itself.
+      if (!preparedLoaded) actions.showCaption(text, language);
+    },
     status: (message) => actions.say(message),
   });
   liveButton = actions.makeButton("🎬 Live captions", () =>
     setLive(!live?.active),
   );
   actions.addTool(liveButton);
-  setLive(true);
+  void (async () => {
+    const videoId = new URLSearchParams(location.search).get("v") || "";
+    const prepared = await ai<
+      | {
+          cues: { start: number; end: number; text: string }[];
+          amCues?: { start: number; end: number; text: string }[];
+        }
+      | undefined
+    >({ type: "mela:transcript", videoId }).catch(() => undefined);
+    const element = document.querySelector<HTMLVideoElement>(
+      "#movie_player video, video",
+    );
+    if (prepared?.cues.length && element) {
+      preparedLoaded = true;
+      live!.usePrepared(prepared.cues, prepared.amCues);
+      // Teacher, captions and concept cards follow the real video.
+      actions.followVideo({
+        element,
+        cues: prepared.cues,
+        amCues: prepared.amCues,
+        videoId,
+        language: () => actions.getLanguage(),
+      });
+      const explain = actions.makeButton("💡 Explain", () => {
+        if (actions.explainVideo())
+          actions.say(
+            "💡 Paused. The teacher is explaining this moment — press Resume lesson to continue.",
+          );
+      });
+      explain.className = "explain";
+      actions.addTool(explain);
+      actions.say(
+        "🎓 This video has prepared lesson captions. The teacher follows along — press 💡 Explain any time.",
+      );
+    }
+    setLive(true);
+  })();
 }
 // Ctrl/⌘+Shift+M talks to MELA (same shortcut as the MELA website).
 const talkKey = (e: KeyboardEvent) => {

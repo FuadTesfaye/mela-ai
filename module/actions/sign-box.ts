@@ -62,13 +62,50 @@ export function mountSignBox(
   const seconds = () =>
     playing ? (performance.now() - started) / 1000 : duration();
 
+  // Video mode: follow a real <video> (e.g. YouTube) with its prepared captions,
+  // so the teacher, concept cards and "Explain" work like on the course page.
+  let video:
+    | {
+        element: HTMLVideoElement;
+        cues: Cue[];
+        amCues?: Cue[];
+        videoId: string;
+        language: () => string;
+      }
+    | undefined;
+  let videoTimer: ReturnType<typeof setInterval> | undefined;
   const preview = mountLearningPreview(content, {
     onGenerate: () => {},
     renderer: "auto",
     runtimeUrl: options.runtimeUrl,
     storyboardUrl: options.storyboardUrl,
+    // "Resume lesson" in the concept card continues the real video.
+    onResume: (at) => {
+      if (!video) return false;
+      video.element.currentTime = at;
+      void video.element.play();
+      return true;
+    },
   });
+  const pushVideo = () => {
+    if (!video || playing) return false;
+    const am = video.language() === "am" && video.amCues?.length;
+    preview.update({
+      cues: video.cues,
+      displayCues: am ? video.amCues : undefined,
+      language: am ? "am" : "en",
+      seconds: video.element.currentTime,
+      playing: !video.element.paused,
+      rate: video.element.playbackRate || 1,
+      visible: true,
+      sourceLabel: am ? "AMHARIC TRANSLATION" : "VIDEO CAPTIONS",
+      videoId: video.videoId,
+      playback: "ready",
+    });
+    return true;
+  };
   const push = () => {
+    if (pushVideo()) return;
     preview.update({
       cues,
       displayCues: language === "am" ? cues : undefined,
@@ -125,8 +162,28 @@ export function mountSignBox(
       playing = false;
       tick();
     },
+    /** Follow a playing video with its prepared captions (teacher + concept cards). */
+    followVideo(next: NonNullable<typeof video>) {
+      video = next;
+      clearInterval(videoTimer);
+      videoTimer = setInterval(() => !playing && pushVideo(), 250);
+      for (const type of ["play", "pause", "seeked", "ratechange"])
+        next.element.addEventListener(type, () => !playing && pushVideo());
+      pushVideo();
+    },
+    /** Pause the video and let the teacher explain the current moment. */
+    explain() {
+      if (!video) return false;
+      playing = false;
+      video.element.pause();
+      pushVideo();
+      preview.explain(video.element.currentTime);
+      box.scrollIntoView({ block: "start", behavior: "smooth" });
+      return true;
+    },
     dispose() {
       clearTimeout(timer);
+      clearInterval(videoTimer);
       preview.dispose();
       box.remove();
     },

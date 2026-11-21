@@ -20,6 +20,22 @@ await build({
   outfile: "extension/dist/background.js",
 });
 await build({
+  entryPoints: ["extension/autoload.ts"],
+  bundle: true,
+  minify: true,
+  format: "iife",
+  target: "chrome120",
+  outfile: "extension/dist/autoload.js",
+});
+await build({
+  entryPoints: ["extension/popup.ts"],
+  bundle: true,
+  minify: true,
+  format: "iife",
+  target: "chrome120",
+  outfile: "extension/dist/popup.js",
+});
+await build({
   entryPoints: ["extension/options.ts"],
   bundle: true,
   minify: true,
@@ -27,7 +43,7 @@ await build({
   target: "chrome120",
   outfile: "extension/dist/options.js",
 });
-for (const file of ["manifest.json", "options.html", "options.css"])
+for (const file of ["manifest.json", "options.html", "options.css", "popup.html"])
   await copyFile("extension/" + file, "extension/dist/" + file);
 await copyFile(
   "public/icons/mela-192.png",
@@ -41,6 +57,17 @@ for (const [from, to] of [
   ["public/spelling.js", "spelling.js"],
 ])
   await copyFile(from, "extension/dist/" + to);
+// Prepared captions for demo/lesson videos (teacher + Explain on YouTube).
+import { readdir } from "node:fs/promises";
+await mkdir("extension/dist/transcripts", { recursive: true });
+const transcripts = (await readdir("public/transcripts")).filter((f) =>
+  f.endsWith(".json"),
+);
+for (const file of transcripts)
+  await copyFile(
+    "public/transcripts/" + file,
+    "extension/dist/transcripts/" + file,
+  );
 console.log("Load extension/dist as an unpacked extension in Chromium.");
 
 import { zipFiles } from "./zip.mjs";
@@ -49,6 +76,9 @@ for (const name of [
   "manifest.json",
   "background.js",
   "content.js",
+  "autoload.js",
+  "popup.js",
+  "popup.html",
   "options.js",
   "options.html",
   "options.css",
@@ -56,6 +86,7 @@ for (const name of [
   "avatar/teacher-3d.js",
   "avatar/storyboard.json",
   "spelling.js",
+  ...transcripts.map((f) => "transcripts/" + f),
 ])
   files.push({ name, data: await readFile("extension/dist/" + name) });
 const zip = zipFiles(files);

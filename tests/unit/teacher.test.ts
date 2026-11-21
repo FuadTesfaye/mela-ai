@@ -111,9 +111,14 @@ test("transcript text selects gestures, cue timing controls phase, and silence r
   assert.equal(captionMotion(cues, 2).phase, 0);
   assert.deepEqual(captionMotion(cues, 3), captionMotion(cues, 3));
   assert.notEqual(captionMotion(cues, 2.4).phase, captionMotion(cues, 3).phase);
-  const long = [{ start: 0, end: 20, text: "Explain this idea" }];
+  // Long captions sign in ~1.4 s beats with varied gestures, never one held pose.
+  const long = [{ start: 0, end: 8, text: "Explain this idea" }];
   assert.equal(captionMotion(long, 4).phase, 0);
-  assert.ok(captionMotion(long, 5).phase > 0);
+  assert.ok(captionMotion(long, 4.5).phase > 0);
+  const seen = new Set(
+    [0.5, 2, 3.4, 4.7, 6, 7.4].map((t) => captionMotion(long, t).gesture),
+  );
+  assert.ok(seen.size >= 3);
 });
 test("caption beats visibly move both wrists and articulate fingers, while reduced motion stays still", () => {
   for (const gesture of [

@@ -21,12 +21,16 @@ import {
 } from "./gemini";
 const chrome = chromeApi();
 // Keep persisted context out of untrusted page/content-script storage access.
-const restricted = chrome.storage.local
-  .setAccessLevel({ accessLevel: "TRUSTED_CONTEXTS" })
-  .then(
-    () => true,
-    () => false,
-  );
+// Firefox has no setAccessLevel; its content scripts are extension code, not the page.
+const restricted =
+  typeof chrome.storage.local.setAccessLevel === "function"
+    ? chrome.storage.local
+        .setAccessLevel({ accessLevel: "TRUSTED_CONTEXTS" })
+        .then(
+          () => true,
+          () => false,
+        )
+    : Promise.resolve(true);
 const memory = createMemoryService(
   chrome.storage.local,
   chrome.runtime.id,
@@ -51,6 +55,23 @@ const geminiSettings = async (): Promise<GeminiSettings> => {
       typeof stored?.addisKey === "string" ? stored.addisKey.trim() : "",
   };
 };
+// Remembered for blind users: language, and whether MELA opens on every page.
+const PREFS_KEY = "mela:prefs";
+type Prefs = { language: string; autoOpen: boolean };
+const loadPrefs = async (): Promise<Prefs> => {
+  const stored = (await chrome.storage.local.get(PREFS_KEY))[PREFS_KEY] as
+    | Partial<Prefs>
+    | undefined;
+  return {
+    language: ["en", "am", "om", "ti"].includes(String(stored?.language))
+      ? String(stored!.language)
+      : "en",
+    autoOpen: stored?.autoOpen === true,
+  };
+};
+const savePrefs = async (next: Partial<Prefs>) =>
+  chrome.storage.local.set({ [PREFS_KEY]: { ...(await loadPrefs()), ...next } });
+const MELA_FILES = ["avatar/teacher-3d.js", "spelling.js", "content.js"];
 // A voice provider that just refused (locked model, daily quota) is skipped for a
 // while so every sentence doesn't wait on the same failure.
 const voicePausedUntil: Record<string, number> = {};
@@ -62,6 +83,45 @@ const voiceGuard =
       voicePausedUntil[name] = Date.now() + minutes * 60_000;
       throw error;
     });
+type Cue = { start: number; end: number; text: string };
+/** Prepared captions for a YouTube video: bundled in the extension, else from the MELA server. */
+async function preparedTranscript(videoId: string) {
+  if (!/^[A-Za-z0-9_-]{11}$/.test(videoId)) return undefined;
+  const load = async (path: string) => {
+    for (const base of [
+      chrome.runtime.getURL(""),
+      ...SERVERS.map((s) => s + "/"),
+    ]) {
+      try {
+        const response = await fetch(base + path, {
+          signal: AbortSignal.timeout(5000),
+        });
+        if (response.ok) return await response.json();
+      } catch {
+        /* next source */
+      }
+    }
+  };
+  const english = await load(`transcripts/${videoId}.json`);
+  const cues: Cue[] = Array.isArray(english?.cues) ? english.cues : [];
+  if (!cues.length) return undefined;
+  const amharic = await load(`transcripts/${videoId}.am.json`);
+  const entries: { sourceText: string; targetText: string }[] = Array.isArray(
+    amharic?.entries,
+  )
+    ? amharic.entries
+    : [];
+  const amCues = entries.length
+    ? cues.map((cue, i) => ({
+        ...cue,
+        text:
+          entries.find((e) => e.sourceText === cue.text)?.targetText ||
+          entries[i]?.targetText ||
+          cue.text,
+      }))
+    : undefined;
+  return { cues, amCues };
+}
 const SERVERS = ["http://localhost:3000", "https://mela-ai-wheat.vercel.app"];
 async function serverSpeak(text: string, language: string) {
   for (const server of SERVERS) {
@@ -105,7 +165,14 @@ type AiMessage = {
     | "mela:transcribe"
     | "mela:tts"
     | "mela:prefs"
-    | "mela:translate";
+    | "mela:translate"
+    | "mela:transcript"
+    | "mela:setPrefs"
+    | "mela:autoload"
+    | "mela:open";
+  tabId?: number;
+  videoId?: string;
+  autoOpen?: boolean;
   context?: string;
   text?: string;
   question?: string;
@@ -123,6 +190,10 @@ chrome.runtime.onMessage.addListener((raw, sender, reply) => {
       "mela:tts",
       "mela:prefs",
       "mela:translate",
+      "mela:transcript",
+      "mela:setPrefs",
+      "mela:autoload",
+      "mela:open",
     ].includes(message?.type)
   )
     return;
@@ -132,9 +203,44 @@ chrome.runtime.onMessage.addListener((raw, sender, reply) => {
     ? "am"
     : String(message.language || "en").slice(0, 5);
   void (async () => {
+    if (message.type === "mela:transcript")
+      return preparedTranscript(String(message.videoId || ""));
+    if (message.type === "mela:setPrefs")
+      return savePrefs({
+        ...(message.language !== undefined && {
+          language: String(message.language),
+        }),
+        ...(typeof message.autoOpen === "boolean" && {
+          autoOpen: message.autoOpen,
+        }),
+      });
+    // Toolbar popup: open MELA on that tab and remember it for every page.
+    if (message.type === "mela:open") {
+      const tabId = Number(message.tabId);
+      if (!Number.isInteger(tabId)) throw new Error("No tab to open MELA on.");
+      const prefs = (await chrome.storage.local.get(PREFS_KEY))[PREFS_KEY] as
+        | { autoOpen?: boolean }
+        | undefined;
+      // First use turns "open on every website" on; an explicit off stays off.
+      if (prefs?.autoOpen === undefined) await savePrefs({ autoOpen: true });
+      await chrome.scripting.executeScript({ target: { tabId }, files: MELA_FILES });
+      void chrome.action.setBadgeText({ tabId, text: "ON" });
+      return true;
+    }
+    // Page loaded: open MELA by itself when the user turned that on.
+    if (message.type === "mela:autoload") {
+      const tabId = (sender as { tab?: { id?: number } }).tab?.id;
+      if (tabId === undefined || !(await loadPrefs()).autoOpen) return false;
+      await chrome.scripting.executeScript({
+        target: { tabId },
+        files: MELA_FILES,
+      });
+      return true;
+    }
     const settings = await geminiSettings();
     if (message.type === "mela:prefs")
       return {
+        ...(await loadPrefs()),
         voice: settings.voice,
         connected: !!(settings.key || settings.groqKey || settings.addisKey),
       };
@@ -146,7 +252,7 @@ chrome.runtime.onMessage.addListener((raw, sender, reply) => {
     if (!gemini && !groq && !addis) {
       chrome.runtime.openOptionsPage().catch(() => {});
       throw new Error(
-        "Add a Groq, Gemini or Addis AI key in the MELA extension settings (the page just opened), then ask again.",
+        "No API key yet. Click the MELA icon in the browser toolbar, open 🔑 API keys, paste your Addis AI key and press Save keys. Then ask again.",
       );
     }
     if (message.type === "mela:translate") {
@@ -312,9 +418,11 @@ chrome.action.onClicked.addListener(async (tab) => {
     return;
   }
   try {
+    // Opening MELA once means "keep MELA with me": it now opens on every page.
+    await savePrefs({ autoOpen: true });
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      files: ["avatar/teacher-3d.js", "spelling.js", "content.js"],
+      files: MELA_FILES,
     });
     await chrome.action.setBadgeText({ tabId: tab.id, text: "" });
   } catch {

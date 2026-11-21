@@ -22,6 +22,9 @@ export default function ExtensionPage() {
           >
             <Download size={18} aria-hidden="true" /> Download the extension
             (.zip)
+          </a>{" "}
+          <a className="button" href="/extension/guide">
+            Read the quick guide
           </a>
         </div>
       </div>
