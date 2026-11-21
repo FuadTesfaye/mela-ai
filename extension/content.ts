@@ -11,6 +11,7 @@ state.__melaActions?.destroy();
 const chrome = chromeApi();
 const client = createSiteMemoryClient();
 const controls = memoryControls(client);
+let voiceMode: "auto" | "gemini" | "device" = "auto";
 
 async function ai<T>(message: Record<string, unknown>): Promise<T> {
   const response = await chrome.runtime.sendMessage(message);
@@ -61,6 +62,13 @@ const actions = mountActions({
     ? location.origin + "/api/v1"
     : "https://mela-ai-wheat.vercel.app/api/v1",
   assistant: true,
+  tts: (text, language) => ai<string>({ type: "mela:tts", text, language }),
+  voiceMode: () => voiceMode,
+  // Mirror the live state on the toolbar icon badge.
+  onStatus: (status) =>
+    void chrome.runtime
+      .sendMessage({ type: "mela:status", status })
+      .catch(() => {}),
   shadowMode: "closed",
   extraControls: controls.element,
   question: answer,
@@ -72,6 +80,11 @@ const actions = mountActions({
     storyboardUrl: chrome.runtime.getURL("avatar/storyboard.json"),
   },
 });
+void ai<{ voice: typeof voiceMode }>({ type: "mela:prefs" })
+  .then((prefs) => {
+    voiceMode = prefs.voice;
+  })
+  .catch(() => {});
 state.__melaActions = {
   open: () => actions.open(),
   destroy() {

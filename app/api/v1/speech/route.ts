@@ -2,6 +2,7 @@ import { z } from "zod";
 import { api, jsonBody, preflight } from "@/lib/security/http";
 import { HttpError } from "@/lib/security/auth";
 import { geminiGenerate } from "@/lib/ai/providers/gemini";
+import { groqConfigured, groqTranscribe } from "@/lib/ai/providers/groq";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 export const OPTIONS = preflight;
@@ -45,6 +46,16 @@ export const POST = (request: Request) =>
                   ? header.subarray(0, 4).toString() === "RIFF"
                   : true;
       if (!valid) throw new HttpError(400, "The recording format is invalid.");
+      // Whisper on Groq is fastest (~1 s); Gemini remains the fallback.
+      if (groqConfigured())
+        try {
+          return {
+            text: await groqTranscribe(bytes, input.mimeType, input.language),
+            language: input.language,
+          };
+        } catch {
+          /* fall through to Gemini */
+        }
       if (!process.env.GEMINI_API_KEY)
         throw new HttpError(
           503,

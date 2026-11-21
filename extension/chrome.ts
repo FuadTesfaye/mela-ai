@@ -37,6 +37,10 @@ export interface ExtensionChrome {
     };
     setBadgeText: (options: { tabId: number; text: string }) => Promise<void>;
     setTitle: (options: { tabId: number; title: string }) => Promise<void>;
+    setBadgeBackgroundColor?: (options: {
+      tabId: number;
+      color: string;
+    }) => Promise<void>;
   };
   scripting: {
     executeScript: (options: {
