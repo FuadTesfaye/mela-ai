@@ -3,6 +3,9 @@ const pending = ((
   globalThis as unknown as { __melaFeatures?: Map<string, Promise<unknown>> }
 ).__melaFeatures ??= new Map<string, Promise<unknown>>());
 export function loadFeature<T>(url: string, name: string): Promise<T> {
+  // The browser extension preloads feature globals into its isolated world.
+  const ready = (window as unknown as Record<string, T>)[name];
+  if (ready) return Promise.resolve(ready);
   let request = pending.get(url);
   if (!request) {
     request = new Promise((resolve, reject) => {

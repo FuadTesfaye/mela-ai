@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "npm run widget:build && next dev --webpack --hostname 0.0.0.0",
-    "build": "npm run widget:build && next build --webpack",
+    "build": "npm run extension:build && next build --webpack",
     "start": "next start --hostname 0.0.0.0",
     "widget:build": "node scripts/build-widget.mjs",
     "typecheck": "next typegen && tsc --noEmit",
@@ -20,7 +20,7 @@
     "format": "prettier --write app components lib module workers scripts tests *.ts *.json *.yml *.md",
     "prepare:video": "python3 scripts/prepare-video.py",
     "prepare:translations": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx scripts/prepare-translations.ts",
-    "extension:build": "node scripts/build-extension.mjs",
+    "extension:build": "node scripts/build-widget.mjs && node scripts/build-extension.mjs",
     "test:features": "node --import tsx tests/features/foundations.test.ts",
     "db:drizzle:inspect": "drizzle-kit pull --config=drizzle.config.mjs",
     "verify:hosted": "node --env-file-if-exists=.env.local scripts/verify-hosted.mjs",

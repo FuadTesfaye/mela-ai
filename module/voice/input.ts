@@ -74,6 +74,20 @@ export function create(options: {
   language: () => Language;
   status: (text: string, error?: boolean) => void;
   api: string;
+  /** Called with the finished transcript, e.g. to send it automatically. */
+  onFinal?: (text: string) => void;
+  /** Called when native listening ends: heard speech, silence, or an error. */
+  onEnd?: (outcome: "heard" | "none" | "error") => void;
+  /** Skip the browser-dictation privacy prompt (already accepted, e.g. hands-free mode). */
+  skipWarning?: () => boolean;
+  /** Button label while idle (defaults to "Use microphone"). */
+  useLabel?: string;
+  /** Optional transcription relay (the extension routes audio through its worker). */
+  transcribe?: (
+    audio: string,
+    mimeType: string,
+    language: Language,
+  ) => Promise<string>;
 }) {
   const { input, button } = options;
   let recognition: Recognition | undefined,
@@ -98,7 +112,7 @@ export function create(options: {
     if (!active()) return;
     const label =
       value === "idle"
-        ? t().use
+        ? options.useLabel || t().use
         : value === "processing"
           ? t().cancel
           : t().stop;
@@ -251,22 +265,32 @@ export function create(options: {
             reader.onerror = () => reject(reader.error);
             reader.readAsDataURL(blob);
           });
-          const response = await fetch(options.api + "/speech", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              language: options.language(),
-              mimeType: blob.type,
-              audio,
-              consent: true,
-            }),
-            signal: AbortSignal.any([
-              request.signal,
-              AbortSignal.timeout(50000),
-            ]),
-          });
-          if (!response.ok) throw new Error("speech");
-          const value = await response.json();
+          const value = options.transcribe
+            ? {
+                text: await options.transcribe(
+                  audio,
+                  blob.type,
+                  options.language(),
+                ),
+              }
+            : await (async () => {
+                const response = await fetch(options.api + "/speech", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    language: options.language(),
+                    mimeType: blob.type,
+                    audio,
+                    consent: true,
+                  }),
+                  signal: AbortSignal.any([
+                    request.signal,
+                    AbortSignal.timeout(50000),
+                  ]),
+                });
+                if (!response.ok) throw new Error("speech");
+                return response.json();
+              })();
           if (!active() || session !== id) return;
           if (typeof value.text !== "string" || value.text.length > 2000)
             throw new Error("speech");
@@ -274,6 +298,7 @@ export function create(options: {
             write(value.text);
             options.status(t().ready);
             input.focus();
+            options.onFinal?.(input.value);
           } else options.status(t().none);
         } catch {
           if (active() && session === id) options.status(t().failed, true);
@@ -339,7 +364,7 @@ export function create(options: {
       void record(id);
       return;
     }
-    if (!window.confirm(t().warning)) return;
+    if (!options.skipWarning?.() && !window.confirm(t().warning)) return;
     let engine: Recognition;
     try {
       engine = new Native();
@@ -376,6 +401,8 @@ export function create(options: {
         recognition = undefined;
         setState("idle");
         if (!hadError) options.status(heard ? t().ready : t().none);
+        if (!hadError && heard) options.onFinal?.(input.value);
+        options.onEnd?.(hadError ? "error" : heard ? "heard" : "none");
       }
     };
     try {
@@ -391,6 +418,7 @@ export function create(options: {
   return {
     toggle,
     cancel,
+    idle: () => state === "idle",
     stop() {
       cancel();
       disposed = true;

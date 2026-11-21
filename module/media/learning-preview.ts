@@ -472,10 +472,10 @@ export function mountLearningPreview(
     );
     sourceLabel.textContent = state.sourceLabel || "AI CAPTIONS";
     hint.textContent = state.displayCues
-      ? "Amharic translation · fluent review pending."
-      : state.sourceLabel === "COURSE CAPTIONS"
-        ? "English source captions."
-        : "Generated from the video's audio. Review for accuracy.";
+        ? "Amharic translation · fluent review pending."
+        : state.sourceLabel === "COURSE CAPTIONS"
+          ? "English source captions."
+          : "Generated from the video's audio. Review for accuracy.";
     note.textContent =
       animationMode.value === "spelling"
         ? "Experimental English fingerspelling preview · not EthSL translation or full ASL. Fluent review pending."
