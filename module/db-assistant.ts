@@ -503,6 +503,8 @@ class DBAssistant extends HTMLElement {
     const privacy = el("label", undefined, "privacy");
     this.cloud = el("input");
     this.cloud.type = "checkbox";
+    // AI answers are on by default (presentation/MVP); hosts can opt out with ai="off".
+    this.cloud.checked = this.getAttribute("ai") !== "off";
     privacy.append(this.cloud, document.createTextNode(this.t.privacy));
     const footer = el("div", undefined, "footer");
     const help = el("button", this.t.help);
@@ -635,6 +637,7 @@ class DBAssistant extends HTMLElement {
         if (!this.cloud.checked) this.visual.checked = false;
       }
     };
+    if (this.visual) this.visual.disabled = !this.cloud.checked;
     const reader = el(
       "button",
       this.locale === "am" ? "ትምህርቱን በአማርኛ ያንብቡ" : "Read lesson in Amharic",

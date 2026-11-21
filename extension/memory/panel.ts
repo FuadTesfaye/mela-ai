@@ -9,10 +9,10 @@ export function memoryControls(
   status.setAttribute("role", "status");
   const intro = document.createElement("p");
   intro.textContent =
-    "Remember public text on this site for your next visit. Saved locally on this device; not uploaded to an AI service. No background browsing history is collected. Ask “What do you remember?” in Web command to pick up again.";
+    "Remember this site's public text on this device for next time.";
   const preview = document.createElement("p");
-  preview.textContent =
-    "Queries, form values, private regions and sensitive account pages are excluded. Up to 25 sites, 10 pages per site and 90 days, within a 2 MiB limit.";
+  preview.textContent = "";
+  preview.hidden = true;
   const list = document.createElement("ul");
   let disposed = false;
   const button = (text: string, fn: () => Promise<unknown>) => {

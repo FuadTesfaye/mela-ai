@@ -4,6 +4,12 @@ import { isLanguage, languages, type Language } from "../../lib/languages";
 import { mountSignBox } from "./sign-box";
 import { courseMediaStyles } from "../media/course-media-styles";
 import { extractPage, summarizeData, type PageData } from "./extract";
+export type LiveStatus =
+  | "live"
+  | "listening"
+  | "thinking"
+  | "speaking"
+  | "jarvis";
 export function mountActions(
   options: {
     root?: ParentNode;
@@ -19,6 +25,11 @@ export function mountActions(
     speakAnswers?: boolean;
     /** Show the big Talk button, hands-free Jarvis mode and web-data extraction. */
     assistant?: boolean;
+    /** Live status for outside indicators (e.g. the extension toolbar badge). */
+    onStatus?: (status: LiveStatus) => void;
+    /** Natural voice (base64 WAV) used when the device has no voice, or when preferred. */
+    tts?: (text: string, language: Language) => Promise<string>;
+    voiceMode?: () => "auto" | "gemini" | "device";
     transcribe?: (
       audio: string,
       mimeType: string,
@@ -42,12 +53,37 @@ export function mountActions(
       ":host{width:min(460px,calc(100vw - 36px))}.sign-box{width:100%;margin-top:10px}.sign-box button,.sign-box select{min-height:0;margin:0;color:#16445e;background:#fff;border:1px solid #b5cbd8}.sign-box .preview-generate{display:none}.teacher-surface{aspect-ratio:auto;height:260px}.gesture-viewport svg{max-height:260px}.mela-toolbar{display:flex;flex-wrap:wrap;gap:4px;align-items:center}.mela-toolbar label{display:flex;gap:6px;align-items:center;font-size:14px}.mela-toolbar input{width:20px;height:20px}";
   if (options.assistant)
     style.textContent +=
-      ".mela-talk-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}.mela-talk-row button{margin:0;min-height:56px;font-size:17px;font-weight:700}.talk{background:#087e8b;border-color:#087e8b}.talk[data-voice-state=listening],.talk[data-voice-state=starting],.talk[data-voice-state=recording]{background:#b3261e;border-color:#b3261e;animation:mela-pulse 1.2s infinite}.jarvis[aria-pressed=true]{background:#b46d05;border-color:#b46d05}.extract{width:100%;margin:6px 0 0;background:#fff;color:#103c4b}.mela-data{display:flex;flex-wrap:wrap;gap:4px}.mela-data button{font-size:14px;min-height:38px;padding:6px 10px;margin:2px 0}.jarvis-state{margin:6px 0 0;font-size:14px;font-weight:600;color:#7a4a00}@keyframes mela-pulse{50%{box-shadow:0 0 0 6px #b3261e33}}@media(prefers-reduced-motion:reduce){.talk{animation:none!important}}";
+      ".mela-talk-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}.mela-talk-row button{margin:0;min-height:56px;font-size:17px;font-weight:700}.talk{background:#087e8b;border-color:#087e8b}.talk[data-voice-state=listening],.talk[data-voice-state=starting],.talk[data-voice-state=recording]{background:#b3261e;border-color:#b3261e;animation:mela-pulse 1.2s infinite}.jarvis[aria-pressed=true]{background:#b46d05;border-color:#b46d05}.extract{width:100%;margin:6px 0 0;background:#fff;color:#103c4b}.mela-data{display:flex;flex-wrap:wrap;gap:4px}.mela-data button{font-size:14px;min-height:38px;padding:6px 10px;margin:2px 0}.jarvis-state{margin:6px 0 0;font-size:14px;font-weight:600;color:#7a4a00}:host([data-closed]){width:auto}:host([data-closed]) details{border-radius:999px;padding:6px 14px 6px 10px}:host([data-closed]) .mela-sub{display:none}summary{display:flex;align-items:center;gap:10px;list-style:none}summary::-webkit-details-marker{display:none}.mela-brand{display:inline-grid;place-items:center;width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#087e8b,#103c4b);color:#fff;font-size:10px;letter-spacing:.5px}.mela-sub{flex:1}.live-pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;letter-spacing:.6px;padding:4px 10px;border-radius:999px;background:#e5f6ec;color:#0a6b30;white-space:nowrap}.live-pill b{width:9px;height:9px;border-radius:50%;background:#12a150;box-shadow:0 0 0 0 #12a15088;animation:mela-dot 1.6s infinite}.live-pill .bars{display:none}.live-pill[data-state=listening]{background:#fde8e7;color:#b3261e}.live-pill[data-state=listening] b{background:#d93025;box-shadow:0 0 0 0 #d9302588}.live-pill[data-state=listening] .bars,.live-pill[data-state=speaking] .bars{display:inline-flex}.live-pill[data-state=thinking]{background:#fff4dc;color:#8a5300}.live-pill[data-state=thinking] b{background:#e0a100}.live-pill[data-state=speaking]{background:#e3effd;color:#0b57d0}.live-pill[data-state=speaking] b{background:#0b57d0}.live-pill[data-state=jarvis]{background:#f1e8fd;color:#6a2fb5}.live-pill[data-state=jarvis] b{background:#8e44e0}.bars{display:inline-flex;gap:2px;align-items:center;height:14px}.bars i{display:block;width:3px;height:100%;border-radius:2px;background:currentColor;animation:mela-bar .9s ease-in-out infinite}.bars i:nth-child(2){animation-delay:-.7s}.bars i:nth-child(3){animation-delay:-.4s}.bars i:nth-child(4){animation-delay:-.2s}.bars i:nth-child(5){animation-delay:-.55s}.mic-banner{display:flex;align-items:center;gap:10px;margin:8px 0 0;padding:10px 14px;border-radius:10px;background:#d93025;color:#fff;font-weight:700;font-size:16px}.mic-banner .bars{height:20px;margin-left:auto}.mic-banner .bars i{width:4px}.talk:hover{background:#066a75!important;color:#fff}.jarvis:hover{background:#0b3140;color:#fff}.jarvis[aria-pressed=true]:hover{background:#9a5c00}.mela-composer .send:hover{background:#066a75}.mela-tools button:hover{filter:brightness(1.15)}.mela-tools .extract:hover{background:#eef6f8;filter:none}details details{border:1px solid #dfe9ec;box-shadow:none;padding:2px 12px;border-radius:10px;margin-top:8px;font-size:14px;max-height:none}details details summary{min-height:36px;font-weight:600;font-size:14px}details details button{min-height:36px;padding:5px 10px;font-size:13px}.mela-chat{display:flex;flex-direction:column;gap:8px;max-height:240px;min-height:90px;overflow:auto;padding:10px 2px 4px}.msg{max-width:88%;padding:9px 13px;border-radius:16px;font-size:15px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}.msg.mela{align-self:flex-start;background:#eef6f8;color:#123a4b;border-bottom-left-radius:4px}.msg.you{align-self:flex-end;background:#087e8b;color:#fff;border-bottom-right-radius:4px}.msg ul{margin:6px 0 0;padding-left:18px;font-size:13px}.msg a{color:inherit}.mela-composer{display:flex;gap:6px;align-items:flex-end;margin-top:8px}.mela-composer textarea{margin:0;flex:1;min-height:46px;resize:none;border-radius:12px;border:2px solid #c3d6dd;padding:10px 12px}.mela-composer .send{margin:0;width:46px;min-width:46px;height:46px;border-radius:50%;padding:0;background:#087e8b;border-color:#087e8b;font-size:18px}.mela-talk-row{margin-top:8px}.mela-status{min-height:0;font-size:13px;color:#4f6b78;margin-top:6px}.mela-status:empty{display:none}.mela-tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid #e2ecef}.mela-tools button,.mela-tools select{margin:0;min-height:38px;padding:6px 10px;font-size:14px;border-width:1px}.mela-tools .extract{width:auto;flex:1}.mela-tools label{display:flex;align-items:center;gap:4px;font-size:18px}.mela-tools input{width:18px;height:18px}.sign-box .gesture-note,.sign-box .alphabet-reference,.sign-box .gesture-description,.sign-box .motion-toggle,.sign-box .motion-state,.sign-box .live-caption small,.sign-box .teacher-renderer-status,.sign-box .teacher-cameras,.sign-box .teacher-tools select,.sign-box .concept-card{display:none!important}.sign-box .teacher-surface{height:200px}.sign-box .live-caption{padding:8px 12px}.sign-box .caption-words{font-size:15px;margin:4px 0;max-height:90px}.sign-box .preview-mode,.sign-box .animation-controls{padding:6px 8px}.sign-box .animation-controls{grid-template-columns:1fr}.sign-box .teacher-tools{padding:0}@keyframes mela-dot{70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}@keyframes mela-bar{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}@media(prefers-reduced-motion:reduce){.bars i,.live-pill b{animation:none}}@keyframes mela-pulse{50%{box-shadow:0 0 0 6px #b3261e33}}@media(prefers-reduced-motion:reduce){.talk{animation:none!important}}";
   shadow.append(style);
   const details = document.createElement("details");
   const summary = document.createElement("summary");
-  summary.textContent = "MELA · Talk to this website";
+  const brand = document.createElement("span");
+  brand.className = "mela-brand";
+  brand.textContent = "MELA";
+  const subtitle = document.createElement("span");
+  subtitle.className = "mela-sub";
+  subtitle.textContent = "Talk to this website";
+  const pill = document.createElement("span");
+  pill.className = "live-pill";
+  pill.setAttribute("role", "status");
+  pill.setAttribute("aria-live", "polite");
+  const bars = () => {
+    const wrap = document.createElement("span");
+    wrap.className = "bars";
+    wrap.setAttribute("aria-hidden", "true");
+    for (let i = 0; i < 5; i++) wrap.append(document.createElement("i"));
+    return wrap;
+  };
+  const pillText = document.createElement("span");
+  pill.append(document.createElement("b"), pillText, bars());
+  if (options.assistant) summary.append(brand, subtitle, pill);
+  else summary.textContent = "MELA · Talk to this website";
   details.append(summary);
+  const micBanner = document.createElement("div");
+  micBanner.className = "mic-banner";
+  micBanner.hidden = true;
+  const micText = document.createElement("span");
+  micBanner.append("🎙", micText, bars());
   const help = document.createElement("p");
   help.textContent =
     "Try “read page”, “scroll down”, “find Downloads”, “click Next” or “fill Name with …”. Actions use this page only." +
@@ -64,6 +100,21 @@ export function mountActions(
   output.setAttribute("role", "status");
   output.setAttribute("aria-live", "polite");
   const controls = document.createElement("div");
+  // Assistant mode shows the conversation as chat bubbles.
+  const chat = document.createElement("div");
+  chat.className = "mela-chat";
+  chat.setAttribute("role", "log");
+  chat.setAttribute("aria-label", "Conversation with MELA");
+  const bubble = (who: "you" | "mela", text: string) => {
+    const message = document.createElement("div");
+    message.className = "msg " + who;
+    message.textContent = text;
+    if (/[\u1200-\u137f]/.test(text)) message.lang = "am";
+    chat.append(message);
+    while (chat.children.length > 40) chat.firstElementChild?.remove();
+    chat.scrollTop = chat.scrollHeight;
+    return message;
+  };
   const confirm = document.createElement("div");
   const engine = createActionEngine(options.root || document);
   let language = options.language || "en";
@@ -87,7 +138,8 @@ export function mountActions(
     return e;
   };
   const show = (result: ActionResult) => {
-    output.textContent = result.message;
+    const target = options.assistant ? bubble("mela", result.message) : output;
+    output.textContent = options.assistant ? "" : result.message;
     if (result.sources?.length) {
       const list = document.createElement("ul");
       for (const source of result.sources) {
@@ -104,7 +156,7 @@ export function mountActions(
           list.append(item);
         } catch {}
       }
-      output.append(list);
+      target.append(list);
     }
     confirm.replaceChildren();
     if (result.status === "confirm")
@@ -126,17 +178,124 @@ export function mountActions(
   speakToggle.checked = options.speakAnswers ?? false;
   let jarvis = false,
     jarvisAccepted = false;
-  const speak = (text: string, force = false): Promise<void> => {
-    const lang = language === "am" ? "am" : "en";
-    signBox?.play(text, lang);
-    if (!(speakToggle.checked || force) || !("speechSynthesis" in window))
-      return Promise.resolve();
+  // ---- Voice output: device voice, or a natural Gemini voice ----
+  let speechToken = 0,
+    audioContext: AudioContext | undefined,
+    currentSource: AudioBufferSourceNode | undefined;
+  const ensureAudio = () => {
+    try {
+      audioContext ??= new AudioContext();
+      void audioContext.resume();
+    } catch {}
+  };
+  const stopSpeech = () => {
+    speechToken++;
+    try {
+      currentSource?.stop();
+    } catch {}
+    currentSource = undefined;
+    window.speechSynthesis?.cancel();
+  };
+  const deviceVoice = async () => {
+    if (!("speechSynthesis" in window)) return undefined;
+    if (!window.speechSynthesis.getVoices().length)
+      await new Promise<void>((resolve) => {
+        const timer = setTimeout(resolve, 500);
+        window.speechSynthesis.addEventListener?.(
+          "voiceschanged",
+          () => {
+            clearTimeout(timer);
+            resolve();
+          },
+          { once: true },
+        );
+      });
     const voices = window.speechSynthesis.getVoices();
     const want = languages[language]?.speech?.toLowerCase() || language;
-    const voice =
+    return (
       voices.find((v) => v.lang.toLowerCase() === want) ||
-      voices.find((v) => v.lang.toLowerCase().startsWith(language));
-    if (!voice && language !== "en") return Promise.resolve(); // captions + sign box still show
+      voices.find((v) => v.lang.toLowerCase().startsWith(language))
+    );
+  };
+  const chunksOf = (text: string) => {
+    const chunks: { text: string; from: number }[] = [];
+    const re = /[^.!?።]+[.!?።]*\s*/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(text))) {
+      const last = chunks.at(-1);
+      if (last && last.text.length + m[0].length < 240 && chunks.length > 1)
+        last.text += m[0];
+      else chunks.push({ text: m[0], from: m.index });
+    }
+    return chunks.filter((c) => c.text.trim());
+  };
+  let naturalPausedUntil = 0;
+  const speakNatural = async (
+    text: string,
+    lang: "en" | "am",
+    token: number,
+  ) => {
+    ensureAudio();
+    const context = audioContext;
+    if (!context || !options.tts) return text;
+    const chunks = chunksOf(text.slice(0, 4000));
+    const loads: Promise<AudioBuffer | undefined>[] = [];
+    const load = (i: number) =>
+      (loads[i] ??= options.tts!(chunks[i].text.trim(), language)
+        .then((b64) =>
+          context.decodeAudioData(
+            Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)).buffer,
+          ),
+        )
+        .catch(() => undefined));
+    load(0);
+    if (chunks.length > 1) load(1);
+    for (let i = 0; i < chunks.length; i++) {
+      const buffer = await load(i);
+      if (i + 2 < chunks.length) load(i + 2);
+      if (token !== speechToken) return "";
+      // Gemini voice unavailable (e.g. daily quota): hand the rest to the device voice.
+      if (!buffer) {
+        naturalPausedUntil = Date.now() + 10 * 60 * 1000;
+        return text.slice(chunks[i].from);
+      }
+      if (i === 0) signBox?.play(text, lang);
+      else signBox?.sync(chunks[i].from);
+      await new Promise<void>((resolve) => {
+        const source = context.createBufferSource();
+        source.buffer = buffer;
+        source.connect(context.destination);
+        source.onended = () => resolve();
+        currentSource = source;
+        source.start();
+      });
+      if (token !== speechToken) return "";
+    }
+    signBox?.stop();
+    return "";
+  };
+  const speak = async (text: string, force = false): Promise<void> => {
+    const lang = language === "am" ? "am" : "en";
+    signBox?.play(text, lang);
+    if (!(speakToggle.checked || force)) return;
+    stopSpeech();
+    const token = speechToken;
+    const mode = options.voiceMode?.() || "auto";
+    const voice = mode === "gemini" ? undefined : await deviceVoice();
+    if (token !== speechToken) return;
+    if (
+      options.tts &&
+      Date.now() > naturalPausedUntil &&
+      (mode === "gemini" || (mode === "auto" && !voice))
+    ) {
+      const rest = await speakNatural(text, lang, token);
+      if (!rest || token !== speechToken) return;
+      text = rest;
+    }
+    if (!("speechSynthesis" in window)) return;
+    // No matching voice: English can use any installed voice; other scripts
+    // stay as captions and the sign box rather than being misread.
+    if (!voice && language !== "en") return;
     window.speechSynthesis.cancel();
     const spoken = text.slice(0, 4000);
     const utterance = new SpeechSynthesisUtterance(spoken);
@@ -165,6 +324,54 @@ export function mountActions(
       window.speechSynthesis.speak(utterance);
     });
   };
+  // ---- Live status (pill in the header, microphone banner, outside badge) ----
+  let micState = "idle",
+    thinking = false,
+    speaking = false,
+    lastStatus: LiveStatus | undefined;
+  const labels: Record<LiveStatus, string> = {
+    live: "LIVE",
+    listening: "MIC ON · LISTENING",
+    thinking: "THINKING",
+    speaking: "SPEAKING",
+    jarvis: "JARVIS ON",
+  };
+  const updateStatus = () => {
+    const status: LiveStatus =
+      micState === "processing"
+        ? "thinking"
+        : micState !== "idle"
+          ? "listening"
+          : thinking
+            ? "thinking"
+            : speaking
+              ? "speaking"
+              : jarvis
+                ? "jarvis"
+                : "live";
+    pill.dataset.state = status;
+    host.dataset.state = status;
+    pillText.textContent = labels[status];
+    micBanner.hidden = status !== "listening";
+    micText.textContent =
+      micState === "starting"
+        ? "Turning the microphone on…"
+        : "Microphone is ON — speak now";
+    if (status !== lastStatus) {
+      lastStatus = status;
+      options.onStatus?.(status);
+    }
+  };
+  const speakTracked = async (text: string, force = false) => {
+    speaking = true;
+    updateStatus();
+    try {
+      await speak(text, force);
+    } finally {
+      speaking = false;
+      updateStatus();
+    }
+  };
   // ---- Web data extraction ----
   let extracted: PageData | undefined;
   const dataActions = document.createElement("div");
@@ -172,7 +379,8 @@ export function mountActions(
   const extract = () => {
     extracted = extractPage();
     const summary = summarizeData(extracted);
-    output.textContent = summary;
+    if (options.assistant) bubble("mela", summary);
+    else output.textContent = summary;
     const json = () => JSON.stringify(extracted, null, 2);
     dataActions.replaceChildren(
       b("Download JSON", () => {
@@ -224,10 +432,11 @@ export function mountActions(
     jarvisState.hidden = true;
     voice.cancel();
     output.textContent = message;
+    updateStatus();
   };
   const startJarvis = async () => {
     if (jarvis) {
-      window.speechSynthesis?.cancel();
+      stopSpeech();
       stopJarvis();
       return;
     }
@@ -244,7 +453,8 @@ export function mountActions(
     jarvisButton.textContent = "⏹ Stop Jarvis";
     jarvisState.hidden = false;
     jarvisState.textContent = "Jarvis is on.";
-    await speak(
+    updateStatus();
+    await speakTracked(
       language === "am"
         ? "ሰላም፣ እኔ መላ ነኝ። ምን ልርዳዎት?"
         : "Hi, I'm MELA. Ask me anything about this page, or tell me what to do.",
@@ -255,20 +465,31 @@ export function mountActions(
   const reply = async (message: string) => {
     if (jarvis) {
       jarvisState.textContent = "Jarvis is speaking…";
-      await speak(message, true);
+      await speakTracked(message, true);
       listenAgain();
-    } else await speak(message);
+    } else await speakTracked(message);
   };
   const run = async () => {
     const id = ++request;
     const text = input.value.trim();
+    if (options.assistant) {
+      if (!text) return;
+      bubble("you", text);
+      input.value = "";
+    }
+    const words = text
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}\s']/gu, " ")
+      .trim()
+      .split(/\s+/);
     if (
       jarvis &&
-      /^(stop( jarvis| listening)?|goodbye|good bye|bye|exit|thank you,? that'?s all|አቁም|ቻው)[.!]?$/iu.test(
-        text,
+      words.length <= 6 &&
+      words.some((w) =>
+        ["stop", "goodbye", "bye", "exit", "አቁም", "ቻው"].includes(w),
       )
     ) {
-      window.speechSynthesis?.cancel();
+      stopSpeech();
       stopJarvis("Jarvis stopped. Press Start Jarvis to talk again.");
       void speak(language === "am" ? "ደህና ሁኑ።" : "Goodbye!", true);
       return;
@@ -284,7 +505,15 @@ export function mountActions(
       if (jarvis) await reply(summary.split("\n")[0]);
       return;
     }
-    const action = parseAction(text);
+    // Voice transcripts often carry filler ("Okay. Scroll down."): also try the last sentence.
+    const action =
+      parseAction(text) ||
+      parseAction(
+        text
+          .split(/[.!?።,]\s+/)
+          .filter(Boolean)
+          .at(-1) || "",
+      );
     if (action) {
       const result = engine.execute(action);
       show(result);
@@ -305,9 +534,16 @@ export function mountActions(
     engine.cancel();
     confirm.replaceChildren();
     if (options.question && text) {
-      output.textContent = "Searching this page and saved site context…";
+      output.textContent = options.assistant
+        ? "Thinking…"
+        : "Searching this page and saved site context…";
+      thinking = true;
+      updateStatus();
       try {
-        const answer = await options.question(text, language);
+        const answer = await options.question(text, language).finally(() => {
+          thinking = false;
+          updateStatus();
+        });
         if (!disposed && id === request) {
           show(answer);
           if (answer.status !== "unsupported" || jarvis)
@@ -320,8 +556,11 @@ export function mountActions(
       }
       return;
     }
-    output.textContent =
-      "Command not recognised. Try one of the examples above.";
+    if (options.assistant)
+      bubble("mela", "Sorry, I didn't catch that. Try again.");
+    else
+      output.textContent =
+        "Command not recognised. Try one of the examples above.";
     if (jarvis) listenAgain();
   };
 
@@ -343,7 +582,7 @@ export function mountActions(
     language = isLanguage(locale.value) ? locale.value : "en";
   };
   const mic = b(options.assistant ? "🎙 Talk" : "Use microphone", () => {
-    if (jarvis) window.speechSynthesis?.cancel();
+    if (jarvis) stopSpeech();
     voice.toggle();
   });
   mic.className = "talk";
@@ -358,8 +597,13 @@ export function mountActions(
   const voice = createVoice({
     transcribe: options.transcribe,
     useLabel: options.assistant ? "🎙 Talk" : undefined,
+    autoMode: options.assistant,
     skipWarning: () => jarvis && jarvisAccepted,
     onFinal: () => void run(),
+    onState: (value) => {
+      micState = value;
+      updateStatus();
+    },
     onEnd: (outcome) => {
       if (!jarvis) return;
       if (outcome === "none") listenAgain();
@@ -376,19 +620,22 @@ export function mountActions(
     },
     api: options.api || new URL("/api/v1", location.href).href,
   });
+  const stopAll = () => {
+    request++;
+    if (jarvis) stopJarvis();
+    voice.cancel();
+    engine.cancel();
+    confirm.replaceChildren();
+    stopSpeech();
+    signBox?.stop();
+    output.textContent = options.assistant
+      ? "Stopped."
+      : "Stopped. Pending actions cancelled.";
+  };
   controls.append(
     b("Run command", run),
     ...(options.assistant ? [] : [mic]),
-    b("Stop", () => {
-      request++;
-      if (jarvis) stopJarvis();
-      voice.cancel();
-      engine.cancel();
-      confirm.replaceChildren();
-      window.speechSynthesis?.cancel();
-      signBox?.stop();
-      output.textContent = "Stopped. Pending actions cancelled.";
-    }),
+    b("Stop", () => stopAll()),
   );
   controls.append(
     b("Listen to result", () => {
@@ -423,14 +670,53 @@ export function mountActions(
   const speakLabel = document.createElement("label");
   speakLabel.append(speakToggle, "Read answers aloud");
   toolbar.append(locale, speakLabel);
+  let toolsRow: HTMLElement | undefined;
   if (options.assistant) {
+    // Clean chat layout: conversation, sign box, composer, big voice buttons, tools.
     const talkRow = document.createElement("div");
     talkRow.className = "mela-talk-row";
     talkRow.append(mic, jarvisButton);
-    details.append(help, talkRow, jarvisState, extractButton, toolbar);
-  } else details.append(help, toolbar);
-  details.append(input, controls, output, dataActions, confirm);
-  if (options.signBox) signBox = mountSignBox(details, options.signBox);
+    const composer = document.createElement("div");
+    composer.className = "mela-composer";
+    input.rows = 1;
+    input.placeholder = "Ask about this page…";
+    const send = b("➤", run);
+    send.className = "send";
+    send.setAttribute("aria-label", "Send");
+    composer.append(input, send);
+    const tools = document.createElement("div");
+    tools.className = "mela-tools";
+    toolsRow = tools;
+    const stop = b("⏹ Stop", stopAll);
+    extractButton.textContent = "📄 Extract data";
+    const speakLabel2 = document.createElement("label");
+    speakLabel2.append(speakToggle, "🔊");
+    speakLabel2.title = "Read answers aloud";
+    tools.append(extractButton, locale, speakLabel2, stop);
+    output.className = "mela-status";
+    const signHost = document.createElement("div");
+    bubble(
+      "mela",
+      "Hi, I'm MELA 👋 Tap Talk or type a question about this page.",
+    );
+    details.append(
+      chat,
+      signHost,
+      composer,
+      talkRow,
+      micBanner,
+      jarvisState,
+      output,
+      dataActions,
+      confirm,
+      tools,
+    );
+    if (options.signBox) signBox = mountSignBox(signHost, options.signBox);
+  } else {
+    details.append(help, toolbar);
+    details.append(input, controls, output, dataActions, confirm);
+    if (options.signBox) signBox = mountSignBox(details, options.signBox);
+  }
   if (options.extraControls) details.append(options.extraControls);
   shadow.append(details);
   container.append(host);
@@ -448,6 +734,11 @@ export function mountActions(
     }
   };
   details.addEventListener("toggle", close);
+  details.addEventListener("toggle", () => {
+    host.toggleAttribute("data-closed", !details.open);
+  });
+  host.toggleAttribute("data-closed", true);
+  updateStatus();
   const key = (e: KeyboardEvent) => {
     if (e.key === "Escape") {
       e.stopPropagation();
@@ -457,8 +748,26 @@ export function mountActions(
     }
   };
   host.addEventListener("keydown", key);
+  // Unlock audio playback on the user's first interaction with the panel.
+  host.addEventListener("pointerdown", ensureAudio, true);
+  host.addEventListener("keydown", ensureAudio, true);
   return {
     element: host,
+    /** Add a button to the assistant's tools row. */
+    addTool(element: HTMLElement) {
+      toolsRow?.prepend(element);
+    },
+    /** Show a caption (e.g. a live video caption) in the sign-language box. */
+    showCaption(text: string, lang: string) {
+      signBox?.play(text, lang === "am" ? "am" : "en");
+    },
+    /** Post a MELA message in the conversation. */
+    say(text: string) {
+      if (options.assistant) bubble("mela", text);
+      else output.textContent = text;
+    },
+    getLanguage: () => language,
+    makeButton: (label: string, fn: () => unknown) => b(label, fn),
     setLanguage(value: Language) {
       if (isLanguage(value)) {
         request++;
@@ -471,8 +780,10 @@ export function mountActions(
     },
     destroy() {
       disposed = true;
+      stopSpeech();
+      void audioContext?.close();
       jarvis = false;
-      window.speechSynthesis?.cancel();
+      stopSpeech();
       signBox?.dispose();
       request++;
       voice.stop();

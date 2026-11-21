@@ -43,8 +43,7 @@ export function youtubeLiveCaptions(options: {
   );
   // Hide YouTube's own caption window while ours is showing (same text, translated).
   const hideNative = document.createElement("style");
-  hideNative.textContent =
-    ".ytp-caption-window-container{opacity:0!important}";
+  hideNative.textContent = ".ytp-caption-window-container{opacity:0!important}";
 
   const show = (text: string, language: string, id: number) => {
     if (!active || id < shown) return;
@@ -118,7 +117,9 @@ export function youtubeLiveCaptions(options: {
     const chunk = () => {
       if (!active || sawCaptions) return;
       const parts: Blob[] = [];
-      const rec = new MediaRecorder(stream, { mimeType: "audio/webm;codecs=opus" });
+      const rec = new MediaRecorder(stream, {
+        mimeType: "audio/webm;codecs=opus",
+      });
       recorder = rec;
       rec.ondataavailable = (e) => e.data.size && parts.push(e.data);
       rec.onstop = async () => {
@@ -127,7 +128,8 @@ export function youtubeLiveCaptions(options: {
         const blob = new Blob(parts, { type: "audio/webm" });
         const audio = await new Promise<string>((resolve) => {
           const reader = new FileReader();
-          reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
+          reader.onload = () =>
+            resolve(String(reader.result).split(",")[1] || "");
           reader.readAsDataURL(blob);
         });
         try {
