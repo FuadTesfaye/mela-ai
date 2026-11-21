@@ -4,10 +4,17 @@ import { extractPage, pageDataContext } from "../module/actions/extract";
 import { chromeApi } from "./chrome";
 import { createSiteMemoryClient } from "./memory/client";
 import { memoryControls } from "./memory/panel";
+import { isYouTubeVideo, youtubeLiveCaptions } from "./youtube";
 const state = globalThis as unknown as {
   __melaActions?: { destroy(): void; open(): void };
 };
 state.__melaActions?.destroy();
+const languageNames: Record<string, string> = {
+  en: "English",
+  am: "Amharic",
+  om: "Afaan Oromo",
+  ti: "Tigrinya",
+};
 const chrome = chromeApi();
 const client = createSiteMemoryClient();
 const controls = memoryControls(client);
@@ -23,8 +30,11 @@ async function ai<T>(message: Record<string, unknown>): Promise<T> {
 }
 
 function pageText() {
+  // On a video, what has been said so far is the most useful context.
+  const spoken = live?.transcript();
+  const video = spoken ? `Video transcript so far: ${spoken}\n\n` : "";
   try {
-    return pageDataContext(extractPage());
+    return video + pageDataContext(extractPage());
   } catch {
     return (document.body?.innerText || "")
       .replace(/\s+/g, " ")
@@ -37,7 +47,7 @@ async function answer(
   language: string,
 ): Promise<ActionResult> {
   // "What do you remember…" keeps using local site memory.
-  if (/\b(remember|saved|memory)\b/i.test(question))
+  if (/\b(what do you remember|saved pages|site memory)\b/i.test(question))
     return client.answer(question);
   try {
     const text = await ai<string>({
@@ -62,6 +72,12 @@ const actions = mountActions({
     ? location.origin + "/api/v1"
     : "https://mela-ai-wheat.vercel.app/api/v1",
   assistant: true,
+  onLanguageChange: (language) => {
+    if (live?.active)
+      actions.say(
+        `🎬 Live captions now in ${languageNames[language] || "English"}.`,
+      );
+  },
   tts: (text, language) => ai<string>({ type: "mela:tts", text, language }),
   voiceMode: () => voiceMode,
   // Mirror the live state on the toolbar icon badge.
@@ -85,9 +101,52 @@ void ai<{ voice: typeof voiceMode }>({ type: "mela:prefs" })
     voiceMode = prefs.voice;
   })
   .catch(() => {});
+// ---- YouTube: live translated captions for Deaf / other-language viewers ----
+let live: ReturnType<typeof youtubeLiveCaptions> | undefined;
+let liveButton: HTMLElement | undefined;
+const setLive = (on: boolean) => {
+  if (!live) return;
+  if (on && live.start()) {
+    const name = languageNames[actions.getLanguage()] || "English";
+    actions.say(
+      `🎬 Live captions are on in ${name}. They appear over the video and in the sign box. Change the language below any time.`,
+    );
+  } else if (!on) {
+    live.stop();
+    actions.say("Live captions are off.");
+  }
+  if (liveButton)
+    liveButton.textContent = live.active
+      ? "🎬 Captions on"
+      : "🎬 Live captions";
+};
+if (isYouTubeVideo()) {
+  live = youtubeLiveCaptions({
+    ai,
+    language: () => actions.getLanguage(),
+    onCaption: (text, language) => actions.showCaption(text, language),
+    status: (message) => actions.say(message),
+  });
+  liveButton = actions.makeButton("🎬 Live captions", () =>
+    setLive(!live?.active),
+  );
+  actions.addTool(liveButton);
+  setLive(true);
+}
+// Ctrl/⌘+Shift+M talks to MELA (same shortcut as the MELA website).
+const talkKey = (e: KeyboardEvent) => {
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.code === "KeyM") {
+    e.preventDefault();
+    e.stopPropagation();
+    actions.talk();
+  }
+};
+addEventListener("keydown", talkKey, true);
 state.__melaActions = {
   open: () => actions.open(),
   destroy() {
+    removeEventListener("keydown", talkKey, true);
+    live?.stop();
     controls.destroy();
     actions.destroy();
   },

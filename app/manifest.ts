@@ -11,6 +11,17 @@ export default function manifest(): MetadataRoute.Manifest {
     display: "standalone",
     background_color: "#f5f7f3",
     theme_color: "#103c4b",
+    // Long-press the installed app icon → "Talk to MELA" starts voice mode and the
+    // microphone (works with TalkBack; phones don't pass volume keys to web apps).
+    shortcuts: [
+      {
+        name: "Talk to MELA",
+        short_name: "Talk",
+        description: "Open MELA and start talking",
+        url: "/savanna/pages/concept-with-navigation.html?talk=1",
+        icons: [{ src: "/icons/mela-192.png", sizes: "192x192" }],
+      },
+    ],
     icons: [
       { src: "/icons/mela-192.png", sizes: "192x192", type: "image/png" },
       {
